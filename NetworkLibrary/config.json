@@ -1,0 +1,17 @@
+{
+  "Network": {
+    "IP":  "0.0.0.0",
+    "Port": 5000,
+    "Backlog": 100
+  },
+
+  "Thread": {
+    "WorkerCount": 4
+  },
+
+  "DB": {
+    "Host": "127.0.0.1",
+    "User": "root",
+    "Password": "1234"
+  }
+}
