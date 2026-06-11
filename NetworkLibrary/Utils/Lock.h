@@ -8,23 +8,11 @@ private:
 	CRITICAL_SECTION cs_;
 
 public:
-	Lock()
-	{
-		InitializeCriticalSection(&cs_);
-	}
+	Lock();
 
-	~Lock()
-	{
-		DeleteCriticalSection(&cs_);
-	}
+	~Lock();
 
-	void lock()
-	{
-		EnterCriticalSection(&cs_);
-	}
+	void lock();
 
-	void unlock()
-	{
-		LeaveCriticalSection(&cs_);
-	}
+	void unlock();
 };

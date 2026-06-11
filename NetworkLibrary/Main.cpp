@@ -6,6 +6,7 @@
 #include "./Utils/ConfigManager.h"
 #include "./Utils/TickController.h"
 #include "./Utils/Logger.h"
+#include "./Utils/CrashDump.h"
 
 #define CONFIG_FILENAME			L"config.json"
 
@@ -13,6 +14,7 @@ bool _shutdown;
 
 int main()
 {
+	CrashDump().Initialize();
 
 	ConfigManager::getInstance().load(CONFIG_FILENAME);
 
@@ -39,7 +41,6 @@ int main()
 	//	PlayerManager::getInstance().update();
 	//	TickController::getInstance().update();
 	//}
-	
 	
 	Server::getInstance().serverExit();
 

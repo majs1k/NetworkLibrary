@@ -60,9 +60,10 @@ private:
 	LONG ioCount_;
 	LONG sendPending_;
 
-	Lock lock_;
+	Lock* lock_;
 
 public:
+	~Session();
 	void initialize(SOCKET socket, std::wstring ip, int port, __int64 id);
 	
 	SOCKET socket() const;

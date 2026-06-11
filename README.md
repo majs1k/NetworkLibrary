@@ -34,12 +34,10 @@ DB 연동
 메세지 쿨타임 처리 (3번 허용 후 종료)
 c# -> NetworkStream + rpc 코드
 라이브러리 64비트 호환
-포트폴리오 최종 목표는 마을 단위 컨텐츠 구현
 ```
 
 ## Question
 ```text
-패킷 핸들러에서 컨텐츠 수정 -> friend? setter?
 예외처리 try-catch?
 
 라이브러리의 헤더파일에 define 값을 맘대로 바꿀수 있나?
@@ -49,11 +47,26 @@ c# -> NetworkStream + rpc 코드
 placement new 활용도??
 
 로그에서 락 걸고 큐에 담은후 1초에 한번씩 flush 하는 경우 - 문제 발생 x?
-로그를 바로 출력?
 
-RPCProxy -> 인자가 sessionId? sendPacket에선 id로?
 
-서버쪽에서 먼저 연결 끊는 경우 iocount 1 감소? -> 결국은 플래그를 도입해야 하나?
+sendPacket에서 헤더를 넣어야 한다면.. 타입은?
+RPCProxy -> 인자가 sessionId?
+헤더랑 메세지를 같이 packet에 넣은 다음 sendPacket 호출중
+
+생성자 소멸자에는 락 적용???
+
+서버쪽에서 먼저 연결 끊는 경우 iocount 1 감소? -> 플래그를 도입해야 하나?
+
+덤프파일
+CrashDump의 MiniDumpWriteDump 의 MiniDumpWithFullMemory는 정확히 어떤 메모리를 찍는거임?
+워킹셋 사이즈 파일명 포함 이유?
+카운트는 무슨 의미? 여러파일에서 0바이트는 잘못된거임? 파일 하나만 생성해도 괜찮음?
+덤프에서 메모리 NP풀 사용량? 즉 모니터링 기능? 모니터링에는 기록의 역할은 없지 않음?
+
+디버깅시 항상 문제 → 원인 → 해결
+
+Lock 없이, sendQ 어케 동기화? 인큐가 두번이라, 큐 자체 락으로는 힘들다..
+
 ```
 
 ## DevLog
@@ -131,11 +144,21 @@ Server 클래스의 소멸자 로직의 로그 출력이 안되는 상황 발생
 wsasend() error  10022 WSAEINVAL 이 에러가 발생하는걸로 보아 overlapped 객체가 사용중인데
 덮어씌워지는 상황인거 같긴한데, 이 에러가 항상 출력되는건 아님.. 이유가??
 
-
 sendQueue에 동시에 enqueue하는 상황이 문제 -> 세션 멤버변수에 Lock 추가
 세션의 모든 멤버변수에 대한 접근에 락 적용
 
-sendPacket()에서 ioCount 0인지 확인하고 진입하는 코드 삭제???
-
 rpc 복습 필요
+```
+
+### 26-06-10
+```text
+sendQueue에 enqueue할때 락을 적용 안하면 wsasend() 10022 에러 발생
+sendQueue 내부적으로 락을 적용한다고 해도, 결국 enqueue 호출부분이 2번이라서 문제가 발생 가능함... 이걸 어케 해결함?
+```
+
+### 26-06-11
+```text
+세션맵 잠금 없을때 더미에서 재연결 옵션시 read access violation 발생
+상대가 closesocket()시 (rst x) GQCS 성공 반환 후 numOfBytes 0 전달됨 -> 예외처리
+
 ```

@@ -245,10 +245,9 @@ unsigned int __stdcall Server::workerThread(void* param)
 
 		if (((OverlappedEx*)overlapped)->type == IOType::RECV)
 		{
+			// 상대가 closesocket()시 (rst x) 발생
 			if (numOfBytes == 0)
 			{
-				/// 발생 확인 필요
-				LOG_INFO(L"recv 0byte");
 				session->decrementIOCount();
 				
 				continue;

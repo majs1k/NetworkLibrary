@@ -133,10 +133,11 @@
     <ClCompile Include="Network\Server.cpp" />
     <ClCompile Include="Network\Session.cpp" />
     <ClCompile Include="Network\SessionManager.cpp" />
-    <ClCompile Include="Utils\CrashDump.cpp" />
     <ClCompile Include="Utils\Lock.cpp" />
+    <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Packet.cpp" />
     <ClCompile Include="Utils\RingBuffer.cpp" />
+    <ClCompile Include="Utils\TickController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />

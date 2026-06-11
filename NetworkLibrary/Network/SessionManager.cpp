@@ -29,38 +29,37 @@ bool SessionManager::isFull() const
 
 __int64 SessionManager::requireId()
 {
-	return ++idSeed_;
+	InterlockedIncrement64(&idSeed_);
+	
+	return idSeed_;
 }
 
 void SessionManager::addSession(Session* session)
 {
-	//lock_.lock();
+	lock_.lock();
 
 	sessionMap_.insert({ session->id(), session });
 
-	sessionSize_++;
-
-	//lock_.unlock();
-
+	lock_.unlock();
+	
 	//LOG_INFO(L"[NETWORK] session create count=%d", sessionSize_);
+	
+	InterlockedIncrement(&sessionSize_);
 }
 
 void SessionManager::removeSession(Session* session)
 {
-	//lock_.lock();
+	lock_.lock();
 
 	sessionMap_.erase(session->id());
 
-	sessionSize_--;
-
-	//lock_.unlock();
-
-	//LOG_INFO(L"[NETWORK] session delete count=%d", sessionSize_);
-
-	// erase에서 세션 삭제???
-	closesocket(session->socket());
+	lock_.unlock();
 
 	delete session;
+	
+	//LOG_INFO(L"[NETWORK] session delete count=%d", sessionSize_);
+	
+	InterlockedDecrement(&sessionSize_);
 }
 
 Session* SessionManager::find(__int64 id)

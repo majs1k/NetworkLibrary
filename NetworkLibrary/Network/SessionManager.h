@@ -16,7 +16,7 @@ private:
 
 	// rehash 일어나면(갑자기 삽입 했을때 등..) 이터레이터 무효화 주의
 	std::unordered_map<__int64, Session*> sessionMap_;
-	int sessionSize_;
+	DWORD sessionSize_;
 
 	Lock lock_;
 
