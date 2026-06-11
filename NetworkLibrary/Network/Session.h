@@ -4,6 +4,8 @@
 #include "../Utils/RingBuffer.h"
 #include "../Utils/Lock.h"
 
+extern LONG cnt;
+
 // ------------------------------------------------------- //
 
 struct MESSAGE

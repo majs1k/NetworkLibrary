@@ -5,9 +5,6 @@
 #include <Windows.h>
 #include "../Utils/Singleton.h"
 
-extern LONG cnt;
-
-
 class Session;
 
 #define SERVER_PORT			6000

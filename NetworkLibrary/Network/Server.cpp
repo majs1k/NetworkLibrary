@@ -7,7 +7,7 @@
 #include "../Utils/Logger.h"
 #include "../Utils/Profiler.h"
 
-LONG cnt = 0;
+auto& sm = SessionManager::getInstance();
 
 Server::Server()
 {
@@ -95,6 +95,8 @@ void Server::serverExit()
 		CloseHandle(hWorkerThread_[i]);
 	}
 
+	// 세션맵 정리??
+
 	CloseHandle(hIOCP_);
 
 	LOG_INFO(L"[NETWORK] server exit");
@@ -133,12 +135,11 @@ unsigned int __stdcall Server::acceptThread(void* param)
 
 void Server::onAccept(SOCKET socket, SOCKADDR_IN sockAddr)
 {
+	// 세션 생성 전에 최대세션 확인?
 	//if (SessionManager::getInstance().isFull())
 	//{
 	//	closesocket(socket);
-
 	//	LOG(L"[Network] session limit over");
-
 	//	return;
 	//}
 
@@ -176,7 +177,7 @@ unsigned int __stdcall Server::workerThread(void* param)
 		//session = nullptr;
 		//numOfBytes = 0;
 
-		// GQCS 반환시 overlapped 구조체는 무조건 세팅됨.
+		// GQCS 호출 반환시 overlapped 구조체 무조건 세팅됨
 		BOOL ret = GetQueuedCompletionStatus(server->hIOCP_, &numOfBytes, (PULONG_PTR)&session, &overlapped, INFINITE);
 
 		InterlockedIncrement(&cnt);
@@ -196,10 +197,9 @@ unsigned int __stdcall Server::workerThread(void* param)
 			// 완료 패킷을 꺼내서, 실패한 IO에 대한 정보를 매개변수에 저장함
 			if (overlapped != nullptr)
 			{
-				// 64 상대가 연결을 끊었을때
+				// 64 상대가 연결을 끊었을때 (numOfBytes == 0)
 				if (error == ERROR_NETNAME_DELETED)
 				{
-					//LOG_INFO(L"GQCS() ERROR_NETNAME_DELETED");
 					session->decrementIOCount();
 
 					continue;
@@ -208,14 +208,14 @@ unsigned int __stdcall Server::workerThread(void* param)
 				// ioCount 도입했기 때문에 뜨면 안됨
 				else if (error == ERROR_CONNECTION_ABORTED)
 				{
-					ERR(L"GQCS() ERROR_CONNECTION_ABORTED");
+					LOG_INFO(L"GQCS() error: ERROR_CONNECTION_ABORTED");
 
 					session->decrementIOCount();
 
 					continue;
 				}
 
-				ERR(L"GQCS() error : %d", error);
+				LOG_INFO(L"GQCS() error: %d", error);
 
 				session->decrementIOCount();
 
@@ -243,20 +243,14 @@ unsigned int __stdcall Server::workerThread(void* param)
 			}
 		}
 
-		//if (numOfBytes == 0)
-		//{
-		//	session->decrementIOCount();
-		//}
-
 		if (((OverlappedEx*)overlapped)->type == IOType::RECV)
 		{
 			if (numOfBytes == 0)
 			{
 				/// 발생 확인 필요
-
-				LOG_INFO(L"recv 0 byte");
-				// 상대방 정상 종료
+				LOG_INFO(L"recv 0byte");
 				session->decrementIOCount();
+				
 				continue;
 			}
 

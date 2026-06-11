@@ -116,6 +116,55 @@ public:
 		return size;
 	}
 
+	int enqueueLocked(const char* data, int size)
+	{
+		lock_.lock();
+
+		/// 1회 리사이즈 로직으로 변경 필요
+		if (freeSize() < size)
+		{
+			printf("queue size over!\n");
+			DebugBreak();
+			return 0;
+		}
+
+		if (capacity_ < writePos_ + size)
+		{
+			memcpy(buffer_ + writePos_, data, capacity_ - writePos_);
+			memcpy(buffer_, data + (capacity_ - writePos_), size - (capacity_ - writePos_));
+		}
+		else
+			memcpy(buffer_ + writePos_, data, size);
+
+		writePos_ = (writePos_ + size) % capacity_;
+
+		lock_.unlock();
+
+		return size;
+	}
+
+	int dequeueLocked(char* data, int size)
+	{
+		lock_.lock();
+
+		//if (useSize() < size)
+		//	return 0;
+
+		if (capacity_ < readPos_ + size)
+		{
+			memcpy(data, buffer_ + readPos_, capacity_ - readPos_);
+			memcpy(data + (capacity_ - readPos_), buffer_, size - (capacity_ - readPos_));
+		}
+		else
+			memcpy(data, buffer_ + readPos_, size);
+
+		readPos_ = (readPos_ + size) % capacity_;
+
+		lock_.unlock();
+
+		return size;
+	}
+
 	int peek(char* data, int size) const
 	{
 		if (useSize() < size)

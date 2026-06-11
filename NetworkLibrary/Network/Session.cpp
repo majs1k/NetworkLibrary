@@ -3,6 +3,8 @@
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
 
+LONG cnt = 0;
+
 void Session::initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
 {
 	lock_.lock();
@@ -24,7 +26,7 @@ void Session::initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
 
 	lock_.unlock();
 
-	LOG_INFO(L"[NETWORK] session ip=%s port=%d", ip_.c_str(), port_);
+	//LOG_INFO(L"[NETWORK] session ip=%s port=%d", ip_.c_str(), port_);
 }
 
 SOCKET Session::socket() const
@@ -49,8 +51,6 @@ int Session::port() const
 
 void Session::postRecv()
 {
-	//printf("postRecv count : %d\n", ioCount_);
-
 	lock_.lock();
 
 	// 처음에 recv를 등록하기전에 카운트를 증가시킴!!!
@@ -96,8 +96,6 @@ void Session::postRecv()
 		}
 		else if (error == WSAECONNRESET)
 		{
-			LOG(L"WSARecv() error: %d, iocount: %d", error, ioCount_);
-
 			this->decrementIOCount();
 
 			return;
@@ -117,7 +115,7 @@ void Session::postRecv()
 	}
 }
 
-// 현재는 전역함수로 선언됨. 어디 클래스에 넣을지?
+// 현재 전역함수
 void onRecv(__int64 sessionId, Packet& packet)
 {
 	MESSAGE message;
@@ -203,11 +201,8 @@ void Session::postSend()
 	}
 
 	// WSASend() 이전에 호출해야, 
-	// 다른 스레드에서 send 완료통지로 ioCount 내려서 0이 되는 상황 차단 가능
+	// 다른 스레드에서 send 완료통지로 ioCount 내려서 0이 되는 상황 차단
 	InterlockedIncrement(&ioCount_);
-
-	//if(InterlockedIncrement(&ioCount_) == 1)
-	//	return;
 
 	ZeroMemory(&sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
 
@@ -255,8 +250,6 @@ void Session::postSend()
 		}
 		else if (error == WSAECONNRESET)
 		{
-			LOG(L"WSASend() error: %d, iocount: %d", error, ioCount_);
-
 			this->decrementIOCount();
 
 			return;
@@ -302,10 +295,13 @@ void Session::sendPacket(Packet& packet)
 	//if (ioCount_ == 0)
 	//	return;
 
+	//if(InterlockedIncrement(&ioCount_) == 1)
+	//	return;
+
 	HEADER header;
 	header.size = packet.useSize();
 
-	/// 여길 반드시 잠궈야 oversend 정상적으로 동작함
+	/// 여길 반드시 잠궈야 oversend 정상적으로 동작
 	lock_.lock();
 
 	sendQueue_.enqueue((char*)&header, sizeof(HEADER));

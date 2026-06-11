@@ -133,6 +133,10 @@
     <ClCompile Include="Network\Server.cpp" />
     <ClCompile Include="Network\Session.cpp" />
     <ClCompile Include="Network\SessionManager.cpp" />
+    <ClCompile Include="Utils\CrashDump.cpp" />
+    <ClCompile Include="Utils\Lock.cpp" />
+    <ClCompile Include="Utils\Packet.cpp" />
+    <ClCompile Include="Utils\RingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -143,6 +147,7 @@
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Network\SessionManager.h" />
     <ClInclude Include="Utils\ConfigManager.h" />
+    <ClInclude Include="Utils\CrashDump.h" />
     <ClInclude Include="Utils\List.h" />
     <ClInclude Include="Utils\Lock.h" />
     <ClInclude Include="Utils\Logger.h" />

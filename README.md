@@ -49,6 +49,7 @@ c# -> NetworkStream + rpc 코드
 placement new 활용도??
 
 로그에서 락 걸고 큐에 담은후 1초에 한번씩 flush 하는 경우 - 문제 발생 x?
+로그를 바로 출력?
 
 RPCProxy -> 인자가 sessionId? sendPacket에선 id로?
 
@@ -79,17 +80,14 @@ RingBuffer에 Packet을 전달해서 디큐한 다음에는 Packet의 쓰기포�
 다른 스레드에서 sendPacket 호출할 가능성 존재 -> pending 변수를 인터락으로 관리
 
 closesocket 이후, 같은 소켓이 생성되어도, 어차피 sendPacket()은 sessionId를 기준으로 진행되어서 문제 발생 x
-sessionId는 세션마다 고유한 값이므로 문제 x
 ```
 
 ### 26-06-06
 ```text
 폴더명 변경시 vcxproj 파일이 업데이트가 안되어서 문제 발생 가능 -> 새 프로젝트 만들어서 옮기기
-~~select / iocp 라이브러리 통합 및 폴더 트리 추가~~
+이전 select모델 프로젝트 코드들(rpc, 컨텐츠 코드, 유틸 등) 추가
 
 세션 종료시 postSend()에서 접근 못하게 ioCount 확인하는 코드 추가
-
-rpc 복습 필요
 
 발생 가능한 이슈
 1. postSend() 내부에서 sendQueue 읽기에 락 필요? 다른스레드에서 sendQueue에 쓰기가 상황이 영향을 끼칠지??
@@ -104,23 +102,20 @@ Logger에 날짜, 스레드, 로그타입 추가 (spdlog 참고)
 server 예외처리 추가 + PQCS 적용
 스레드 생성하자마자 핸들 닫으면 핸들 무효화됨 주의
 커널 오브젝트의 reference count와 signal 상태는 별개의 개념임
-GQCS 반환시 numOfBytes 체크 필요 x
+GQCS 반환시 numOfBytes 체크 필요 x (어차피 에러 확인 코드 있으니깐)
 
 windows.h -> 반드시 winsock 밑에!! 헤더 include 하면서 순서 꼬일수 있음 주의
 #define WIN32_LEAN_AND_MEAN 추가도 가능 but windows.h의 헤더들이 많이 날라감..
-
 ```
 
 ### 26-06-08
 ```text
 select 모델 삭제 (레포지토리 분리)
 
-WSARecv()시 등록과 완료시 ioCount 변화 적용
+WSARecv()시 등록과 완료시 ioCount 증감 적용
 ref count는 한 작업이 종료될때까지 들고 있다가 완료되면 감소. 0이 되면 삭제.
 postSend()는 WSASend() 호출 전에 iocount 늘려야
 다른 스레드에서 send 완료통지로 ioCount 내려서 0이 되는 상황 방지
-
-sendPacket()에서 ioCount 0인지 확인하고 진입하는 코드 삭제
 ```
 
 ### 26-06-09
@@ -132,11 +127,15 @@ Server 클래스의 소멸자 로직의 로그 출력이 안되는 상황 발생
 클라 1 / 오버센드 1 / 연결종료 x / 딜레이 0 / TPS 약 20000
 어느 시점 갑자기 TPS 0으로 떨어짐. 서버에선 세션 삭제 문구 뜨지 않음
 워커스레드 종료는 없음 확인
+클라 서버 둘다 소켓 삭제 안되었는데 데이터 전송은 없음
+wsasend() error  10022 WSAEINVAL 이 에러가 발생하는걸로 보아 overlapped 객체가 사용중인데
+덮어씌워지는 상황인거 같긴한데, 이 에러가 항상 출력되는건 아님.. 이유가??
 
-와이어샤크
-소켓 삭제 안되었음
-더미에서 송신 자체가 중단됨?? (이건 더미를 리모트로 해서 소켓 삭제되는지 확인될듯)
 
-전역변수 만들고 스택으로 접근해보니 ioCount가 1이라는 상황 확인하였음!!
+sendQueue에 동시에 enqueue하는 상황이 문제 -> 세션 멤버변수에 Lock 추가
+세션의 모든 멤버변수에 대한 접근에 락 적용
 
+sendPacket()에서 ioCount 0인지 확인하고 진입하는 코드 삭제???
+
+rpc 복습 필요
 ```

@@ -35,23 +35,27 @@ __int64 SessionManager::requireId()
 void SessionManager::addSession(Session* session)
 {
 	//lock_.lock();
+
 	sessionMap_.insert({ session->id(), session });
-	//.unlock();
 
 	sessionSize_++;
 
-	LOG_INFO(L"[NETWORK] session create count=%d", sessionSize_);
+	//lock_.unlock();
+
+	//LOG_INFO(L"[NETWORK] session create count=%d", sessionSize_);
 }
 
 void SessionManager::removeSession(Session* session)
 {
 	//lock_.lock();
+
 	sessionMap_.erase(session->id());
-	//lock_.unlock();
 
 	sessionSize_--;
 
-	LOG_INFO(L"[NETWORK] session delete count=%d", sessionSize_);
+	//lock_.unlock();
+
+	//LOG_INFO(L"[NETWORK] session delete count=%d", sessionSize_);
 
 	// erase에서 세션 삭제???
 	closesocket(session->socket());
@@ -61,12 +65,14 @@ void SessionManager::removeSession(Session* session)
 
 Session* SessionManager::find(__int64 id)
 {
-	//lock_.lock();
-	auto it = sessionMap_.find(id);
-	//auto end = sessionMap_.end();
-	//lock_.unlock();
+	lock_.lock();
 
-	if (it != sessionMap_.end())
+	auto it = sessionMap_.find(id);
+	auto end = sessionMap_.end();
+	
+	lock_.unlock();
+
+	if (it != end)
 	{
 		return (*it).second;
 	}
