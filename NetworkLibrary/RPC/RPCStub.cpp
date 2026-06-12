@@ -5,72 +5,72 @@ IPacketHandler::~IPacketHandler()
 
 }
 
-bool IPacketHandler::sc_create_my_character(Session* session, int id, char direction, short x, short y, char hp)
+bool IPacketHandler::sc_create_my_character(__int64 sessionId, int id, char direction, short x, short y, char hp)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_create_other_character(Session* session, int id, char direction, short x, short y, char hp)
+bool IPacketHandler::sc_create_other_character(__int64 sessionId, int id, char direction, short x, short y, char hp)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_character_delete(Session* session, int id)
+bool IPacketHandler::sc_character_delete(__int64 sessionId, int id)
 {
 	return true;
 }
 
-bool IPacketHandler::cs_start_move(Session* session, char direction, short x, short y)
+bool IPacketHandler::cs_start_move(__int64 sessionId, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_start_move(Session* session, int id, char direction, short x, short y)
+bool IPacketHandler::sc_start_move(__int64 sessionId, int id, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::cs_stop_move(Session* session, char action, short x, short y)
+bool IPacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_stop_move(Session* session, int id, char action, short x, short y)
+bool IPacketHandler::sc_stop_move(__int64 sessionId, int id, char action, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::cs_attack1(Session* session, char direction, short x, short y)
+bool IPacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_attack1(Session* session, int id, char direction, short x, short y)
+bool IPacketHandler::sc_attack1(__int64 sessionId, int id, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::cs_attack2(Session* session, char direction, short x, short y)
+bool IPacketHandler::cs_attack2(__int64 sessionId, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_attack2(Session* session, int id, char direction, short x, short y)
+bool IPacketHandler::sc_attack2(__int64 sessionId, int id, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::cs_attack3(Session* session, char direction, short x, short y)
+bool IPacketHandler::cs_attack3(__int64 sessionId, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_attack3(Session* session, int id, char direction, short x, short y)
+bool IPacketHandler::sc_attack3(__int64 sessionId, int id, char direction, short x, short y)
 {
 	return true;
 }
 
-bool IPacketHandler::sc_damage(Session* session, int attackID, int damageID, char damageHP)
+bool IPacketHandler::sc_damage(__int64 sessionId, int attackID, int damageID, char damageHP)
 {
 	return true;
 }
@@ -80,7 +80,7 @@ void RPCStub::initialize(IPacketHandler* handle)
 	handle_ = handle;
 }
 
-bool RPCStub::packetProc(Session* session, Packet& packet, int type)
+bool RPCStub::packetProc(__int64 sessionId, Packet& packet, int type)
 {
 	switch (type) 
 	{
@@ -94,7 +94,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id >> direction >> x >> y >> hp;
 
-		return handle_->sc_create_my_character(session, id, direction, x, y, hp);
+		return handle_->sc_create_my_character(sessionId, id, direction, x, y, hp);
 		break;
 	}
 
@@ -108,7 +108,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id >> direction >> x >> y >> hp;
 
-		return handle_->sc_create_other_character(session, id, direction, x, y, hp);
+		return handle_->sc_create_other_character(sessionId, id, direction, x, y, hp);
 		break;
 	}
 
@@ -118,7 +118,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id;
 
-		return handle_->sc_character_delete(session, id);
+		return handle_->sc_character_delete(sessionId, id);
 		break;
 	}
 
@@ -130,7 +130,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> direction >> x >> y;
 
-		return handle_->cs_start_move(session, direction, x, y);
+		return handle_->cs_start_move(sessionId, direction, x, y);
 		break;
 	}
 
@@ -143,7 +143,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id >> direction >> x >> y;
 
-		return handle_->sc_start_move(session, id, direction, x, y);
+		return handle_->sc_start_move(sessionId, id, direction, x, y);
 		break;
 	}
 
@@ -155,7 +155,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> action >> x >> y;
 
-		return handle_->cs_stop_move(session, action, x, y);
+		return handle_->cs_stop_move(sessionId, action, x, y);
 		break;
 	}
 
@@ -168,7 +168,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id >> action >> x >> y;
 
-		return handle_->sc_stop_move(session, id, action, x, y);
+		return handle_->sc_stop_move(sessionId, id, action, x, y);
 		break;
 	}
 
@@ -180,7 +180,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> direction >> x >> y;
 
-		return handle_->cs_attack1(session, direction, x, y);
+		return handle_->cs_attack1(sessionId, direction, x, y);
 		break;
 	}
 
@@ -193,7 +193,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id >> direction >> x >> y;
 
-		return handle_->sc_attack1(session, id, direction, x, y);
+		return handle_->sc_attack1(sessionId, id, direction, x, y);
 		break;
 	}
 
@@ -205,7 +205,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> direction >> x >> y;
 
-		return handle_->cs_attack2(session, direction, x, y);
+		return handle_->cs_attack2(sessionId, direction, x, y);
 		break;
 	}
 
@@ -218,7 +218,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id >> direction >> x >> y;
 
-		return handle_->sc_attack2(session, id, direction, x, y);
+		return handle_->sc_attack2(sessionId, id, direction, x, y);
 		break;
 	}
 
@@ -230,7 +230,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> direction >> x >> y;
 
-		return handle_->cs_attack3(session, direction, x, y);
+		return handle_->cs_attack3(sessionId, direction, x, y);
 		break;
 	}
 
@@ -243,7 +243,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> id >> direction >> x >> y;
 
-		return handle_->sc_attack3(session, id, direction, x, y);
+		return handle_->sc_attack3(sessionId, id, direction, x, y);
 		break;
 	}
 
@@ -255,7 +255,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
 		packet >> attackID >> damageID >> damageHP;
 
-		return handle_->sc_damage(session, attackID, damageID, damageHP);
+		return handle_->sc_damage(sessionId, attackID, damageID, damageHP);
 		break;
 	}
 

@@ -1,9 +1,7 @@
 #include "Session.h"	
-#include "SessionManager.h"
+#include "Server.h"
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
-
-LONG cnt = 0;
 
 Session::~Session()
 {
@@ -26,10 +24,6 @@ void Session::initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
 
 	ioCount_ = 0;
 	sendPending_ = false;
-
-	lock_ = new Lock();
-
-	//LOG_INFO(L"[NETWORK] session ip=%s port=%d", ip_.c_str(), port_);
 }
 
 SOCKET Session::socket() const
@@ -54,21 +48,21 @@ int Session::port() const
 
 void Session::postRecv()
 {
-	lock_->lock();
+	sessionLock_.lock();
 
 	// 처음에 recv를 등록하기전에 카운트를 증가시킴!!!
 	InterlockedIncrement(&ioCount_);
 
 	ZeroMemory(&recvOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
 
-	lock_->unlock();
+	sessionLock_.unlock();
 
 	DWORD flags = 0;
-	int retval1;
+	int retval;
 
 	WSABUF wsaBuf[2];
 
-	lock_->lock();
+	sessionLock_.lock();
 
 	wsaBuf[0].buf = recvQueue_.getRearBufferPtr();
 	wsaBuf[0].len = recvQueue_.directEnqueueSize();
@@ -76,7 +70,7 @@ void Session::postRecv()
 	if (recvQueue_.freeSize() == recvQueue_.directEnqueueSize())
 	{
 		// buf 1개
-		retval1 = WSARecv(socket_, wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&recvOverlapped_, NULL);
+		retval = WSARecv(socket_, wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&recvOverlapped_, NULL);
 	}
 	else
 	{
@@ -84,12 +78,12 @@ void Session::postRecv()
 		wsaBuf[1].buf = recvQueue_.getBufferPtr();
 		wsaBuf[1].len = recvQueue_.freeSize() - recvQueue_.directEnqueueSize();
 
-		retval1 = WSARecv(socket_, wsaBuf, 2, nullptr, &flags, (WSAOVERLAPPED*)&recvOverlapped_, NULL);
+		retval = WSARecv(socket_, wsaBuf, 2, nullptr, &flags, (WSAOVERLAPPED*)&recvOverlapped_, NULL);
 	}
 
-	lock_->unlock();
+	sessionLock_.unlock();
 
-	if (retval1 == SOCKET_ERROR)
+	if (retval == SOCKET_ERROR)
 	{
 		int error = WSAGetLastError();
 
@@ -97,7 +91,7 @@ void Session::postRecv()
 		{
 			//printf("recv() Direct IO\n");
 		}
-		else if (error == WSAECONNRESET)
+		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
 		{
 			this->decrementIOCount();
 
@@ -118,31 +112,18 @@ void Session::postRecv()
 	}
 }
 
-// 현재 전역함수
-void onRecv(__int64 sessionId, Packet& packet)
-{
-	MESSAGE message;
-	packet >> message.data_;
-
-	Packet packet2;
-	packet2 << message.data_;
-
-	// 여기서 패킷 헤더를 넣어야함
-	SessionManager::getInstance().sendPacket(sessionId, packet2);
-}
-
 void Session::completeRecv(int numOfBytes)
 {
 	//printf("completeRecv() %d\n", numOfBytes);
-	lock_->lock();
+	sessionLock_.lock();
 
 	recvQueue_.moveRear(numOfBytes);
 
-	lock_->unlock();
+	sessionLock_.unlock();
 
 	while (1)
 	{
-		lock_->lock();
+		sessionLock_.lock();
 
 		int useSize = recvQueue_.useSize();
 
@@ -153,25 +134,25 @@ void Session::completeRecv(int numOfBytes)
 			//연결 종료 로직 필요
 		}
 
-		lock_->unlock();
+		sessionLock_.unlock();
 
 		if (useSize < sizeof(HEADER))
 			break;
 
 		HEADER header;
 
-		lock_->lock();
+		sessionLock_.lock();
 
 		recvQueue_.peek((char*)&header, sizeof(HEADER));
 
-		lock_->unlock();
+		sessionLock_.unlock();
 
 		int headerSize = header.size;
 
 		if (useSize < sizeof(HEADER) + headerSize)
 			break;
 
-		lock_->lock();
+		sessionLock_.lock();
 
 		recvQueue_.moveFront(sizeof(HEADER));
 
@@ -179,13 +160,13 @@ void Session::completeRecv(int numOfBytes)
 
 		recvQueue_.dequeue(packet.getBufferPtr(), headerSize);
 
-		lock_->unlock();
+		sessionLock_.unlock();
 
 		packet.moveWritePos(headerSize);
 
 		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
 
-		onRecv(sessionId_, packet);
+		Server::getInstance().onRecv(sessionId_, packet);
 	}
 
 	this->postRecv();
@@ -195,11 +176,11 @@ void Session::completeRecv(int numOfBytes)
 
 void Session::postSend()
 {
-	lock_->lock();
+	sessionLock_.lock();
 
 	if (InterlockedExchange(&sendPending_, 1) == 1)
 	{
-		lock_->unlock();
+		sessionLock_.unlock();
 
 		return;
 	}
@@ -210,13 +191,13 @@ void Session::postSend()
 
 	ZeroMemory(&sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
 
-	lock_->unlock();
+	sessionLock_.unlock();
 
 	int retval;
 
 	WSABUF wsaBuf[2];
 
-	lock_->lock();
+	sessionLock_.lock();
 
 	if (sendQueue_.useSize() <= sendQueue_.directDequeueSize())
 	{
@@ -242,7 +223,7 @@ void Session::postSend()
 		//PRO_END(L"send");
 	}
 
-	lock_->unlock();
+	sessionLock_.unlock();
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -252,7 +233,7 @@ void Session::postSend()
 		{
 			//printf("send Direct IO\n");
 		}
-		else if (error == WSAECONNRESET)
+		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
 		{
 			this->decrementIOCount();
 
@@ -275,7 +256,7 @@ void Session::postSend()
 
 void Session::completeSend(int numOfBytes)
 {
-	lock_->lock();
+	sessionLock_.lock();
 
 	sendQueue_.moveFront(numOfBytes);
 
@@ -284,7 +265,7 @@ void Session::completeSend(int numOfBytes)
 	// 추가
 	int useSize = sendQueue_.useSize();
 
-	lock_->unlock();
+	sessionLock_.unlock();
 
 	if (useSize > 0)
 		this->postSend();
@@ -306,29 +287,28 @@ void Session::sendPacket(Packet& packet)
 	header.size = packet.useSize();
 
 	/// 여길 반드시 잠궈야 oversend 정상적으로 동작
-	lock_->lock();
+	sessionLock_.lock();
 
 	sendQueue_.enqueue((char*)&header, sizeof(HEADER));
 	sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
 
-	lock_->unlock();
+	sessionLock_.unlock();
 
 	this->postSend();
 }
 
 void Session::decrementIOCount()
 {
-	lock_->lock();
+	//sessionLock_.lock();
 
 	if (InterlockedDecrement(&ioCount_) == 0)
 	{
-		SessionManager::getInstance().removeSession(this);
+		Server::getInstance().disconnect(sessionId_);
 
-		lock_->unlock();
-		delete lock_;
+		//sessionLock_.unlock();
 
 		return;
 	}
 
-	lock_->unlock();
+	//sessionLock_.unlock();
 }

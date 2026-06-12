@@ -16,9 +16,6 @@ TickController::TickController()
 	fpsCount_ = 0;
 	targetFps_ = TARGET_FPS;
 	fps_ = 0;
-
-	tps_ = 0;
-	tpsCount_ = 0;
 }
 
 float TickController::deltaTime() const
@@ -29,11 +26,6 @@ float TickController::deltaTime() const
 int TickController::fps() const
 {
 	return fps_;
-}
-
-int TickController::tps() const
-{
-	return tps_;
 }
 
 void TickController::setNormalFps()
@@ -73,19 +65,11 @@ void TickController::update()
 
 		fps_ = fpsCount_;
 		fpsCount_ = 0;
-
-		tps_ = InterlockedExchange(&tpsCount_, 0);
 	}
-}
-
-void TickController::incrementTpsCount()
-{
-	InterlockedIncrement(&tpsCount_);
 }
 
 void TickController::print()
 {
 	printf("[Profile] FPS  : %d\n", fps_);
-	printf("[Profile] TPS  : %d\n", tps_);
 	printf("---------------------------------\n");
 }

@@ -14,25 +14,10 @@ RingBuffer::~RingBuffer()
 	free(buffer_);
 }
 
-int RingBuffer::capacity() const
-{
-	return capacity_;
-}
-
-bool RingBuffer::isFull() const
-{
-	return ((writePos_ + 1) % capacity_ == readPos_);
-}
-
 void RingBuffer::clear()
 {
 	writePos_ = 0;
 	readPos_ = 0;
-}
-
-int RingBuffer::safeSize() const
-{
-	return safeSize_;
 }
 
 int RingBuffer::useSize() const
@@ -45,6 +30,31 @@ int RingBuffer::useSize() const
 int RingBuffer::freeSize() const
 {
 	return capacity_ - useSize() - 1;
+}
+
+int RingBuffer::safeSize() const
+{
+	return safeSize_;
+}
+
+bool RingBuffer::isFull() const
+{
+	return ((writePos_ + 1) % capacity_ == readPos_);
+}
+
+char* RingBuffer::getBufferPtr() const
+{
+	return buffer_;
+}
+
+char* RingBuffer::getFrontBufferPtr() const
+{
+	return buffer_ + readPos_;
+}
+
+char* RingBuffer::getRearBufferPtr() const
+{
+	return buffer_ + writePos_;
 }
 
 int RingBuffer::enqueue(const char* data, int size)
@@ -89,55 +99,6 @@ int RingBuffer::dequeue(char* data, int size)
 		memcpy(data, buffer_ + readPos_, size);
 
 	readPos_ = (readPos_ + size) % capacity_;
-
-	return size;
-}
-
-int RingBuffer::enqueueLocked(const char* data, int size)
-{
-	lock_.lock();
-
-	/// 1회 리사이즈 로직으로 변경 필요
-	if (freeSize() < size)
-	{
-		printf("queue size over!\n");
-		DebugBreak();
-		return 0;
-	}
-
-	if (capacity_ < writePos_ + size)
-	{
-		memcpy(buffer_ + writePos_, data, capacity_ - writePos_);
-		memcpy(buffer_, data + (capacity_ - writePos_), size - (capacity_ - writePos_));
-	}
-	else
-		memcpy(buffer_ + writePos_, data, size);
-
-	writePos_ = (writePos_ + size) % capacity_;
-
-	lock_.unlock();
-
-	return size;
-}
-
-int RingBuffer::dequeueLocked(char* data, int size)
-{
-	lock_.lock();
-
-	//if (useSize() < size)
-	//	return 0;
-
-	if (capacity_ < readPos_ + size)
-	{
-		memcpy(data, buffer_ + readPos_, capacity_ - readPos_);
-		memcpy(data + (capacity_ - readPos_), buffer_, size - (capacity_ - readPos_));
-	}
-	else
-		memcpy(data, buffer_ + readPos_, size);
-
-	readPos_ = (readPos_ + size) % capacity_;
-
-	lock_.unlock();
 
 	return size;
 }
@@ -196,17 +157,12 @@ int RingBuffer::moveRear(int size)
 	return size;
 }
 
-char* RingBuffer::getBufferPtr() const
+void RingBuffer::lock()
 {
-	return buffer_;
+	lock_.lock();
 }
 
-char* RingBuffer::getFrontBufferPtr() const
+void RingBuffer::unlock()
 {
-	return buffer_ + readPos_;
-}
-
-char* RingBuffer::getRearBufferPtr() const
-{
-	return buffer_ + writePos_;
+	lock_.unlock();
 }

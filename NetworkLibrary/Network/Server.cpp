@@ -1,22 +1,21 @@
 #pragma comment(lib, "ws2_32.lib")
 #include <process.h>
-#include <WS2tcpip.h>
 #include "Server.h"	
 #include "Session.h"
-#include "SessionManager.h"
+#include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
 #include "../Utils/Profiler.h"
-
-auto& sm = SessionManager::getInstance();
+#pragma comment(lib, "winmm.lib")
 
 Server::Server()
+	:idSeed_(0), sessionCount_(0)
 {
-	ip_ = L"0.0.0.0";
-	port_ = SERVER_PORT;
+	sessionMap_.reserve(MAX_SESSION);
+
+	// manual reset
+	hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	WSADATA wsa;
-	//ip_ = ConfigManager::getInstance().network_.ip;
-	//port_ = ConfigManager::getInstance().network_.port;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
 		ERR(L"WSAStartup() error");
@@ -27,8 +26,14 @@ Server::~Server()
 	WSACleanup();
 }
 
-void Server::initialize()
+void Server::start()
 {
+	//ip_ = ConfigManager::getInstance().network_.ip;
+	//port_ = ConfigManager::getInstance().network_.port;
+
+	ip_ = L"0.0.0.0";
+	port_ = SERVER_PORT;
+
 	hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, CONCURRENT_NUM);
 
 	for (int i = 0; i < WORKER_NUM; i++)
@@ -73,10 +78,12 @@ void Server::initialize()
 
 	hAcceptThread_ = (HANDLE)_beginthreadex(nullptr, 0, acceptThread, this, 0, nullptr);
 
+	hMonitorThread_ = (HANDLE)_beginthreadex(nullptr, 0, mornitorThread, this, 0, nullptr);
+
 	LOG_INFO(L"[NETWORK] server start");
 }
 
-void Server::serverExit()
+void Server::stop()
 {
 	closesocket(listenSocket_);
 
@@ -86,20 +93,132 @@ void Server::serverExit()
 	}
 
 	WaitForSingleObject(hAcceptThread_, INFINITE);
-	WaitForMultipleObjects(WORKER_NUM, hWorkerThread_, TRUE, INFINITE);
-
 	CloseHandle(hAcceptThread_);
+
+	WaitForMultipleObjects(WORKER_NUM, hWorkerThread_, TRUE, INFINITE);
 
 	for (int i = 0; i < WORKER_NUM; i++)
 	{
 		CloseHandle(hWorkerThread_[i]);
 	}
 
-	// 세션맵 정리??
+	SetEvent(hEvent);
+	WaitForSingleObject(hMonitorThread_, INFINITE);
+	CloseHandle(hMonitorThread_);
+	CloseHandle(hEvent);
+
+	for (auto& session : sessionMap_)
+	{
+		delete session.second;
+	}
 
 	CloseHandle(hIOCP_);
 
 	LOG_INFO(L"[NETWORK] server exit");
+}
+
+int Server::sessionCount() const
+{
+	return sessionCount_;
+}
+
+bool Server::disconnect(__int64 sessionId)
+{
+	Session* session = this->findSession(sessionId);
+
+	if (session == nullptr)
+		return false;
+
+	mapLock_.lock();
+
+	sessionMap_.erase(sessionId);
+
+	mapLock_.unlock();
+
+	delete session;
+
+	//LOG_INFO(L"[NETWORK] session delete count=%d", sessionSize_);
+
+	InterlockedDecrement(&sessionCount_);
+
+	return true;
+}
+
+bool Server::sendPacket(__int64 sessionId, Packet& packet)
+{
+	Session* session = this->findSession(sessionId);
+
+	if (session)
+	{
+		session->sendPacket(packet);
+
+		return true;
+	}
+	else
+		return false;
+}
+
+bool Server::onConnectionRequest(const std::wstring& ip, int port)
+{
+	if (sessionCount_ >= MAX_SESSION)
+	{
+		LOG(L"[Network] session limit over");
+
+		return false;
+	}
+
+	{
+		// TODO: lan 외부 ip / 해외 ip / DDos 공격 차단
+	}
+
+	return true;
+}
+
+void Server::onAccept(__int64 sessionId)
+{
+
+}
+
+void Server::onRelease(__int64 sessionId)
+{
+
+}
+
+void Server::onRecv(__int64 sessionId, Packet& packet)
+{
+	MESSAGE message;
+	packet >> message.data_;
+
+	Packet packet2;
+	packet2 << message.data_;
+
+	// 호출부 안에서 패킷 헤더를 삽입
+	this->sendPacket(sessionId, packet2);
+}
+
+void Server::onError(int errorCode, wchar_t* str)
+{
+
+}
+
+int Server::acceptTps()
+{
+	return acceptTps_;
+}
+
+int Server::recvMessageTps()
+{
+	return recvMessageTps_;
+}
+
+int Server::sendMessageTps()
+{
+	return sendMessageTps_;
+}
+
+void Server::printTps()
+{
+	wprintf(L"acceptTps: %d\nrecvMessageTps: %d\nsendMessageTps: %d\n", acceptTps_, recvMessageTps_, sendMessageTps_);
 }
 
 unsigned int __stdcall Server::acceptThread(void* param)
@@ -127,41 +246,42 @@ unsigned int __stdcall Server::acceptThread(void* param)
 				ERR(L"accept() error");
 			}
 		}
-		server->onAccept(clientSock, clientAddr);
+
+		InterlockedIncrement(&server->acceptCount_);
+
+		/// TODO: ip.c_str() 로 바꾸면 안됨?
+		wchar_t str[16];
+		InetNtop(AF_INET, &clientAddr.sin_addr, str, 16);
+		std::wstring ip = str;
+		int port = ntohs(clientAddr.sin_port);
+
+		if (!server->onConnectionRequest(ip, port))
+			continue;
+
+		Session* session = new Session();
+		// idSeed_는 이 스레드에서만 변경 가능하므로 인터락 적용 x
+		session->initialize(clientSock, ip, port, ++(server->idSeed_));
+
+		//LOG_INFO(L"[NETWORK] session ip=%s port=%d", ip, port);
+
+		server->mapLock_.lock();
+
+		server->sessionMap_.insert({ session->id(), session });
+
+		server->mapLock_.unlock();
+
+		InterlockedIncrement(&(server->sessionCount_));
+
+		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
+
+		//LOG_INFO(L"[NETWORK] session create count=%d", server->sessionCount_);
+
+		session->postRecv();
+
+		server->onAccept(session->id());
 	}
 
 	return 0;
-}
-
-void Server::onAccept(SOCKET socket, SOCKADDR_IN sockAddr)
-{
-	// 세션 생성 전에 최대세션 확인?
-	//if (SessionManager::getInstance().isFull())
-	//{
-	//	closesocket(socket);
-	//	LOG(L"[Network] session limit over");
-	//	return;
-	//}
-
-	wchar_t str[16];
-	InetNtop(AF_INET, &sockAddr.sin_addr, str, 16);
-	std::wstring ip = str;
-
-	// TODO: 접속된 ip 확인
-	// 해외 ip 차단
-	// 서버 공격은 LAN 외부 ip 기준일까?
-	// 아니면 더미는 내 ip니까 그냥 모든 외부 ip에 연결 제한을 두는 개념?
-
-	int port = ntohs(sockAddr.sin_port);
-
-	Session* session = new Session();
-	session->initialize(socket, ip, port, SessionManager::getInstance().requireId());
-
-	SessionManager::getInstance().addSession(session);
-
-	CreateIoCompletionPort((HANDLE)socket, hIOCP_, (ULONG_PTR)session, 0);
-
-	session->postRecv();
 }
 
 unsigned int __stdcall Server::workerThread(void* param)
@@ -179,8 +299,6 @@ unsigned int __stdcall Server::workerThread(void* param)
 
 		// GQCS 호출 반환시 overlapped 구조체 무조건 세팅됨
 		BOOL ret = GetQueuedCompletionStatus(server->hIOCP_, &numOfBytes, (PULONG_PTR)&session, &overlapped, INFINITE);
-
-		InterlockedIncrement(&cnt);
 
 		if (overlapped == nullptr && session == nullptr && numOfBytes == 0)
 		{
@@ -249,19 +367,81 @@ unsigned int __stdcall Server::workerThread(void* param)
 			if (numOfBytes == 0)
 			{
 				session->decrementIOCount();
-				
+
 				continue;
 			}
 
 			session->completeRecv(numOfBytes);
+
+			InterlockedIncrement(&server->recvMessageCount_);
 		}
 		else
 		{
 			session->completeSend(numOfBytes);
-		}
 
-		InterlockedDecrement(&cnt);
+			InterlockedIncrement(&server->sendMessageCount_);
+		}
 	}
 
 	return 0;
+}
+
+unsigned int __stdcall Server::mornitorThread(void* param)
+{
+	Server* server = (Server*)param;
+
+	// 시간차는 int형으로 선언
+	int sleepTime = 0;
+	DWORD lastSecond = timeGetTime();
+
+	while (1)
+	{
+		DWORD dw = WaitForSingleObject(server->hEvent, sleepTime);
+
+		switch (dw)
+		{
+		case WAIT_TIMEOUT:
+		{
+			DWORD curTime = timeGetTime();
+
+			while (1)
+			{
+				int deltaTime = curTime - lastSecond;
+
+				sleepTime = CLOCKS_PER_SEC - deltaTime;
+
+				lastSecond += CLOCKS_PER_SEC;
+
+				server->acceptTps_ = InterlockedExchange(&server->acceptCount_, 0);
+				server->recvMessageTps_ = InterlockedExchange(&server->recvMessageCount_, 0);
+				server->sendMessageTps_ = InterlockedExchange(&server->sendMessageCount_, 0);
+
+				if (sleepTime > 0)
+					break;
+			}
+		}
+		break;
+
+		case WAIT_OBJECT_0:
+			LOG_INFO(L"[NETWORK] monitor thread exit");
+			return 0;
+		}
+	}
+}
+
+Session* Server::findSession(__int64 sessionId)
+{
+	mapLock_.lock();
+
+	auto it = sessionMap_.find(sessionId);
+	auto end = sessionMap_.end();
+
+	mapLock_.unlock();
+
+	if (it != end)
+	{
+		return (*it).second;
+	}
+	else
+		return nullptr;
 }

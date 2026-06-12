@@ -63,18 +63,18 @@ CrashDump의 MiniDumpWriteDump 의 MiniDumpWithFullMemory는 정확히 어떤 �
 카운트는 무슨 의미? 여러파일에서 0바이트는 잘못된거임? 파일 하나만 생성해도 괜찮음?
 덤프에서 메모리 NP풀 사용량? 즉 모니터링 기능? 모니터링에는 기록의 역할은 없지 않음?
 
-디버깅시 항상 문제 → 원인 → 해결
 
 Lock 없이, sendQ 어케 동기화? 인큐가 두번이라, 큐 자체 락으로는 힘들다..
-
 ```
 
 ## DevLog
 ### 이전
 ```text
+문제 발생 -> 원인 완벽하게 파악 (디버깅, 로그, ...) -> 해결
+
 지연삭제 -> 이터레이터로 인한 문제 방지. 즉 배열은 적용 x
 
-accept thread 분리, accept()는 블로킹으로 why? 쓸데없이 도는 코드는 없어야하므로..
+accept thread 분리, accept()는 블로킹으로 why? 쓸데없이 도는 코드는 절대 없어야함
 ```
 ### 26-06-03
 
@@ -160,5 +160,12 @@ sendQueue 내부적으로 락을 적용한다고 해도, 결국 enqueue 호출�
 ```text
 세션맵 잠금 없을때 더미에서 재연결 옵션시 read access violation 발생
 상대가 closesocket()시 (rst x) GQCS 성공 반환 후 numOfBytes 0 전달됨 -> 예외처리
+
+```
+
+### 26-06-12
+```text
+Server, SessionManager 클래스 -> LanServer 클래스 전면수정
+
 
 ```

@@ -29,42 +29,29 @@ private:
 
 public:
 	RingBuffer(int bufferSize = 100);
-
 	~RingBuffer();
-
-	int capacity() const;
-
-	bool isFull() const;
 
 	void clear();
 
-	int safeSize() const;
-
 	int useSize() const;
-
 	int freeSize() const;
+	int safeSize() const;
+	bool isFull() const;
+
+	char* getBufferPtr() const;
+	char* getFrontBufferPtr() const;
+	char* getRearBufferPtr() const;
 
 	int enqueue(const char* data, int size);
-
 	int dequeue(char* data, int size);
-
-	int enqueueLocked(const char* data, int size);
-
-	int dequeueLocked(char* data, int size);
-
 	int peek(char* data, int size) const;
 
 	int directEnqueueSize() const;
-
 	int directDequeueSize() const;
 
 	int moveFront(int size);
-
 	int moveRear(int size);
 
-	char* getBufferPtr() const;
-
-	char* getFrontBufferPtr() const;
-
-	char* getRearBufferPtr() const;
+	void lock();
+	void unlock();
 };

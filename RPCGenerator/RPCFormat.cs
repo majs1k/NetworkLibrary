@@ -11,8 +11,6 @@ namespace PacketGenerator
         public static string proxyHeader =
 @"#pragma once
 
-class Session;
-
 class RPCProxy
 {{
 public:{0}
@@ -21,19 +19,19 @@ public:{0}
 
         public static string proxyHeaderFunc =
 @"
-	static void {0}(Session* session{1});";
+	static void {0}(__int64 sessionId{1});";
 
         public static string funcParam =
 @"{0} {1}";
 
         public static string proxyCpp =
 @"#include ""RPCProxy.h""
-#include ""../Network/Session.h""
+#include ""../Network/Server.h""
 {0}";
 
         public static string proxyCppFunc =
 @"
-void RPCProxy::{0}(Session* session{1})
+void RPCProxy::{0}(__int64 sessionId{1})
 {{
 	Packet packet;
 	int size = 0{2};
@@ -41,7 +39,7 @@ void RPCProxy::{0}(Session* session{1})
 	packet << (unsigned char)0x89 << (unsigned char)size << (unsigned char){3};
 	packet{4};
 
-	session->sendPacket(packet);
+	Server::getInstance().sendPacket(sessionId, packet);
 }}
 ";
 
@@ -74,13 +72,13 @@ private:
 
 public:
 	void initialize(IPacketHandler* handle);
-	bool packetProc(Session* session, Packet& packet, int type);
+	bool packetProc(__int64 sessionId, Packet& packet, int type);
 }};
 ";
 
         public static string stubHeaderFunc =
 @"
-	virtual bool {0}(Session* session{1});";
+	virtual bool {0}(__int64 sessionId{1});";
 
 
 
@@ -99,7 +97,7 @@ void RPCStub::initialize(IPacketHandler* handle)
 	handle_ = handle;
 }}
 
-bool RPCStub::packetProc(Session* session, Packet& packet, int type)
+bool RPCStub::packetProc(__int64 sessionId, Packet& packet, int type)
 {{
 	switch (type) 
 	{{{1}
@@ -115,7 +113,7 @@ bool RPCStub::packetProc(Session* session, Packet& packet, int type)
 
         public static string stubCppFunc1 =
 @"
-bool IPacketHandler::{0}(Session* session{1})
+bool IPacketHandler::{0}(__int64 sessionId{1})
 {{
 	return true;
 }}
@@ -128,7 +126,7 @@ bool IPacketHandler::{0}(Session* session{1})
 {1}
 		packet{2};
 
-		return handle_->{3}(session{4});
+		return handle_->{3}(sessionId{4});
 		break;
 	}}
 ";

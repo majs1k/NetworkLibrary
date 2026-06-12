@@ -26,20 +26,15 @@ class TickController : public Singleton<TickController>
 	int fpsCount_;
 	int targetFps_;
 
-	int tps_;
-	LONG tpsCount_;
-
 public:
 	TickController();
 
 	float deltaTime() const;
 	int fps() const;
-	int tps() const;
 
 	void setNormalFps();
 	void setSlowFps();
 
 	void update();
-	void incrementTpsCount();
 	void print();
 };

@@ -1,24 +1,23 @@
 #include "PacketHandler.h"
 #include "Player.h"
 #include "../Network/Session.h"
-#include "../Network/SessionManager.h"
 #include "../RPC/RPCProxy.h"
 #include "../Utils/Logger.h"
 
-bool PacketHandler::cs_start_move(Session* session, char direction, short x, short y)
+bool PacketHandler::cs_start_move(__int64 sessionId, char direction, short x, short y)
 {
-	Player* player = PlayerManager::getInstance().findBySessionId(session->id());
+	Player* player = PlayerManager::getInstance().findBySessionId(sessionId);
 	if (player == nullptr)
 		return false;
 
 	// 이동 오류 체크
 	if (ERROR_RANGE < abs(x - (int)(player->x())) || ERROR_RANGE < abs(y - (int)(player->y())))
 	{
-		LOG(L"[Network] invalid coord session=%d", session->id());
+		LOG(L"[Network] invalid coord session=%d", sessionId);
 
 		return false;
 	}
-	
+
 	player->action_ = direction;
 
 	switch (direction)
@@ -44,26 +43,22 @@ bool PacketHandler::cs_start_move(Session* session, char direction, short x, sho
 		if (other == player)
 			continue;
 
-		Session* otherSession = SessionManager::getInstance().find(other->sessionId());
-		if (otherSession == nullptr)
-			continue;
-
-		RPCProxy::sc_start_move(otherSession, player->playerId_, player->action_, (short)player->x_, (short)player->y_);
+		RPCProxy::sc_start_move(other->sessionId(), player->playerId_, player->action_, (short)player->x_, (short)player->y_);
 	}
 
 	return true;
 }
 
-bool PacketHandler::cs_stop_move(Session* session, char action, short x, short y)
+bool PacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short y)
 {
-	Player* player = PlayerManager::getInstance().findBySessionId(session->id());
+	Player* player = PlayerManager::getInstance().findBySessionId(sessionId);
 	if (player == nullptr)
 		return false;
 
 	// 이동 오류 체크
 	if (ERROR_RANGE < abs(x - (int)(player->x_)) || ERROR_RANGE < abs(y - (int)(player->y_)))
 	{
-		LOG(L"[Network] invalid coord session=%d", session->id());
+		LOG(L"[Network] invalid coord session=%d", sessionId);
 
 		return false;
 	}
@@ -78,19 +73,15 @@ bool PacketHandler::cs_stop_move(Session* session, char action, short x, short y
 		if (other == player)
 			continue;
 
-		Session* otherSession = SessionManager::getInstance().find(other->sessionId());
-		if (otherSession == nullptr)
-			continue;
-
-		RPCProxy::sc_stop_move(otherSession, player->playerId_, player->direction_, (short)player->x_, (short)player->y_);
+		RPCProxy::sc_stop_move(other->sessionId(), player->playerId_, player->direction_, (short)player->x_, (short)player->y_);
 	}
 
 	return true;
 }
 
-bool PacketHandler::cs_attack1(Session* session, char direction, short x, short y)
+bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short y)
 {
-	Player* player = PlayerManager::getInstance().findBySessionId(session->id());
+	Player* player = PlayerManager::getInstance().findBySessionId(sessionId);
 	if (player == nullptr)
 		return false;
 
@@ -98,17 +89,13 @@ bool PacketHandler::cs_attack1(Session* session, char direction, short x, short 
 	player->x_ = x;
 	player->y_ = y;
 
-	for (auto other : PlayerManager::getInstance().playerList_)
+	for (auto& other : PlayerManager::getInstance().playerList_)
 	{
 		if (other == player)
 			continue;
 
-		Session* otherSession = SessionManager::getInstance().find(other->sessionId());
-		if (otherSession == nullptr)
-			continue;
-
 		// 단순히 공격 이펙트만 전송
-		RPCProxy::sc_attack1(otherSession, player->playerId_, player->direction_, player->x_, player->y_);
+		RPCProxy::sc_attack1(other->sessionId(), player->playerId_, player->direction_, player->x_, player->y_);
 	}
 
 	Player* target = nullptr;
@@ -152,15 +139,23 @@ bool PacketHandler::cs_attack1(Session* session, char direction, short x, short 
 
 	for (auto& other : PlayerManager::getInstance().playerList_)
 	{
-		Session* otherSession = SessionManager::getInstance().find(other->sessionId());
-		if (otherSession == nullptr)
-			continue;
-
-		RPCProxy::sc_damage(otherSession, player->playerId_, target->playerId_, target->hp_);
+		RPCProxy::sc_damage(other->sessionId(), player->playerId_, target->playerId_, target->hp_);
 	}
 
 	if (target->hp_ <= 0)
+	{
+		for (auto& other : PlayerManager::getInstance().playerList_)
+		{
+			if (other == player)
+				continue;
+
+			RPCProxy::sc_character_delete(other->sessionId(), player->playerId());
+		}
+
+		PlayerManager::getInstance().removePlayer(player);
+
 		return false;
+	}
 
 	return true;
 }

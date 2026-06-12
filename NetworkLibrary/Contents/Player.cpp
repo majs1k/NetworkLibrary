@@ -1,6 +1,5 @@
 #include "Player.h"
 #include "../Network/Session.h"
-#include "../Network/SessionManager.h"
 #include "../RPC/RPCProxy.h"
 #include "../Utils/Random.h"
 #include "../Utils/TickController.h"
@@ -17,11 +16,9 @@ void Player::initialize(Session* session)
 	x_ = RAND(RANGE_MOVE_LEFT, RANGE_MOVE_RIGHT);
 	y_ = RAND(RANGE_MOVE_TOP, RANGE_MOVE_BOTTOM);
 	hp_ = MAX_HP;
-
-	isActive_ = true;
 }
 
-int Player::id() const
+int Player::playerId() const
 {
 	return playerId_;
 }
@@ -54,16 +51,6 @@ float Player::y() const
 char Player::hp() const
 {
 	return hp_;
-}
-
-bool Player::isActive() const
-{
-	return isActive_;
-}
-
-void Player::deactivate()
-{
-	isActive_ = false;
 }
 
 void Player::move()
@@ -172,74 +159,47 @@ void PlayerManager::createPlayer(Session* session)
 	// db 구현후 플레이어 id는 조회 필요
 	Player* player = new Player();
 	player->initialize(session);
-	playerList_.push_back(player);
-	size_++;
 
-	int id = player->id();
+	/// TODO: Lock 필요
+	playerList_.push_back(player);
+	playerSize_++;
+
+	int id = player->playerId();
 	int direction = player->direction();
 	short x = static_cast<short>(player->x());
 	short y = static_cast<short>(player->y());
 	char hp = player->hp();
 
 	// 내 캐릭터 정보 나에게
-	RPCProxy::sc_create_my_character(session, id, direction, x, y, hp);
+	RPCProxy::sc_create_my_character(session->id(), id, direction, x, y, hp);
 
 	for (auto& other : playerList_)
 	{
-		if (other->id() == id)
-			continue;
-
-		Session* otherSession = SessionManager::getInstance().find(other->sessionId());
-		if (otherSession == nullptr)
+		if (other->playerId() == id)
 			continue;
 
 		// 내 캐릭터 정보 남에게
-		RPCProxy::sc_create_other_character(otherSession, id, direction, x, y, hp);
+		RPCProxy::sc_create_other_character(other->sessionId(), id, direction, x, y, hp);
 
 		// 남 캐릭터 정보 나에게
-		RPCProxy::sc_create_other_character(session, other->id(), other->direction(), (short)other->x(), (short)other->y(), other->hp());
+		RPCProxy::sc_create_other_character(player->sessionId(), other->playerId(), other->direction(), (short)other->x(), (short)other->y(), other->hp());
 
 		if (other->action() == MOVE_DIR_NONE)
 			continue;
 
 		// 남 캐릭터 이동중이면 나에게
-		RPCProxy::sc_start_move(session, other->id(), other->action(), (short)other->x(), (short)other->y());
+		RPCProxy::sc_start_move(player->sessionId(), other->playerId(), other->action(), (short)other->x(), (short)other->y());
 	}
 }
 
-void PlayerManager::remove(Player* player)
+void PlayerManager::removePlayer(Player* player)
 {
-	player->deactivate();
+	/// TODO: Lock 필요
+	playerList_.remove(player);
 
-	for (auto& other : playerList_)
-	{
-		if (other == player)
-			continue;
+	delete player;
 
-		Session* otherSession = SessionManager::getInstance().find(other->sessionId());
-		if (otherSession == nullptr)
-			continue;
-
-		RPCProxy::sc_character_delete(otherSession, player->id());
-	}
-}
-
-void PlayerManager::lazyDeletion()
-{
-	for (auto it = playerList_.begin(); it != playerList_.end(); )
-	{
-		Player* player = *it;
-
-		if (!player->isActive())
-		{
-			delete player;
-			size_--;
-
-			it = playerList_.erase(it);
-		}
-		else
-			++it;
-	}
+	playerSize_--;
 }
 
 Player* PlayerManager::findBySessionId(int sessionId)
@@ -257,20 +217,9 @@ void PlayerManager::update()
 {
 	for (auto& player : playerList_)
 	{
-		// FIXME: 컨텐츠 분리 작업 수업 후 수정 요함
-		Session* session = SessionManager::getInstance().find(player->sessionId());
-
-		if (session == nullptr)
-		{
-			PlayerManager::getInstance().remove(player);
-			continue;
-		}
-
 		if (player->action() == MOVE_DIR_NONE)
 			continue;
 
 		player->move();
 	}
-
-	this->lazyDeletion();
 }

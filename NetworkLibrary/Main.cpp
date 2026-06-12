@@ -20,20 +20,17 @@ int main()
 
 	RPCStub::getInstance().initialize(new PacketHandler());
 
-	Server::getInstance().initialize();
+	Server::getInstance().start();
 
 	while (1)
 	{
 		int c = _getch();
 
-		// 추가할만한 명령어?
 		if (c == 'x')
 			break;
 
-		if (c == 'a')
-		{
-			printf("cnt : %d\n", cnt);
-		}
+		if (c == 'p')
+			Server::getInstance().printTps();
 	}
 
 	//while (!_shutdown)
@@ -42,7 +39,7 @@ int main()
 	//	TickController::getInstance().update();
 	//}
 	
-	Server::getInstance().serverExit();
+	Server::getInstance().stop();
 
 	return 0;
 }

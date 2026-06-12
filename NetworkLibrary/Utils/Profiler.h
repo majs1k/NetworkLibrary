@@ -2,13 +2,17 @@
 // 
 // 프로파일러
 // 
+// QueryPerformanceCounter로 인자 전달한 후 QuadPart로 시간 추출
+// Profile 클래스 멤버변수들은 100ns 단위 (정밀함을 위함)
+// 파일 출력은 us단위로 진행
+// 
 // 1. 시간을 측정해서 로직 개선 / 자료구조 수정
 // 2. 호출횟수를 측정해서 자주 호출되는 함수 성능 개선 (80-20 법칙)
 // 
 // 스페이스바 -> 파일 저장
 // C키 -> 리셋
 //
-// 프로그램 실행 후, 리셋 1회 필요
+// 프로그램 실행 후, 프로파일러 리셋 1회 권장
 // 
 // -------------------------------------------------------------------
 #pragma once
@@ -20,6 +24,7 @@
 #include <unordered_map>
 #include <conio.h>
 #include <process.h>
+#include <timeapi.h>
 #include <Windows.h>
 
 #include "Singleton.h"
@@ -42,7 +47,6 @@
 struct Profile
 {
 	std::wstring		name_;
-
 
 	__int64				totalTime_;
 	__int64				minTime_;
@@ -104,9 +108,9 @@ public:
 
 	~Profiler()
 	{
-		for (auto profile : profileMap_)
+		for (auto& p : profileMap_)
 		{
-			delete profile.second;
+			delete p.second;
 		}
 	}
 
@@ -117,9 +121,9 @@ public:
 
 	void clear()
 	{
-		for (auto profile : profileMap_)
+		for (auto& p : profileMap_)
 		{
-			profile.second->clear();
+			p.second->clear();
 		}
 
 		std::wcout << L"Profiler clear" << std::endl;
@@ -157,8 +161,8 @@ public:
 
 		Profile* profile = this->find(name);
 
-		// QueryPerformanceCounter로 인자 전달한 후 QuadPart로 시간 추출
-		__int64 timeDiff = (__int64)((endTime.QuadPart - profile->startTime_.QuadPart) * 10'000'000 / freq_.QuadPart); // 100ns 단위 환산
+		// 100ns 단위 환산
+		__int64 timeDiff = (__int64)((endTime.QuadPart - profile->startTime_.QuadPart) * 10'000'000 / freq_.QuadPart);
 
 		profile->update(timeDiff);
 	}
@@ -169,7 +173,8 @@ public:
 		GetLocalTime(&st);
 
 		WCHAR fileName[MAX_PATH];
-		swprintf_s(fileName, MAX_PATH, L"./Log/profiler_%04d%02d%02d_%02d%02d%02d.txt", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+		swprintf_s(fileName, MAX_PATH, L"./Log/profiler_%04d%02d%02d_%02d%02d%02d.txt", 
+			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
 		std::wofstream fout(fileName);
 
@@ -185,30 +190,31 @@ public:
 
 		fout << L"--------------------------------------------------------------------------------------" << std::endl;
 
-		for (auto& pro : profileMap_)
+		for (auto& p : profileMap_)
 		{
-			Profile* profile = pro.second;
+			Profile* profile = p.second;
 
 			if (profile->call_ <= 2)
 				continue;
 
 			fout << std::fixed << std::setprecision(3)
 				<< std::setw(15) << profile->name_
-				<< std::setw(15) << (double)(profile->totalTime_ - profile->minTime_ - profile->maxTime_) / 10 / (profile->call_ - 2)
-				<< std::setw(15) << (double)profile->minTime_ / 10
-				<< std::setw(15) << (double)profile->maxTime_ / 10
+				<< std::setw(15) << static_cast<double>(profile->totalTime_ - profile->minTime_ - profile->maxTime_)
+				/ 10 / (profile->call_ - 2)
+				<< std::setw(15) << static_cast<double>(profile->minTime_ / 10)
+				<< std::setw(15) << static_cast<double>(profile->maxTime_ / 10)
 				<< std::setw(15) << profile->call_
 				<< std::endl;
 		}
 
 		fout.close();
 
-		std::wcout << L"Profiler saved" << std::endl;
+		wprintf(L"profiler saved\n");
 	}
 
 	static unsigned int __stdcall profilerThread(void* param)
 	{
-		Profiler* profiler = (Profiler*)param;
+		Profiler* profiler = reinterpret_cast<Profiler*>(param);
 
 		while (1)
 		{

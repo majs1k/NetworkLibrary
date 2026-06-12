@@ -70,23 +70,18 @@ private:
 	float y_;
 	char hp_;
 
-	bool isActive_;
-
-	/// 메세지 쿨타임 추가 필요
+	/// TODO: 메세지 쿨타임 추가
 
 public:
 	void initialize(Session* session);
 
-	int id() const;
+	int playerId() const;
 	int sessionId() const;
 	int action() const;
 	int direction() const;
 	float x() const;
 	float y() const;
 	char hp() const;
-	bool isActive() const;
-
-	void deactivate();
 
 	void move();
 	void moveLeft();
@@ -101,12 +96,11 @@ class PlayerManager : public Singleton<PlayerManager>
 
 private:
 	std::list<Player*> playerList_{};
-	int size_ = 0;
+	int playerSize_ = 0;
 
 public:
 	void createPlayer(Session* session);
-	void remove(Player* player);
-	void lazyDeletion();
+	void removePlayer(Player* player);
 
 	Player* findBySessionId(int sessionId);
 

@@ -4,15 +4,6 @@
 #include "../Utils/RingBuffer.h"
 #include "../Utils/Lock.h"
 
-extern LONG cnt;
-
-// ------------------------------------------------------- //
-
-struct MESSAGE
-{
-	__int64 data_;
-};
-
 // ------------------------------------------------------- //
 
 enum class IOType
@@ -53,19 +44,19 @@ private:
 
 	RingBuffer sendQueue_{ SEND_SIZE };
 	RingBuffer recvQueue_{ RECV_SIZE };
-	
+
 	OverlappedEx sendOverlapped_;
 	OverlappedEx recvOverlapped_;
 
 	LONG ioCount_;
 	LONG sendPending_;
 
-	Lock* lock_;
+	Lock sessionLock_;
 
 public:
 	~Session();
 	void initialize(SOCKET socket, std::wstring ip, int port, __int64 id);
-	
+
 	SOCKET socket() const;
 	__int64 id() const;
 
