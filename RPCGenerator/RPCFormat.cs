@@ -26,7 +26,7 @@ public:{0}
 
         public static string proxyCpp =
 @"#include ""RPCProxy.h""
-#include ""../Network/Server.h""
+#include ""../Network/LanServer.h""
 {0}";
 
         public static string proxyCppFunc =
@@ -39,7 +39,7 @@ void RPCProxy::{0}(__int64 sessionId{1})
 	packet << (unsigned char)0x89 << (unsigned char)size << (unsigned char){3};
 	packet{4};
 
-	Server::getInstance().sendPacket(sessionId, packet);
+	server->sendPacket(sessionId, packet);
 }}
 ";
 

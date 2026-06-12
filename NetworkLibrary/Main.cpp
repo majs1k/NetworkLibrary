@@ -1,16 +1,15 @@
 #include <conio.h>
-#include "./Network/Server.h"
-#include "./Network/Session.h"
+
+#include "./Network/LanServer.h"
+#include "./Network/LanTestServer.h"
+
 #include "./Contents/PacketHandler.h"
 #include "./Contents/Player.h"
+
 #include "./Utils/ConfigManager.h"
-#include "./Utils/TickController.h"
-#include "./Utils/Logger.h"
 #include "./Utils/CrashDump.h"
 
 #define CONFIG_FILENAME			L"config.json"
-
-bool _shutdown;
 
 int main()
 {
@@ -20,7 +19,9 @@ int main()
 
 	RPCStub::getInstance().initialize(new PacketHandler());
 
-	Server::getInstance().start();
+	server = new LanTestServer();
+
+	server->start();
 
 	while (1)
 	{
@@ -30,16 +31,10 @@ int main()
 			break;
 
 		if (c == 'p')
-			Server::getInstance().printTps();
+			server->printTps();
 	}
-
-	//while (!_shutdown)
-	//{
-	//	PlayerManager::getInstance().update();
-	//	TickController::getInstance().update();
-	//}
 	
-	Server::getInstance().stop();
+	server->stop();
 
 	return 0;
 }

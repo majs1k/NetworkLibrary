@@ -1,5 +1,5 @@
 #include "Session.h"	
-#include "Server.h"
+#include "LanServer.h"
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
 
@@ -166,7 +166,9 @@ void Session::completeRecv(int numOfBytes)
 
 		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
 
-		Server::getInstance().onRecv(sessionId_, packet);
+		server->increaseRecvMessageTps();
+
+		server->onRecv(sessionId_, packet);
 	}
 
 	this->postRecv();
@@ -303,7 +305,7 @@ void Session::decrementIOCount()
 
 	if (InterlockedDecrement(&ioCount_) == 0)
 	{
-		Server::getInstance().disconnect(sessionId_);
+		server->disconnect(sessionId_);
 
 		//sessionLock_.unlock();
 

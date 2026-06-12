@@ -130,7 +130,8 @@
     <ClCompile Include="Contents\RPCModule.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Network\Client.cpp" />
-    <ClCompile Include="Network\Server.cpp" />
+    <ClCompile Include="Network\LanServer.cpp" />
+    <ClCompile Include="Network\LanTestServer.cpp" />
     <ClCompile Include="Network\Session.cpp" />
     <ClCompile Include="Utils\Lock.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
@@ -140,10 +141,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Contents\LogicThread.h" />
     <ClInclude Include="Contents\PacketHandler.h" />
     <ClInclude Include="Contents\Player.h" />
     <ClInclude Include="Network\Client.h" />
-    <ClInclude Include="Network\Server.h" />
+    <ClInclude Include="Network\LanServer.h" />
+    <ClInclude Include="Network\LanTestServer.h" />
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Utils\ConfigManager.h" />
     <ClInclude Include="Utils\CrashDump.h" />

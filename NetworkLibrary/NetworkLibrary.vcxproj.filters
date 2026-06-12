@@ -21,7 +21,7 @@
     <ClCompile Include="Network\Client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Network\Server.cpp">
+    <ClCompile Include="Network\LanServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Network\Session.cpp">
@@ -49,6 +49,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utils\TickController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\LanTestServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -101,7 +104,7 @@
     <ClInclude Include="Network\Client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Network\Server.h">
+    <ClInclude Include="Network\LanServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Network\Session.h">
@@ -114,6 +117,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils\CrashDump.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\LanTestServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\LogicThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
