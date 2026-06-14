@@ -18,12 +18,23 @@ struct OverlappedEx
 	IOType type;
 };
 
-// ------------------------------------------------------- //
-
 class Packet;
 
 #define SEND_SIZE				10000
 #define RECV_SIZE				10000
+
+// ------------------------------------------------------- //
+
+#define PACKET_CODE				0x89
+
+struct FIGHTER_HEADER
+{
+	unsigned char code;
+	unsigned char size;
+	unsigned char type;
+};
+
+// ------------------------------------------------------- //
 
 class Session
 {

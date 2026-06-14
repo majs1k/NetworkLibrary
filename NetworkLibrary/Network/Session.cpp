@@ -112,6 +112,7 @@ void Session::postRecv()
 	}
 }
 
+/// LanTestServer
 void Session::completeRecv(int numOfBytes)
 {
 	//printf("completeRecv() %d\n", numOfBytes);
@@ -123,58 +124,152 @@ void Session::completeRecv(int numOfBytes)
 
 	while (1)
 	{
-		sessionLock_.lock();
+		//sessionLock_.lock();
 
 		int useSize = recvQueue_.useSize();
 
 		if (recvQueue_.isFull())
 		{
+			//sessionLock_.unlock();
+
 			LOG_INFO(L"recvQueue full");
 
 			//연결 종료 로직 필요
+
+			return;
 		}
 
-		sessionLock_.unlock();
+		//sessionLock_.unlock();
 
 		if (useSize < sizeof(HEADER))
 			break;
 
 		HEADER header;
 
-		sessionLock_.lock();
+		//sessionLock_.lock();
 
 		recvQueue_.peek((char*)&header, sizeof(HEADER));
 
-		sessionLock_.unlock();
+		//sessionLock_.unlock();
 
-		int headerSize = header.size;
+		int messageSize = header.size;
 
-		if (useSize < sizeof(HEADER) + headerSize)
+		if (useSize < sizeof(HEADER) + messageSize)
 			break;
 
-		sessionLock_.lock();
+		//sessionLock_.lock();
 
 		recvQueue_.moveFront(sizeof(HEADER));
 
 		Packet packet;
 
-		recvQueue_.dequeue(packet.getBufferPtr(), headerSize);
+		recvQueue_.dequeue(packet.getBufferPtr(), messageSize);
 
-		sessionLock_.unlock();
+		//sessionLock_.unlock();
 
-		packet.moveWritePos(headerSize);
+		packet.moveWritePos(messageSize);
 
 		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
 
-		server->increaseRecvMessageTps();
-
 		server->onRecv(sessionId_, packet);
+
+		server->increaseRecvMessageTps();
 	}
 
 	this->postRecv();
 
 	this->decrementIOCount();
 }
+
+
+#include "../RPC/RPCStub.h"
+
+/// FighterServer
+//void Session::completeRecv(int numOfBytes)
+//{
+//	//printf("completeRecv() %d\n", numOfBytes);
+//	//sessionLock_.lock();
+//
+//	recvQueue_.moveRear(numOfBytes);
+//
+//	//sessionLock_.unlock();
+//
+//	while (1)
+//	{
+//		//sessionLock_.lock();
+//
+//		int useSize = recvQueue_.useSize();
+//
+//		if (recvQueue_.isFull())
+//		{
+//			//sessionLock_.unlock();
+//
+//			LOG_INFO(L"recvQueue full");
+//
+//			//연결 종료 로직 필요
+//
+//			return;
+//		}
+//
+//		//sessionLock_.unlock();
+//
+//		if (useSize < sizeof(FIGHTER_HEADER))
+//			break;
+//
+//		FIGHTER_HEADER header;
+//
+//		//sessionLock_.lock();
+//
+//		recvQueue_.peek((char*)&header, sizeof(FIGHTER_HEADER));
+//
+//		//sessionLock_.unlock();
+//
+//		if (header.code != PACKET_CODE)
+//		{
+//			this->decrementIOCount();
+//
+//			LOG(L"[NETWORK] invalid packet header session=%d", sessionId_);
+//
+//			return;
+//		}
+//
+//		int messageSize = header.size;
+//
+//		if (useSize < sizeof(FIGHTER_HEADER) + messageSize)
+//			break;
+//
+//		//sessionLock_.lock();
+//
+//		recvQueue_.moveFront(sizeof(FIGHTER_HEADER));
+//
+//		Packet packet;
+//
+//		recvQueue_.dequeue(packet.getBufferPtr(), messageSize);
+//
+//		//sessionLock_.unlock();
+//
+//		packet.moveWritePos(messageSize);
+//
+//		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
+//
+//		// 함수의 인자 자료형 주의 필요 (이후 패킷헤더 수정시 참고)
+//		if (!RPCStub::getInstance().packetProc(sessionId_, packet, (int)header.type))
+//		{
+//			// packetProc에서 disconnect 호출되는 상황 주의. 중복 삭제 발생 가능
+//			//this->disconnect();
+//
+//			return;
+//		}
+//
+//		//server->onRecv(sessionId_, packet);
+//
+//		server->increaseRecvMessageTps();
+//	}
+//
+//	this->postRecv();
+//
+//	this->decrementIOCount();
+//}
 
 void Session::postSend()
 {
@@ -288,29 +383,26 @@ void Session::sendPacket(Packet& packet)
 	HEADER header;
 	header.size = packet.useSize();
 
-	/// 여길 반드시 잠궈야 oversend 정상적으로 동작
-	sessionLock_.lock();
+	//sessionLock_.lock();
+
+	sendQueue_.lock();
 
 	sendQueue_.enqueue((char*)&header, sizeof(HEADER));
 	sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
 
-	sessionLock_.unlock();
+	sendQueue_.unlock();
+
+	//sessionLock_.unlock();
 
 	this->postSend();
 }
 
 void Session::decrementIOCount()
 {
-	//sessionLock_.lock();
-
 	if (InterlockedDecrement(&ioCount_) == 0)
 	{
 		server->disconnect(sessionId_);
 
-		//sessionLock_.unlock();
-
 		return;
 	}
-
-	//sessionLock_.unlock();
 }

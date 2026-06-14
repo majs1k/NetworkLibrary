@@ -9,10 +9,7 @@
 LanServer* server = nullptr;
 
 LanServer::LanServer()
-	:idSeed_(0), sessionCount_(0)
 {
-	sessionMap_.reserve(MAX_SESSION);
-
 	WSADATA wsa;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
@@ -24,20 +21,14 @@ LanServer::~LanServer()
 	WSACleanup();
 }
 
-void LanServer::start()
+bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount)
 {
-	//ip_ = ConfigManager::getInstance().network_.ip;
-	//port_ = ConfigManager::getInstance().network_.port;
-
-	ip_ = L"0.0.0.0";
-	port_ = SERVER_PORT;
-
-	hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, CONCURRENT_NUM);
-
-	for (int i = 0; i < WORKER_NUM; i++)
-	{
-		hWorkerThread_[i] = (HANDLE)_beginthreadex(nullptr, 0, workerThread, this, 0, nullptr);
-	}
+	serverIp_ = ip;
+	serverPort_ = port;
+	sessionMax_ = sessionMax;
+	sessionMap_.reserve(sessionMax_);
+	concurrentThreadCount_ = concurrentCount;
+	workerThreadCount_ = workerCount;
 
 	listenSocket_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket_ == INVALID_SOCKET)
@@ -65,14 +56,22 @@ void LanServer::start()
 	SOCKADDR_IN serverAddr;
 	ZeroMemory(&serverAddr, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
-	InetPton(AF_INET, ip_.c_str(), &serverAddr.sin_addr);
-	serverAddr.sin_port = htons(port_);
+	InetPton(AF_INET, serverIp_.c_str(), &serverAddr.sin_addr);
+	serverAddr.sin_port = htons(serverPort_);
 
 	if (::bind(listenSocket_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 		ERR(L"bind() error");
 
 	if (::listen(listenSocket_, SOMAXCONN) == SOCKET_ERROR)
 		ERR(L"listen() error");
+
+	hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, concurrentThreadCount_);
+
+	for (int i = 0; i < workerThreadCount_; i++)
+	{
+		HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, workerThread, this, 0, nullptr);
+		hWorkerThread_.push_back(hThread);
+	}
 
 	hAcceptThread_ = (HANDLE)_beginthreadex(nullptr, 0, acceptThread, this, 0, nullptr);
 
@@ -82,37 +81,43 @@ void LanServer::start()
 	hExitEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	LOG_INFO(L"[NETWORK] server start");
+
+	return true;
 }
 
 void LanServer::stop()
 {
+	// accept thread 종료
 	closesocket(listenSocket_);
+	WaitForSingleObject(hAcceptThread_, INFINITE);
+	CloseHandle(hAcceptThread_);
 
-	for (int i = 0; i < WORKER_NUM; i++)
+	// worker thread 종료
+	for (int i = 0; i < workerThreadCount_; i++)
 	{
 		PostQueuedCompletionStatus(hIOCP_, 0, 0, nullptr);
 	}
 
-	WaitForSingleObject(hAcceptThread_, INFINITE);
-	CloseHandle(hAcceptThread_);
+	WaitForMultipleObjects(workerThreadCount_, hWorkerThread_.data(), TRUE, INFINITE);
 
-	WaitForMultipleObjects(WORKER_NUM, hWorkerThread_, TRUE, INFINITE);
-
-	for (int i = 0; i < WORKER_NUM; i++)
+	for (int i = 0; i < workerThreadCount_; i++)
 	{
 		CloseHandle(hWorkerThread_[i]);
 	}
 
+	// monitor thread 종료
 	SetEvent(hExitEvent);
 	WaitForSingleObject(hMonitorThread_, INFINITE);
 	CloseHandle(hMonitorThread_);
 	CloseHandle(hExitEvent);
 
+	// 세션 정리
 	for (auto& session : sessionMap_)
 	{
 		delete session.second;
 	}
 
+	// IOCP 삭제
 	CloseHandle(hIOCP_);
 
 	LOG_INFO(L"[NETWORK] server exit");
@@ -159,22 +164,6 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 	}
 	else
 		return false;
-}
-
-bool LanServer::onConnectionRequest(const std::wstring& ip, int port)
-{
-	if (sessionCount_ >= MAX_SESSION)
-	{
-		LOG(L"[Network] session limit over");
-
-		return false;
-	}
-
-	{
-		// TODO: lan 외부 ip / 해외 ip / DDos 공격 차단
-	}
-
-	return true;
 }
 
 int LanServer::acceptTps()
@@ -225,8 +214,7 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 
 		InterlockedIncrement(&server->acceptCount_);
 
-		/// TODO: ip.c_str() 로 바꾸면 안됨?
-		wchar_t str[16];
+		WCHAR str[16];
 		InetNtop(AF_INET, &clientAddr.sin_addr, str, 16);
 		std::wstring ip = str;
 		int port = ntohs(clientAddr.sin_port);

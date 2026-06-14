@@ -1,8 +1,6 @@
 #pragma once
-#include <list>
+#include <unordered_map>
 #include "../Utils/Singleton.h"
-
-class Session;
 
 //-----------------------------------------------------------------
 // 초당 이동 픽셀
@@ -73,10 +71,10 @@ private:
 	/// TODO: 메세지 쿨타임 추가
 
 public:
-	void initialize(Session* session);
+	void initialize(__int64 sessionId);
 
 	int playerId() const;
-	int sessionId() const;
+	__int64 sessionId() const;
 	int action() const;
 	int direction() const;
 	float x() const;
@@ -95,12 +93,12 @@ class PlayerManager : public Singleton<PlayerManager>
 	friend class PacketHandler;
 
 private:
-	std::list<Player*> playerList_{};
-	int playerSize_ = 0;
+	std::unordered_map<__int64, Player*> playerList_{};
+	int playerCount_ = 0;
 
 public:
-	void createPlayer(Session* session);
-	void removePlayer(Player* player);
+	void createPlayer(__int64 sessionId);
+	void removePlayer(__int64 sessionId);
 
 	Player* findBySessionId(int sessionId);
 

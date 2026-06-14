@@ -22,9 +22,15 @@ void RingBuffer::clear()
 
 int RingBuffer::useSize() const
 {
-	return readPos_ <= writePos_
-		? writePos_ - readPos_
-		: writePos_ + capacity_ - readPos_;
+	//return readPos_ <= writePos_
+	//	? writePos_ - readPos_
+	//	: writePos_ + capacity_ - readPos_;
+	int r = readPos_;
+	int w = writePos_;
+
+	return r <= w
+	? w - r
+	: w + capacity_ - r;
 }
 
 int RingBuffer::freeSize() const
@@ -59,10 +65,12 @@ char* RingBuffer::getRearBufferPtr() const
 
 int RingBuffer::enqueue(const char* data, int size)
 {
+	int s = freeSize();
+
 	/// 1회 리사이즈 로직으로 변경 필요
-	if (freeSize() < size)
+	if (s < size)
 	{
-		printf("enqueue over!\n");
+		printf("enqueue over! free: %d / size : %d\n", s, size);
 		DebugBreak();
 		return 0;
 	}

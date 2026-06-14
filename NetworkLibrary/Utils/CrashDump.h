@@ -1,7 +1,16 @@
+//-------------------------------------------------------------------------
+//
+// 크래시 덤프
+// 
+// Initialize() 호출 필요
+// 덤프 + exe + pdb 세트로 보관
+// 덤프 파일사이즈 == 프로세스의 메모리 사용량
+// 
+// 네이티브 전용 디버그 사용
+// 
+//-------------------------------------------------------------------------
 #pragma once
-
 #pragma comment(lib, "Dbghelp.lib")
-
 #include <Windows.h>
 #include <DbgHelp.h>
 #include <crtdbg.h>
@@ -10,131 +19,96 @@
 class CrashDump
 {
 public:
-    static void Initialize()
-    {
-        SetUnhandledExceptionFilter(UnhandledExceptionFilter);
+	static void Initialize()
+	{
+		SetUnhandledExceptionFilter(UnhandledExceptionFilter);
 
-        _set_invalid_parameter_handler(InvalidParameterHandler);
-        _set_purecall_handler(PureCallHandler);
+		_set_invalid_parameter_handler(InvalidParameterHandler);
+		_set_purecall_handler(PureCallHandler);
 
-        _CrtSetReportMode(_CRT_WARN, 0);
-        _CrtSetReportMode(_CRT_ASSERT, 0);
-        _CrtSetReportMode(_CRT_ERROR, 0);
+		_CrtSetReportMode(_CRT_WARN, 0);
+		_CrtSetReportMode(_CRT_ASSERT, 0);
+		_CrtSetReportMode(_CRT_ERROR, 0);
 
-        _CrtSetReportHook(CrtReportHook);
-    }
+		_CrtSetReportHook(CrtReportHook);
+	}
 
 private:
 
-    static LONG WINAPI UnhandledExceptionFilter(
-        EXCEPTION_POINTERS* exceptionInfo)
-    {
-        if (InterlockedExchange(&s_Dumping, 1) != 0)
-        {
-            Sleep(INFINITE);
-        }
+	static LONG WINAPI UnhandledExceptionFilter(EXCEPTION_POINTERS* exceptionInfo)
+	{
+		if (InterlockedExchange(&s_Dumping, 1) != 0)
+		{
+			Sleep(INFINITE);
+		}
 
-        CreateDump(exceptionInfo);
+		CreateDump(exceptionInfo);
 
-        return EXCEPTION_EXECUTE_HANDLER;
-    }
+		return EXCEPTION_EXECUTE_HANDLER;
+	}
 
-    static void CreateDump(EXCEPTION_POINTERS* exceptionInfo)
-    {
-        SYSTEMTIME st;
-        GetLocalTime(&st);
+	static void CreateDump(EXCEPTION_POINTERS* exceptionInfo)
+	{
+		SYSTEMTIME st;
+		GetLocalTime(&st);
 
-        WCHAR fileName[MAX_PATH];
+		WCHAR fileName[MAX_PATH];
 
-        wsprintfW(
-            fileName,
-            L"Dump_%04d%02d%02d_%02d%02d%02d.dmp",
-            st.wYear,
-            st.wMonth,
-            st.wDay,
-            st.wHour,
-            st.wMinute,
-            st.wSecond);
+		wsprintfW(fileName,	L"Dump_%04d%02d%02d_%02d%02d%02d.dmp",
+			st.wYear, st.wMonth, st.wDay,
+			st.wHour, st.wMinute, st.wSecond);
 
-        HANDLE hFile = CreateFileW(
-            fileName,
-            GENERIC_WRITE,
-            0,
-            nullptr,
-            CREATE_ALWAYS,
-            FILE_ATTRIBUTE_NORMAL,
-            nullptr);
+		HANDLE hFile = CreateFileW(fileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
-        if (hFile == INVALID_HANDLE_VALUE)
-            return;
+		if (hFile == INVALID_HANDLE_VALUE)
+			return;
 
-        MINIDUMP_EXCEPTION_INFORMATION mei;
-        mei.ThreadId = GetCurrentThreadId();
-        mei.ExceptionPointers = exceptionInfo;
-        mei.ClientPointers = FALSE;
+		MINIDUMP_EXCEPTION_INFORMATION mei;
+		mei.ThreadId = GetCurrentThreadId();
+		mei.ExceptionPointers = exceptionInfo;
+		mei.ClientPointers = FALSE;
 
-        BOOL success = MiniDumpWriteDump(
-            GetCurrentProcess(),
-            GetCurrentProcessId(),
-            hFile,
-            MiniDumpWithFullMemory,
-
-            exceptionInfo ? &mei : nullptr,
-            nullptr,
-            nullptr);
+		BOOL success = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(),
+			hFile, MiniDumpWithFullMemory, exceptionInfo ? &mei : nullptr, nullptr, nullptr);
 
 #ifdef _DEBUG
-        if (!success)
-        {
-            DWORD err = GetLastError();
+		if (!success)
+		{
+			DWORD err = GetLastError();
 
-            WCHAR msg[256];
-            wsprintfW(msg,
-                L"MiniDumpWriteDump Failed : %u\n",
-                err);
+			WCHAR msg[256];
+			wsprintfW(msg, L"MiniDumpWriteDump Failed : %u\n", err);
 
-            OutputDebugStringW(msg);
-        }
+			OutputDebugStringW(msg);
+		}
 #endif
 
-        CloseHandle(hFile);
-    }
+		CloseHandle(hFile);
+	}
 
-    static void ForceCrash()
-    {
-        RaiseException(
-            EXCEPTION_NONCONTINUABLE_EXCEPTION,
-            0,
-            0,
-            nullptr);
-    }
+	static void ForceCrash()
+	{
+		RaiseException(EXCEPTION_NONCONTINUABLE_EXCEPTION, 0, 0, nullptr);
+	}
 
-    static void InvalidParameterHandler(
-        const wchar_t*,
-        const wchar_t*,
-        const wchar_t*,
-        unsigned int,
-        uintptr_t)
-    {
-        ForceCrash();
-    }
+	static void InvalidParameterHandler(const wchar_t*, const wchar_t*, const wchar_t*, unsigned int, uintptr_t)
+	{
+		ForceCrash();
+	}
 
-    static void PureCallHandler()
-    {
-        ForceCrash();
-    }
+	static void PureCallHandler()
+	{
+		ForceCrash();
+	}
 
-    static int CrtReportHook(
-        int,
-        char*,
-        int*)
-    {
-        ForceCrash();
-        return TRUE;
-    }
+	static int CrtReportHook(int, char*, int*)
+	{
+		ForceCrash();
+		return TRUE;
+	}
 
 private:
-    static LONG s_Dumping;
+	static LONG s_Dumping;
 };
 
 LONG CrashDump::s_Dumping = 0;

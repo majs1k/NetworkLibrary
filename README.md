@@ -19,53 +19,14 @@ Network
  ├─ MemoryPool
  └─ RPC
 
-Network Library 개발중
-select IO 모델 / IOCP 모델 분리
-패킷 직렬화
-RPC + 자동화?
+IOCP Network Library 개발
+커스텀 패킷 직렬화
+RPC + 자동화
 클라이언트는 먼저 액션(이동, 공격 ...)을 하고 패킷을 서버로 보냄
 클라이언트로 공격쿨 전에 메세지가 들어오면 이펙트 스킵 / 체력만 감소
 충돌 처리 및 데미지에 대한 정보는 서버에서 처리 후 통보
 ```
 
-## TODO
-```text
-DB 연동
-메세지 쿨타임 처리 (3번 허용 후 종료)
-c# -> NetworkStream + rpc 코드
-라이브러리 64비트 호환
-```
-
-## Question
-```text
-예외처리 try-catch?
-
-라이브러리의 헤더파일에 define 값을 맘대로 바꿀수 있나?
-
-메모리 풀 관련
-메모리 릭(custom new-delete)/오버플로우(no access page) 라이브러리 활용도?
-placement new 활용도??
-
-로그에서 락 걸고 큐에 담은후 1초에 한번씩 flush 하는 경우 - 문제 발생 x?
-
-
-sendPacket에서 헤더를 넣어야 한다면.. 타입은?
-RPCProxy -> 인자가 sessionId?
-헤더랑 메세지를 같이 packet에 넣은 다음 sendPacket 호출중
-
-생성자 소멸자에는 락 적용???
-
-서버쪽에서 먼저 연결 끊는 경우 iocount 1 감소? -> 플래그를 도입해야 하나?
-
-덤프파일
-CrashDump의 MiniDumpWriteDump 의 MiniDumpWithFullMemory는 정확히 어떤 메모리를 찍는거임?
-워킹셋 사이즈 파일명 포함 이유?
-카운트는 무슨 의미? 여러파일에서 0바이트는 잘못된거임? 파일 하나만 생성해도 괜찮음?
-덤프에서 메모리 NP풀 사용량? 즉 모니터링 기능? 모니터링에는 기록의 역할은 없지 않음?
-
-
-Lock 없이, sendQ 어케 동기화? 인큐가 두번이라, 큐 자체 락으로는 힘들다..
-```
 
 ## DevLog
 ### 이전
@@ -74,9 +35,13 @@ Lock 없이, sendQ 어케 동기화? 인큐가 두번이라, 큐 자체 락으�
 
 지연삭제 -> 이터레이터로 인한 문제 방지. 즉 배열은 적용 x
 
-accept thread 분리, accept()는 블로킹으로 why? 쓸데없이 도는 코드는 절대 없어야함
+accept thread 분리, accept() 블로킹 호출 why? 쓸데없이 도는 코드는 절대 없어야함
+
+50byte Sleep(1) 기준 wsasend 두번 호출 vs wsasend 한번에 wsabuf 2개등록
+83us / 7us
+-> 당연히 시스템콜 호출이 적은 후자가 성능 좋음
+
 ```
-### 26-06-03
 
 ### 26-06-05
 ```text
@@ -146,8 +111,6 @@ wsasend() error  10022 WSAEINVAL 이 에러가 발생하는걸로 보아 overlap
 
 sendQueue에 동시에 enqueue하는 상황이 문제 -> 세션 멤버변수에 Lock 추가
 세션의 모든 멤버변수에 대한 접근에 락 적용
-
-rpc 복습 필요
 ```
 
 ### 26-06-10
@@ -161,11 +124,27 @@ sendQueue 내부적으로 락을 적용한다고 해도, 결국 enqueue 호출�
 세션맵 잠금 없을때 더미에서 재연결 옵션시 read access violation 발생
 상대가 closesocket()시 (rst x) GQCS 성공 반환 후 numOfBytes 0 전달됨 -> 예외처리
 
+로그 전부 주석처리. 출력시간으로 인하여 동기화 문제가 안타나남
+
+더미 클라 1로 테스트
+lock을 포인터로 분리했음에도 recv /send 에서 10053 에러 발생중임...
+락을 릴리즈 한 후 재사용해서 발생하는 문제임
 ```
 
 ### 26-06-12
 ```text
 Server, SessionManager 클래스 -> LanServer 클래스 전면수정
+LanServer 클래스는 상속이 필요하므로 싱글턴 제거
 
+링버퍼에 락 추가
 
+Fighter Server IOCP로 재설계중...
+```
+
+### 26-06-13
+```text
+config 파일 및 클래스 수정 (전역변수 방식으로 변경)
+
+링버퍼의 useSize() 메서드에서 동기화 문제로 음수가 반환되는 문제 발생
+쓰기 위치 / 읽기 위치를 메서드 진입시 저장하고 로직 진행하도록 수정
 ```

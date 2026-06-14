@@ -1,6 +1,7 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
@@ -11,32 +12,28 @@
 class Session;
 class Packet;
 
-#define MAX_SESSION			200
-
-#define SERVER_PORT			6000
-
-#define CONCURRENT_NUM		4
-#define WORKER_NUM			4
-
 class LanServer
 {
-private:
+protected:
 	SOCKET listenSocket_;
 
-	std::wstring ip_;
-	int port_;
+	std::wstring serverIp_;
+	int serverPort_;
 
 	HANDLE hIOCP_;
-	HANDLE hWorkerThread_[WORKER_NUM];
+	std::vector<HANDLE> hWorkerThread_;
 	HANDLE hAcceptThread_;
 	HANDLE hMonitorThread_;
 	HANDLE hExitEvent;
+	int concurrentThreadCount_;
+	int workerThreadCount_;
 
 	// rehash 일어나면(갑자기 삽입 했을때 등..) 이터레이터 무효화 주의
 	std::unordered_map<__int64, Session*> sessionMap_;
-	LONG sessionCount_;
+	LONG sessionCount_ = 0;
+	int sessionMax_;
 	Lock sessionMapLock_;
-	__int64 idSeed_;
+	__int64 idSeed_ = 0;
 
 	LONG acceptTps_;
 	LONG recvMessageTps_;
@@ -50,7 +47,7 @@ public:
 	LanServer();
 	~LanServer();
 
-	void start();
+	bool start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount);
 	void stop();
 	int sessionCount() const;
 
@@ -59,7 +56,7 @@ public:
 	bool sendPacket(__int64 sessionId, Packet& packet);
 
 	/// 순수 가상함수
-	virtual bool onConnectionRequest(const std::wstring& ip, int port);
+	virtual bool onConnectionRequest(const std::wstring& ip, int port) = 0;
 
 	// 인자 미정
 	virtual void onAccept(__int64 sessionId) = 0;

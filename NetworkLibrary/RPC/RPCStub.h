@@ -1,7 +1,6 @@
 #pragma once
 #include "../Utils/Singleton.h"
 
-class Session;
 class Packet;
 
 class IPacketHandler

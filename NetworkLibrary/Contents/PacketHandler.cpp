@@ -11,7 +11,10 @@ bool PacketHandler::cs_start_move(__int64 sessionId, char direction, short x, sh
 		return false;
 
 	// 이동 오류 체크
-	if (ERROR_RANGE < abs(x - (int)(player->x())) || ERROR_RANGE < abs(y - (int)(player->y())))
+	int deltaX = abs(x - player->x_);
+	int deltaY = abs(y - player->y_);
+
+	if (ERROR_RANGE < deltaX || ERROR_RANGE < deltaY)
 	{
 		LOG(L"[Network] invalid coord session=%d", sessionId);
 
@@ -38,12 +41,15 @@ bool PacketHandler::cs_start_move(__int64 sessionId, char direction, short x, sh
 	player->x_ = x;
 	player->y_ = y;
 
-	for (auto& other : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerList_)
 	{
+		Player* other = p.second;
+
 		if (other == player)
 			continue;
 
-		RPCProxy::sc_start_move(other->sessionId(), player->playerId_, player->action_, (short)player->x_, (short)player->y_);
+		RPCProxy::sc_start_move(other->sessionId(), player->playerId_, player->action_, 
+			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
 
 	return true;
@@ -56,7 +62,10 @@ bool PacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short 
 		return false;
 
 	// 이동 오류 체크
-	if (ERROR_RANGE < abs(x - (int)(player->x_)) || ERROR_RANGE < abs(y - (int)(player->y_)))
+	int deltaX = abs(x - player->x_);
+	int deltaY = abs(y - player->y_);
+
+	if (ERROR_RANGE < deltaX || ERROR_RANGE < deltaY)
 	{
 		LOG(L"[Network] invalid coord session=%d", sessionId);
 
@@ -68,12 +77,15 @@ bool PacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short 
 	player->x_ = x;
 	player->y_ = y;
 
-	for (auto& other : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerList_)
 	{
+		Player* other = p.second;
+
 		if (other == player)
 			continue;
 
-		RPCProxy::sc_stop_move(other->sessionId(), player->playerId_, player->direction_, (short)player->x_, (short)player->y_);
+		RPCProxy::sc_stop_move(other->sessionId(), player->playerId_, player->direction_,
+			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
 
 	return true;
@@ -89,8 +101,10 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 	player->x_ = x;
 	player->y_ = y;
 
-	for (auto& other : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerList_)
 	{
+		Player* other = p.second;
+
 		if (other == player)
 			continue;
 
@@ -101,8 +115,10 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 	Player* target = nullptr;
 	int deltaXMin = ATTACK1_RANGE_X;
 
-	for (auto& other : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerList_)
 	{
+		Player* other = p.second;
+
 		if (player->playerId_ == other->playerId_)
 			continue;
 
@@ -137,22 +153,26 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 	// TODO: 최솟값 0
 	target->hp_ -= ATTACK1_DAMAGE;
 
-	for (auto& other : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerList_)
 	{
+		Player* other = p.second;
+
 		RPCProxy::sc_damage(other->sessionId(), player->playerId_, target->playerId_, target->hp_);
 	}
 
 	if (target->hp_ <= 0)
 	{
-		for (auto& other : PlayerManager::getInstance().playerList_)
+		for (auto& p : PlayerManager::getInstance().playerList_)
 		{
+			Player* other = p.second;
+
 			if (other == player)
 				continue;
 
 			RPCProxy::sc_character_delete(other->sessionId(), player->playerId());
 		}
 
-		PlayerManager::getInstance().removePlayer(player);
+		PlayerManager::getInstance().removePlayer(player->playerId_);
 
 		return false;
 	}

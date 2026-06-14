@@ -1,14 +1,13 @@
 #include "Player.h"
-#include "../Network/Session.h"
 #include "../RPC/RPCProxy.h"
 #include "../Utils/Random.h"
 #include "../Utils/TickController.h"
 
-void Player::initialize(Session* session)
+void Player::initialize(__int64 sessionId)
 {
 	// TODO: db 연동 이후 수정
-	playerId_ = session->id();
-	sessionId_ = session->id();
+	playerId_ = sessionId;
+	sessionId_ = sessionId;
 
 	action_ = MOVE_DIR_NONE;
 	direction_ = MOVE_DIR_LL;
@@ -23,7 +22,7 @@ int Player::playerId() const
 	return playerId_;
 }
 
-int Player::sessionId() const
+__int64 Player::sessionId() const
 {
 	return sessionId_;
 }
@@ -154,69 +153,74 @@ void Player::moveDown()
 	action_ = MOVE_DIR_NONE;
 }
 
-void PlayerManager::createPlayer(Session* session)
+void PlayerManager::createPlayer(__int64 sessionId)
 {
 	// db 구현후 플레이어 id는 조회 필요
 	Player* player = new Player();
-	player->initialize(session);
+	player->initialize(sessionId);
 
 	/// TODO: Lock 필요
-	playerList_.push_back(player);
-	playerSize_++;
+	playerList_.insert({sessionId, player});
+	playerCount_++;
 
-	int id = player->playerId();
+	int playerId = player->playerId();
 	int direction = player->direction();
 	short x = static_cast<short>(player->x());
 	short y = static_cast<short>(player->y());
 	char hp = player->hp();
 
 	// 내 캐릭터 정보 나에게
-	RPCProxy::sc_create_my_character(session->id(), id, direction, x, y, hp);
+	RPCProxy::sc_create_my_character(sessionId, playerId, direction, x, y, hp);
 
-	for (auto& other : playerList_)
+	for (auto& p : playerList_)
 	{
-		if (other->playerId() == id)
+		Player* other = p.second;
+
+		if (other->playerId() == playerId)
 			continue;
 
 		// 내 캐릭터 정보 남에게
-		RPCProxy::sc_create_other_character(other->sessionId(), id, direction, x, y, hp);
+		RPCProxy::sc_create_other_character(other->sessionId(), playerId, direction, x, y, hp);
 
 		// 남 캐릭터 정보 나에게
-		RPCProxy::sc_create_other_character(player->sessionId(), other->playerId(), other->direction(), (short)other->x(), (short)other->y(), other->hp());
+		RPCProxy::sc_create_other_character(sessionId, other->playerId(), other->direction(), (short)other->x(), (short)other->y(), other->hp());
 
 		if (other->action() == MOVE_DIR_NONE)
 			continue;
 
 		// 남 캐릭터 이동중이면 나에게
-		RPCProxy::sc_start_move(player->sessionId(), other->playerId(), other->action(), (short)other->x(), (short)other->y());
+		RPCProxy::sc_start_move(sessionId, other->playerId(), other->action(), (short)other->x(), (short)other->y());
 	}
 }
 
-void PlayerManager::removePlayer(Player* player)
+void PlayerManager::removePlayer(__int64 sessionId)
 {
 	/// TODO: Lock 필요
-	playerList_.remove(player);
+	playerList_.erase(sessionId);
 
-	delete player;
+	auto it = playerList_.find(sessionId);
 
-	playerSize_--;
+	delete (*it).second;
+
+	playerCount_--;
 }
 
 Player* PlayerManager::findBySessionId(int sessionId)
 {
-	for (auto& p : playerList_)
-	{
-		if (p->sessionId() == sessionId)
-			return p;
-	}
+	auto it = playerList_.find(sessionId);
+
+	if (it != playerList_.end())
+		return (*it).second;
 
 	return nullptr;
 }
 
 void PlayerManager::update()
 {
-	for (auto& player : playerList_)
+	for (auto& p : playerList_)
 	{
+		Player* player = p.second;
+
 		if (player->action() == MOVE_DIR_NONE)
 			continue;
 

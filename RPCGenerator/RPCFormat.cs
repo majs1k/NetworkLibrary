@@ -55,7 +55,6 @@ void RPCProxy::{0}(__int64 sessionId{1})
 @"#pragma once
 #include ""../Utils/Singleton.h""
 
-class Session;
 class Packet;
 
 class IPacketHandler
