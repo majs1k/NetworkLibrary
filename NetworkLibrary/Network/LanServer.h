@@ -6,10 +6,88 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #include <Windows.h>
-#include "../Utils/Singleton.h"
+#include "../Utils/RingBuffer.h"
 #include "../Utils/Lock.h"
 
-class Session;
+// ------------------------------------------------------- //
+
+struct HEADER
+{
+	unsigned short size;
+};
+
+// ------------------------------------------------------- //
+
+#define PACKET_CODE				0x89
+
+struct FIGHTER_HEADER
+{
+	unsigned char code;
+	unsigned char size;
+	//unsigned char type;
+};
+
+// ------------------------------------------------------- //
+
+#define SEND_SIZE				10000
+#define RECV_SIZE				2000
+
+enum class IOType
+{
+	SEND = 0,
+	RECV = 1,
+};
+
+struct OverlappedEx
+{
+	WSAOVERLAPPED overlapped;
+	IOType type;
+};
+
+/// TODO: 세션 삭제시 소켓 close 해야함.
+struct Session
+{
+	SOCKET socket_;
+	// 고유값. sessionList의 인덱스로 활용 x
+	// 네트워크 연결에 대한 로직/로그에서 사용
+	// 소켓핸들처럼 컨텐츠에서 사용 (컨텐츠 코드가 간단해짐)
+	__int64 sessionId_;
+
+	std::wstring ip_;
+	int port_;
+
+	RingBuffer sendQueue_{ SEND_SIZE };
+	RingBuffer recvQueue_{ RECV_SIZE };
+
+	OverlappedEx sendOverlapped_;
+	OverlappedEx recvOverlapped_;
+
+	LONG ioCount_;
+	LONG sendPending_;
+
+	Lock sessionLock_;
+
+	void initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
+	{
+		socket_ = socket;
+		sessionId_ = id;
+
+		ip_ = ip;
+		port_ = port;
+
+		sendQueue_.clear();
+		recvQueue_.clear();
+
+		sendOverlapped_.type = IOType::SEND;
+		recvOverlapped_.type = IOType::RECV;
+
+		ioCount_ = 0;
+		sendPending_ = false;
+	}
+};
+
+// ------------------------------------------------------- //
+
 class Packet;
 
 class LanServer
@@ -55,7 +133,7 @@ public:
 	bool disconnect(__int64 sessionId);
 	bool sendPacket(__int64 sessionId, Packet& packet);
 
-	// IP 차단 기능 + 패치 후 white ip로 점검 등
+	// (외부/해외/공격)IP 차단 기능 + 패치 후 점검 white ip만 가능케
 	virtual bool onConnectionRequest(const std::wstring& ip, int port) = 0;
 
 	// 인자 미정
@@ -78,6 +156,13 @@ public:
 	static unsigned int __stdcall workerThread(void* param);
 	static unsigned int __stdcall mornitorThread(void* param);
 
-	Session* findSession(__int64 sessionId);
-	void decrementIoCount(__int64 sessionId);
+// ------------------------------------------------------- //
+
+	void postRecv(Session* session);
+	void completeRecv(Session* session, int numOfBytes);
+
+	void postSend(Session* session);
+	void completeSend(Session* session, int numOfBytes);
+
+	void decrementIoCount(Session* session);
 };

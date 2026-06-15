@@ -15,19 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Network\LanServer.cpp">
+    <ClCompile Include="Network\LanServer_1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Network\Session.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Contents\RPCModule.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Contents\PacketHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Contents\Player.cpp">
+    <ClCompile Include="Network\LanServer_2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utils\Lock.cpp">
@@ -45,19 +36,19 @@
     <ClCompile Include="Utils\TickController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Network\FighterServer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FighterServerMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TestServerMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Network\LanClient.cpp">
+    <ClCompile Include="Network\LanClient_1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Network\TestServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\LanClient_2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,22 +101,7 @@
     <ClInclude Include="Network\LanServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Network\Session.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Contents\PacketHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Contents\Player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\CrashDump.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Contents\LogicThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Network\FighterServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Network\LanClient.h">

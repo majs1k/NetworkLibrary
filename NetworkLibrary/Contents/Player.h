@@ -100,7 +100,5 @@ public:
 	void createPlayer(__int64 sessionId);
 	void removePlayer(__int64 sessionId);
 
-	Player* findBySessionId(int sessionId);
-
 	void update();
 };

@@ -30,6 +30,7 @@ public:{0}
         public static string proxyCpp =
 @"#include ""RPCProxy.h""
 #include ""../Network/LanServer.h""
+#include ""../Utils/Packet.h""
 {0}";
 
         public static string proxyCppFunc =
@@ -82,6 +83,7 @@ public:
 
         public static string stubCpp =
 @"#include ""RPCStub.h""
+#include ""../Utils/Packet.h""
 
 IPacketHandler::~IPacketHandler()
 {{

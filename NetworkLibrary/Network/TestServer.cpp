@@ -11,10 +11,6 @@ bool TestServer::onConnectionRequest(const std::wstring& ip, int port)
 		return false;
 	}
 
-	{
-		// TODO: lan 외부 ip / 해외 ip / DDos 공격 차단
-	}
-
 	return true;
 }
 
@@ -30,8 +26,6 @@ void TestServer::onRelease(__int64 sessionId)
 
 void TestServer::onRecv(__int64 sessionId, Packet& packet)
 {
-	InterlockedIncrement(&recvMessageCount_);
-
 	MESSAGE message;
 	packet >> message.data_;
 

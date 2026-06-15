@@ -12,10 +12,12 @@
 // 디버거가 있으면 브레이크포인트 역할
 // 단순히 실행파일이 실행중이면, 프로세스에서 crash 발생 (비정상 종료)
 // 
-// 
+// wofstream 으로 파일 출력한다고 파일 인코딩은 기본 utf-8
+// utf-8 원한다면 따로 설정 필요
 //-------------------------------------------------------------------------
 #pragma once
 #include <fstream>
+#include <Windows.h>
 #include "Singleton.h"
 
 enum class LogLevel

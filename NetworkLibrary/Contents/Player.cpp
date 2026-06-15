@@ -195,7 +195,12 @@ void PlayerManager::createPlayer(__int64 sessionId)
 
 void PlayerManager::removePlayer(__int64 sessionId)
 {
-	Player* player = this->findBySessionId(sessionId);
+	auto it = playerList_.find(sessionId);
+
+	if (it == playerList_.end())
+		return;
+
+	Player* player = (*it).second;
 
 	/// TODO: Lock ÇÊ¿ä
 	playerList_.erase(sessionId);
@@ -203,16 +208,6 @@ void PlayerManager::removePlayer(__int64 sessionId)
 	delete player;
 
 	playerCount_--;
-}
-
-Player* PlayerManager::findBySessionId(int sessionId)
-{
-	auto it = playerList_.find(sessionId);
-
-	if (it != playerList_.end())
-		return (*it).second;
-
-	return nullptr;
 }
 
 void PlayerManager::update()

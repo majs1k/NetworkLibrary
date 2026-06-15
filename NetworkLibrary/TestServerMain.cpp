@@ -1,10 +1,10 @@
 #include <conio.h>
 
-#include "./Network/LanServer.h"
+//#include "./Network/LanServer.h"
 #include "./Network/TestServer.h"
 
-#include "./Contents/PacketHandler.h"
-#include "./Contents/Player.h"
+//#include "./Contents/PacketHandler.h"
+//#include "./Contents/Player.h"
 
 #include "./Utils/ConfigLoader.h"
 #include "./Utils/CrashDump.h"
@@ -17,7 +17,7 @@ int main()
 
 	ConfigLoader::getInstance().load(CONFIG_FILENAME);
 
-	RPCStub::getInstance().initialize(new PacketHandler());
+	//RPCStub::getInstance().initialize(new PacketHandler());
 
 	TestServer server;
 

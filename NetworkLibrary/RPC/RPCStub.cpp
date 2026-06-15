@@ -1,4 +1,5 @@
 #include "RPCStub.h"
+#include "../Utils/Packet.h"
 
 IPacketHandler::~IPacketHandler()
 {

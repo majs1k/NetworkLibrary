@@ -27,7 +27,6 @@ RPC + 자동화
 충돌 처리 및 데미지에 대한 정보는 서버에서 처리 후 통보
 ```
 
-
 ## DevLog
 ### 이전
 ```text
@@ -150,4 +149,35 @@ config 파일 및 클래스 수정 (전역변수 방식으로 변경)
 
 FighterServer 수정 완료 (LanServer 인터페이스에 맞게)
 RPC 코드에서 패킷 타입 관리하도록 수정
+```
+
+### 26-06-15
+```text
+Session 클래스 삭제, 구조체로 변경, 메서드는 LanServer 클래스로 편입
+LanServer의 변수를 기존 클래스의 내의 전역변수에서 
+메인함수의 스택에서 선언하도록 위치 변경
+사용자측의 라이브러리 사용 복잡성 해소를 위함
+
+RPC에서 Server 인스턴스 접근 방법 고민중...
+
+Session* LanServer::findSession(__int64 sessionId)
+{
+	sessionMapLock_.lock();
+
+	auto it = sessionMap_.find(sessionId);
+	auto end = sessionMap_.end();
+
+	sessionMapLock_.unlock();
+
+	if (it != end)
+	{
+		return (*it).second;
+	}
+	else
+		return nullptr;
+}
+
+위 코드 삭제
+세션맵락 언락 후 세션이 삭제될 가능성 존재
+
 ```

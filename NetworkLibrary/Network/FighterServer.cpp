@@ -13,10 +13,6 @@ bool FighterServer::onConnectionRequest(const std::wstring& ip, int port)
 		return false;
 	}
 
-	{
-		// TODO: lan 외부 ip / 해외 ip / DDos 공격 차단
-	}
-
 	return true;
 }
 
@@ -34,8 +30,6 @@ void FighterServer::onRelease(__int64 sessionId)
 
 void FighterServer::onRecv(__int64 sessionId, Packet& packet)
 {
-	InterlockedIncrement(&recvMessageCount_);
-
 	unsigned char type;
 	packet >> type;
 
