@@ -31,7 +31,7 @@ int	Packet::capacity()
 
 int	Packet::useSize()
 {
-	return writePos_;
+	return writePos_ - readPos_;
 }
 
 char* Packet::getBufferPtr()

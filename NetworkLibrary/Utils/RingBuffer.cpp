@@ -1,5 +1,6 @@
 #include <iostream>
 #include "RingBuffer.h"
+#include <Windows.h>
 
 RingBuffer::RingBuffer(int bufferSize)
 	:capacity_(bufferSize), writePos_(0), readPos_(0)
@@ -20,11 +21,41 @@ void RingBuffer::clear()
 	readPos_ = 0;
 }
 
+void RingBuffer::resize(int size)
+{
+	if (capacity_ > size)
+		return;
+
+	char* newBuffer = (char*)malloc(size);
+
+	if (readPos_ <= writePos_)
+	{
+		memcpy(newBuffer, buffer_ + readPos_, useSize());
+	}
+	else
+	{
+		memcpy(newBuffer, buffer_ + readPos_, directDequeueSize());
+		memcpy(newBuffer + directDequeueSize(), buffer_, useSize() - directDequeueSize());
+	}
+
+	int s = useSize();
+
+	readPos_ = 0;
+	writePos_ = s;
+
+	free(buffer_);
+
+	buffer_ = newBuffer;
+	capacity_ = size;
+	safeSize_ = capacity_ * SAFETY_PERCENT / 100;
+}
+
 int RingBuffer::useSize() const
 {
 	//return readPos_ <= writePos_
 	//	? writePos_ - readPos_
 	//	: writePos_ + capacity_ - readPos_;
+
 	int r = readPos_;
 	int w = writePos_;
 
@@ -65,12 +96,10 @@ char* RingBuffer::getRearBufferPtr() const
 
 int RingBuffer::enqueue(const char* data, int size)
 {
-	int s = freeSize();
-
 	/// 1회 리사이즈 로직으로 변경 필요
-	if (s < size)
+	if (freeSize() < size)
 	{
-		printf("enqueue over! free: %d / size : %d\n", s, size);
+		printf("enqueue over!\n");
 		DebugBreak();
 		return 0;
 	}

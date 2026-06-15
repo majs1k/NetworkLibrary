@@ -167,7 +167,7 @@ unsigned int __stdcall LanClient::workerThread(void* param)
 				// 64 상대가 연결을 끊었을때 (numOfBytes == 0)
 				if (error == ERROR_NETNAME_DELETED)
 				{
-					session->decrementIOCount();
+					session->decrementIoCount();
 
 					continue;
 				}
@@ -177,14 +177,14 @@ unsigned int __stdcall LanClient::workerThread(void* param)
 				{
 					LOG_INFO(L"GQCS() error: ERROR_CONNECTION_ABORTED");
 
-					session->decrementIOCount();
+					session->decrementIoCount();
 
 					continue;
 				}
 
 				LOG_INFO(L"GQCS() error: %d", error);
 
-				session->decrementIOCount();
+				session->decrementIoCount();
 
 				continue;
 			}
@@ -215,7 +215,7 @@ unsigned int __stdcall LanClient::workerThread(void* param)
 			// 상대가 closesocket()시 (rst x) 발생
 			if (numOfBytes == 0)
 			{
-				session->decrementIOCount();
+				session->decrementIoCount();
 
 				continue;
 			}

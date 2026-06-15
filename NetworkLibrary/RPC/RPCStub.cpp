@@ -80,9 +80,9 @@ void RPCStub::initialize(IPacketHandler* handle)
 	handle_ = handle;
 }
 
-bool RPCStub::packetProc(__int64 sessionId, Packet& packet, int type)
+bool RPCStub::packetProc(__int64 sessionId, Packet& packet, unsigned char type)
 {
-	switch (type) 
+	switch (type)
 	{
 	case 0: 
 	{

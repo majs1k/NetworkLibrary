@@ -31,7 +31,7 @@ struct FIGHTER_HEADER
 {
 	unsigned char code;
 	unsigned char size;
-	unsigned char type;
+	//unsigned char type;
 };
 
 // ------------------------------------------------------- //
@@ -81,5 +81,5 @@ public:
 	void completeSend(int numOfBytes);
 	void sendPacket(Packet& packet);
 
-	void decrementIOCount();
+	void decrementIoCount();
 };

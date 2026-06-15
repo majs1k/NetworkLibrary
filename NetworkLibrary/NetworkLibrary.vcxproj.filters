@@ -122,7 +122,7 @@
     <ClInclude Include="Utils\CrashDump.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Contents\GameThread.h">
+    <ClInclude Include="Contents\LogicThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Network\FighterServer.h">

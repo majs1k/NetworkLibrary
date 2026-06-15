@@ -30,6 +30,8 @@ void TestServer::onRelease(__int64 sessionId)
 
 void TestServer::onRecv(__int64 sessionId, Packet& packet)
 {
+	InterlockedIncrement(&recvMessageCount_);
+
 	MESSAGE message;
 	packet >> message.data_;
 

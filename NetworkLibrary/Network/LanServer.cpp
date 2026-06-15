@@ -130,6 +130,7 @@ int LanServer::sessionCount() const
 
 bool LanServer::disconnect(__int64 sessionId)
 {
+	// session 먼저 잡아놓고, 세션맵에서 제거해야함
 	Session* session = this->findSession(sessionId);
 
 	if (session == nullptr)
@@ -143,9 +144,11 @@ bool LanServer::disconnect(__int64 sessionId)
 
 	delete session;
 
-	//LOG_INFO(L"[NETWORK] session delete count=%d", sessionSize_);
-
 	InterlockedDecrement(&sessionCount_);
+
+	LOG_INFO(L"[NETWORK] session delete");
+
+	onRelease(sessionId);
 
 	return true;
 }
@@ -226,8 +229,6 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 		// idSeed_는 이 스레드에서만 변경 가능하므로 인터락 적용 x
 		session->initialize(clientSock, ip, port, ++(server->idSeed_));
 
-		//LOG_INFO(L"[NETWORK] session ip=%s port=%d", ip, port);
-
 		server->sessionMapLock_.lock();
 
 		server->sessionMap_.insert({ session->id(), session });
@@ -236,9 +237,9 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 
 		InterlockedIncrement(&(server->sessionCount_));
 
-		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
+		LOG_INFO(L"[NETWORK] session create ip=%s port=%d count=%d", ip.c_str(), port, server->sessionCount_);
 
-		//LOG_INFO(L"[NETWORK] session create count=%d", server->sessionCount_);
+		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
 
 		session->postRecv();
 
@@ -282,7 +283,7 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 				// 64 상대가 연결을 끊었을때 (numOfBytes == 0)
 				if (error == ERROR_NETNAME_DELETED)
 				{
-					session->decrementIOCount();
+					session->decrementIoCount();
 
 					continue;
 				}
@@ -292,14 +293,14 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 				{
 					LOG_INFO(L"GQCS() error: ERROR_CONNECTION_ABORTED");
 
-					session->decrementIOCount();
+					session->decrementIoCount();
 
 					continue;
 				}
 
 				LOG_INFO(L"GQCS() error: %d", error);
 
-				session->decrementIOCount();
+				session->decrementIoCount();
 
 				continue;
 			}
@@ -330,7 +331,7 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 			// 상대가 closesocket()시 (rst x) 발생
 			if (numOfBytes == 0)
 			{
-				session->decrementIOCount();
+				session->decrementIoCount();
 
 				continue;
 			}
@@ -408,7 +409,8 @@ Session* LanServer::findSession(__int64 sessionId)
 		return nullptr;
 }
 
-void LanServer::increaseRecvMessageTps()
+void LanServer::decrementIoCount(__int64 sessionId)
 {
-	InterlockedIncrement(&recvMessageCount_);
+	Session* session = this->findSession(sessionId);
+	session->decrementIoCount();
 }

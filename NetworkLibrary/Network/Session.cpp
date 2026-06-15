@@ -48,21 +48,21 @@ int Session::port() const
 
 void Session::postRecv()
 {
-	sessionLock_.lock();
+	//sessionLock_.lock();
 
 	// 처음에 recv를 등록하기전에 카운트를 증가시킴!!!
 	InterlockedIncrement(&ioCount_);
 
 	ZeroMemory(&recvOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
 
-	sessionLock_.unlock();
+	//sessionLock_.unlock();
 
 	DWORD flags = 0;
 	int retval;
 
 	WSABUF wsaBuf[2];
 
-	sessionLock_.lock();
+	//sessionLock_.lock();
 
 	wsaBuf[0].buf = recvQueue_.getRearBufferPtr();
 	wsaBuf[0].len = recvQueue_.directEnqueueSize();
@@ -81,7 +81,7 @@ void Session::postRecv()
 		retval = WSARecv(socket_, wsaBuf, 2, nullptr, &flags, (WSAOVERLAPPED*)&recvOverlapped_, NULL);
 	}
 
-	sessionLock_.unlock();
+	//sessionLock_.unlock();
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -93,7 +93,7 @@ void Session::postRecv()
 		}
 		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
 		{
-			this->decrementIOCount();
+			this->decrementIoCount();
 
 			return;
 		}
@@ -101,7 +101,7 @@ void Session::postRecv()
 		{
 			LOG(L"WSARecv() error: %d, iocount: %d", error, ioCount_);
 
-			this->decrementIOCount();
+			this->decrementIoCount();
 
 			return;
 		}
@@ -112,87 +112,15 @@ void Session::postRecv()
 	}
 }
 
-/// LanTestServer
-void Session::completeRecv(int numOfBytes)
-{
-	//printf("completeRecv() %d\n", numOfBytes);
-	sessionLock_.lock();
-
-	recvQueue_.moveRear(numOfBytes);
-
-	sessionLock_.unlock();
-
-	while (1)
-	{
-		//sessionLock_.lock();
-
-		int useSize = recvQueue_.useSize();
-
-		if (recvQueue_.isFull())
-		{
-			//sessionLock_.unlock();
-
-			LOG_INFO(L"recvQueue full");
-
-			//연결 종료 로직 필요
-
-			return;
-		}
-
-		//sessionLock_.unlock();
-
-		if (useSize < sizeof(HEADER))
-			break;
-
-		HEADER header;
-
-		//sessionLock_.lock();
-
-		recvQueue_.peek((char*)&header, sizeof(HEADER));
-
-		//sessionLock_.unlock();
-
-		int messageSize = header.size;
-
-		if (useSize < sizeof(HEADER) + messageSize)
-			break;
-
-		//sessionLock_.lock();
-
-		recvQueue_.moveFront(sizeof(HEADER));
-
-		Packet packet;
-
-		recvQueue_.dequeue(packet.getBufferPtr(), messageSize);
-
-		//sessionLock_.unlock();
-
-		packet.moveWritePos(messageSize);
-
-		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
-
-		server->onRecv(sessionId_, packet);
-
-		server->increaseRecvMessageTps();
-	}
-
-	this->postRecv();
-
-	this->decrementIOCount();
-}
-
-
-#include "../RPC/RPCStub.h"
-
-/// FighterServer
+/// TestServer
 //void Session::completeRecv(int numOfBytes)
 //{
 //	//printf("completeRecv() %d\n", numOfBytes);
-//	//sessionLock_.lock();
+//	sessionLock_.lock();
 //
 //	recvQueue_.moveRear(numOfBytes);
 //
-//	//sessionLock_.unlock();
+//	sessionLock_.unlock();
 //
 //	while (1)
 //	{
@@ -213,34 +141,25 @@ void Session::completeRecv(int numOfBytes)
 //
 //		//sessionLock_.unlock();
 //
-//		if (useSize < sizeof(FIGHTER_HEADER))
+//		if (useSize < sizeof(HEADER))
 //			break;
 //
-//		FIGHTER_HEADER header;
+//		HEADER header;
 //
 //		//sessionLock_.lock();
 //
-//		recvQueue_.peek((char*)&header, sizeof(FIGHTER_HEADER));
+//		recvQueue_.peek((char*)&header, sizeof(HEADER));
 //
 //		//sessionLock_.unlock();
 //
-//		if (header.code != PACKET_CODE)
-//		{
-//			this->decrementIOCount();
-//
-//			LOG(L"[NETWORK] invalid packet header session=%d", sessionId_);
-//
-//			return;
-//		}
-//
 //		int messageSize = header.size;
 //
-//		if (useSize < sizeof(FIGHTER_HEADER) + messageSize)
+//		if (useSize < sizeof(HEADER) + messageSize)
 //			break;
 //
 //		//sessionLock_.lock();
 //
-//		recvQueue_.moveFront(sizeof(FIGHTER_HEADER));
+//		recvQueue_.moveFront(sizeof(HEADER));
 //
 //		Packet packet;
 //
@@ -252,32 +171,103 @@ void Session::completeRecv(int numOfBytes)
 //
 //		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
 //
-//		// 함수의 인자 자료형 주의 필요 (이후 패킷헤더 수정시 참고)
-//		if (!RPCStub::getInstance().packetProc(sessionId_, packet, (int)header.type))
-//		{
-//			// packetProc에서 disconnect 호출되는 상황 주의. 중복 삭제 발생 가능
-//			//this->disconnect();
-//
-//			return;
-//		}
-//
-//		//server->onRecv(sessionId_, packet);
+//		server->onRecv(sessionId_, packet);
 //
 //		server->increaseRecvMessageTps();
 //	}
 //
 //	this->postRecv();
 //
-//	this->decrementIOCount();
+//	this->decrementIoCount();
 //}
+
+
+#include "../RPC/RPCStub.h"
+#include <iostream>
+
+/// FighterServer
+void Session::completeRecv(int numOfBytes)
+{
+	//printf("completeRecv() %d\n", numOfBytes);
+	//sessionLock_.lock();
+
+	recvQueue_.moveRear(numOfBytes);
+
+	//sessionLock_.unlock();
+
+	while (1)
+	{
+		//sessionLock_.lock();
+
+		int useSize = recvQueue_.useSize();
+
+		if (recvQueue_.isFull())
+		{
+			//sessionLock_.unlock();
+
+			LOG_INFO(L"recvQueue full");
+
+			//연결 종료 로직 필요
+
+			return;
+		}
+
+		//sessionLock_.unlock();
+
+		if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char))
+			break;
+
+		FIGHTER_HEADER header;
+
+		//sessionLock_.lock();
+
+		recvQueue_.peek((char*)&header, sizeof(FIGHTER_HEADER));
+
+		//sessionLock_.unlock();
+
+		if (header.code != PACKET_CODE)
+		{
+			this->decrementIoCount();
+
+			LOG(L"[NETWORK] invalid packet header session=%d", sessionId_);
+
+			return;
+		}
+
+		int messageSize = header.size;
+
+		if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char) + messageSize)
+			break;
+
+		//sessionLock_.lock();
+
+		recvQueue_.moveFront(sizeof(FIGHTER_HEADER));
+
+		Packet packet;
+
+		recvQueue_.dequeue(packet.getBufferPtr(), sizeof(unsigned char) + messageSize);
+
+		//sessionLock_.unlock();
+
+		packet.moveWritePos(sizeof(unsigned char) + messageSize);
+
+		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
+
+		server->onRecv(sessionId_, packet);
+	}
+
+	this->postRecv();
+
+	this->decrementIoCount();
+}
 
 void Session::postSend()
 {
-	sessionLock_.lock();
+	//sessionLock_.lock();
 
 	if (InterlockedExchange(&sendPending_, 1) == 1)
 	{
-		sessionLock_.unlock();
+		//sessionLock_.unlock();
 
 		return;
 	}
@@ -288,13 +278,13 @@ void Session::postSend()
 
 	ZeroMemory(&sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
 
-	sessionLock_.unlock();
+	//sessionLock_.unlock();
 
 	int retval;
 
 	WSABUF wsaBuf[2];
 
-	sessionLock_.lock();
+	//sessionLock_.lock();
 
 	if (sendQueue_.useSize() <= sendQueue_.directDequeueSize())
 	{
@@ -320,7 +310,7 @@ void Session::postSend()
 		//PRO_END(L"send");
 	}
 
-	sessionLock_.unlock();
+	//sessionLock_.unlock();
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -332,7 +322,7 @@ void Session::postSend()
 		}
 		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
 		{
-			this->decrementIOCount();
+			this->decrementIoCount();
 
 			return;
 		}
@@ -340,7 +330,7 @@ void Session::postSend()
 		{
 			LOG(L"WSASend() error: %d, iocount: %d", error, ioCount_);
 
-			this->decrementIOCount();
+			this->decrementIoCount();
 
 			return;
 		}
@@ -353,7 +343,7 @@ void Session::postSend()
 
 void Session::completeSend(int numOfBytes)
 {
-	sessionLock_.lock();
+	//sessionLock_.lock();
 
 	sendQueue_.moveFront(numOfBytes);
 
@@ -362,26 +352,48 @@ void Session::completeSend(int numOfBytes)
 	// 추가
 	int useSize = sendQueue_.useSize();
 
-	sessionLock_.unlock();
+	//sessionLock_.unlock();
 
 	if (useSize > 0)
 		this->postSend();
 
 	//printf("sendq usesize: %d\n", useSize);
 
-	this->decrementIOCount();
+	this->decrementIoCount();
 }
 
+/// TestServer
+//void Session::sendPacket(Packet& packet)
+//{
+//	//if (ioCount_ == 0)
+//	//	return;
+//
+//	//if(InterlockedIncrement(&ioCount_) == 1)
+//	//	return;
+//
+//	HEADER header;
+//	header.size = packet.useSize();
+//
+//	//sessionLock_.lock();
+//
+//	sendQueue_.lock();
+//
+//	sendQueue_.enqueue((char*)&header, sizeof(HEADER));
+//	sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
+//
+//	sendQueue_.unlock();
+//
+//	//sessionLock_.unlock();
+//
+//	this->postSend();
+//}
+
+/// FighterServer
 void Session::sendPacket(Packet& packet)
 {
-	//if (ioCount_ == 0)
-	//	return;
-
-	//if(InterlockedIncrement(&ioCount_) == 1)
-	//	return;
-
-	HEADER header;
-	header.size = packet.useSize();
+	FIGHTER_HEADER header;
+	header.code = PACKET_CODE;
+	header.size = packet.useSize() - sizeof(unsigned char);
 
 	//sessionLock_.lock();
 
@@ -397,7 +409,7 @@ void Session::sendPacket(Packet& packet)
 	this->postSend();
 }
 
-void Session::decrementIOCount()
+void Session::decrementIoCount()
 {
 	if (InterlockedDecrement(&ioCount_) == 0)
 	{

@@ -160,7 +160,7 @@ void PlayerManager::createPlayer(__int64 sessionId)
 	player->initialize(sessionId);
 
 	/// TODO: Lock 필요
-	playerList_.insert({sessionId, player});
+	playerList_.insert({ sessionId, player });
 	playerCount_++;
 
 	int playerId = player->playerId();
@@ -195,12 +195,12 @@ void PlayerManager::createPlayer(__int64 sessionId)
 
 void PlayerManager::removePlayer(__int64 sessionId)
 {
+	Player* player = this->findBySessionId(sessionId);
+
 	/// TODO: Lock 필요
 	playerList_.erase(sessionId);
 
-	auto it = playerList_.find(sessionId);
-
-	delete (*it).second;
+	delete player;
 
 	playerCount_--;
 }

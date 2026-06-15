@@ -15,8 +15,6 @@ Logger::Logger()
 
 	if (!fout_.is_open())
 		printf("*** Logger fail ***\n");
-	else
-		printf("### Logger OK ###\n");
 }
 
 Logger::~Logger()
@@ -58,19 +56,10 @@ void Logger::log(LogLevel level, const WCHAR* fmt, ...)
 
 	WCHAR finalMessage[1400];
 
-	swprintf_s(
-		finalMessage,
-		L"[%04d-%02d-%02d %02d:%02d:%02d.%03d] [T%u] [%s] %s\n",
-		st.wYear,
-		st.wMonth,
-		st.wDay,
-		st.wHour,
-		st.wMinute,
-		st.wSecond,
-		st.wMilliseconds,
-		threadId,
-		levelStr,
-		userMessage);
+	swprintf_s(finalMessage, L"[%04d-%02d-%02d %02d:%02d:%02d.%03d] [T%u] [%s] %s\n",
+		st.wYear, st.wMonth, st.wDay,
+		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
+		threadId, levelStr, userMessage);
 
 	std::wcout << finalMessage;
 	fout_ << finalMessage;

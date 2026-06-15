@@ -48,7 +48,7 @@ bool PacketHandler::cs_start_move(__int64 sessionId, char direction, short x, sh
 		if (other == player)
 			continue;
 
-		RPCProxy::sc_start_move(other->sessionId(), player->playerId_, player->action_, 
+		RPCProxy::sc_start_move(other->sessionId_, player->playerId_, player->action_,
 			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
 
@@ -84,7 +84,7 @@ bool PacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short 
 		if (other == player)
 			continue;
 
-		RPCProxy::sc_stop_move(other->sessionId(), player->playerId_, player->direction_,
+		RPCProxy::sc_stop_move(other->sessionId_, player->playerId_, player->direction_,
 			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
 
@@ -97,9 +97,9 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 	if (player == nullptr)
 		return false;
 
-	player->direction_ = direction;
-	player->x_ = x;
-	player->y_ = y;
+	//player->direction_ = direction;
+	//player->x_ = x;
+	//player->y_ = y;
 
 	for (auto& p : PlayerManager::getInstance().playerList_)
 	{
@@ -109,7 +109,7 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 			continue;
 
 		// 단순히 공격 이펙트만 전송
-		RPCProxy::sc_attack1(other->sessionId(), player->playerId_, player->direction_, player->x_, player->y_);
+		RPCProxy::sc_attack1(other->sessionId_, player->playerId_, player->direction_, player->x_, player->y_);
 	}
 
 	Player* target = nullptr;
@@ -129,20 +129,20 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 
 		if (player->direction_ == MOVE_DIR_RR)
 		{
-			int diffX = other->x_ - player->x_;
-			if (deltaXMin <= diffX)
+			int deltaX = abs(other->x_ - player->x_);
+			if (other->x_ < player->x_ || deltaXMin <= deltaX)
 				continue;
 
-			deltaXMin = diffX;
+			deltaXMin = deltaX;
 			target = other;
 		}
 		else
 		{
-			int diffX = player->x_ - other->x_;
-			if (deltaXMin <= diffX)
+			int deltaX = abs(other->x_ - player->x_);
+			if ( player->x_ <other->x_  || deltaXMin <= deltaX)
 				continue;
 
-			deltaXMin = diffX;
+			deltaXMin = deltaX;
 			target = other;
 		}
 	}
@@ -157,24 +157,23 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 	{
 		Player* other = p.second;
 
-		RPCProxy::sc_damage(other->sessionId(), player->playerId_, target->playerId_, target->hp_);
+		RPCProxy::sc_damage(other->sessionId_, player->playerId_, target->playerId_, target->hp_);
 	}
 
 	if (target->hp_ <= 0)
 	{
 		for (auto& p : PlayerManager::getInstance().playerList_)
 		{
-			Player* other = p.second;
+			Player* everyPlayer = p.second;
 
-			if (other == player)
-				continue;
-
-			RPCProxy::sc_character_delete(other->sessionId(), player->playerId());
+			RPCProxy::sc_character_delete(everyPlayer->sessionId_, target->playerId_);
 		}
 
-		PlayerManager::getInstance().removePlayer(player->playerId_);
+		/// HOW TO?
+		//server->decrementIoCount(target->sessionId_);
+		//PlayerManager::getInstance().removePlayer(target->playerId_);
 
-		return false;
+		return true;
 	}
 
 	return true;

@@ -32,6 +32,7 @@ public:
 	~RingBuffer();
 
 	void clear();
+	void resize(int size);
 
 	int useSize() const;
 	int freeSize() const;

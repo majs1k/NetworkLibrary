@@ -31,5 +31,5 @@ private:
 
 public:
 	void initialize(IPacketHandler* handle);
-	bool packetProc(__int64 sessionId, Packet& packet, int type);
+	bool packetProc(__int64 sessionId, Packet& packet, unsigned char type);
 };

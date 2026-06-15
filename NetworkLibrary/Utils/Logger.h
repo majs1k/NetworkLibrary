@@ -32,7 +32,7 @@ enum class LogLevel
 class Logger : public Singleton<Logger>
 {
 private:
-	std::wofstream fout_;		// w ¡÷¿«
+	std::wofstream fout_;
 	WCHAR fileName_[MAX_PATH];
 
 public:

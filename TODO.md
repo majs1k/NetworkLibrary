@@ -25,16 +25,19 @@ placement new 활용도??
 
 로그에서 락 걸고 큐에 담은후 1초에 한번씩 flush 하는 경우 - 문제 발생 x?
 
-sendPacket에서 헤더를 넣어야 한다면.. 타입은?
-RPCProxy -> 인자가 sessionId?
+네트워크 패킷 헤더에 타입이 없다??
+RPC 적용된 경우에는 
+Proxy 코드에서 헤더를 Packet 구조체에 넣고 sendPacket 진입?
+onRecv 에서 타입을 Packet 구조체에서 뺀 후 packetProc로 타입 전달?
+RPC 코드들은 인자가 Session* 대신에 sessionId?
 
 서버쪽에서 먼저 연결 끊는 경우 (컨텐츠 종료 등)
-컨텐츠 측에서 세션 찾아서 iocount 감소? 플래그 도입?
+"컨텐츠" 측에서 세션 찾아서 iocount 감소? 플래그 도입?
 
 server 전역변수 하나만 존재? 메인함수에서 선언?
 만약 아니면 session 클래스에서 어떻게 사용할지
 
 onAccept(), onEnterJoinServer() 은 recv 등록하기 전에 호출?
 
-로그 파일 출력시 utf-8???
+로그 파일 출력시 utf-8??? 문자열도 utf-8 세트?
 ```

@@ -56,18 +56,16 @@ class RPCGenerator
 
                 string funcParam = "";
                 string shiftParam = "";
-                string proxySize = "";
 
                 foreach (var p in parsed.Parameters)
                 {
                     funcParam += ", ";
                     funcParam += string.Format(RPCFormat.funcParam, p.type, p.name);
                     shiftParam += string.Format(RPCFormat.shiftLeft, p.name);
-                    proxySize += string.Format(RPCFormat.sizeOf, p.type);
                 }
 
                 proxyFunc += string.Format(RPCFormat.proxyCppFunc,
-                    parsed.Name, funcParam, proxySize, parsed.PacketType, shiftParam);
+                    parsed.Name, funcParam, parsed.PacketType, shiftParam);
             }
 
             string proxyCpp = string.Format(RPCFormat.proxyCpp, proxyFunc);
@@ -139,7 +137,6 @@ class RPCGenerator
                     funcParam2 += ";" + Environment.NewLine;
 
                     shiftParam += string.Format(RPCFormat.shiftRight, p.name);
-                    proxySize += string.Format(RPCFormat.sizeOf, p.type);
                 }
 
                 stubFunc1 += string.Format(RPCFormat.stubCppFunc1, parsed.Name, funcParam);

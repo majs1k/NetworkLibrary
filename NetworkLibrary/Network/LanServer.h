@@ -55,16 +55,18 @@ public:
 	bool disconnect(__int64 sessionId);
 	bool sendPacket(__int64 sessionId, Packet& packet);
 
-	/// 순수 가상함수
+	// IP 차단 기능 + 패치 후 white ip로 점검 등
 	virtual bool onConnectionRequest(const std::wstring& ip, int port) = 0;
 
 	// 인자 미정
+	// Session 포인터, socket -> 컨텐츠로 절대 전달 x
 	virtual void onAccept(__int64 sessionId) = 0;
 
 	virtual void onRelease(__int64 sessionId) = 0;
 
 	virtual void onRecv(__int64 sessionId, Packet& packet) = 0;
 
+	// 컨텐츠에게 에러코드를 알려주지만 서버 끌 상황은 아닐때
 	virtual void onError(int errorCode, wchar_t* str) = 0;
 
 	int acceptTps();
@@ -77,7 +79,5 @@ public:
 	static unsigned int __stdcall mornitorThread(void* param);
 
 	Session* findSession(__int64 sessionId);
-	void increaseRecvMessageTps();
+	void decrementIoCount(__int64 sessionId);
 };
-
-extern LanServer* server;
