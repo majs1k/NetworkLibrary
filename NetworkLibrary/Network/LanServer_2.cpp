@@ -1,6 +1,7 @@
 #include "LanServer.h"
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
+#include "../Utils/Profiler.h"
 
 void LanServer::postRecv(Session* session)
 {
@@ -71,7 +72,6 @@ void LanServer::postRecv(Session* session)
 /// TestServer
 void LanServer::completeRecv(Session* session, int numOfBytes)
 {
-	//printf("completeRecv() %d\n", numOfBytes);
 	//sessionLock_.lock();
 
 	session->recvQueue_.moveRear(numOfBytes);
@@ -144,7 +144,6 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 /// FighterServer
 //void LanServer::completeRecv(Session* session, int numOfBytes)
 //{
-//	//printf("completeRecv() %d\n", numOfBytes);
 //	//sessionLock_.lock();
 //
 //	session->recvQueue_.moveRear(numOfBytes);
@@ -250,9 +249,10 @@ void LanServer::postSend(Session* session)
 		wsaBuf[0].buf = session->sendQueue_.getFrontBufferPtr();
 		wsaBuf[0].len = session->sendQueue_.useSize();
 
-		//PRO_BEGIN(L"send");
+		//PRO_BEGIN(L"send 1");
+		//PRO_BEGIN(L"send 2");
 		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&session->sendOverlapped_, NULL);
-		//PRO_END(L"send");
+		//PRO_END(L"send 1");
 	}
 	else
 	{
@@ -263,9 +263,10 @@ void LanServer::postSend(Session* session)
 		wsaBuf[1].buf = session->sendQueue_.getBufferPtr();
 		wsaBuf[1].len = session->sendQueue_.useSize() - session->sendQueue_.directEnqueueSize();
 
-		//PRO_BEGIN(L"send");
+		//PRO_BEGIN(L"send 1");
+		//PRO_BEGIN(L"send 2");
 		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&session->sendOverlapped_, NULL);
-		//PRO_END(L"send");
+		//PRO_END(L"send 1");
 	}
 
 	//sessionLock_.unlock();
@@ -301,21 +302,18 @@ void LanServer::postSend(Session* session)
 
 void LanServer::completeSend(Session* session, int numOfBytes)
 {
+	//PRO_END(L"send 2");
+
 	//sessionLock_.lock();
 
 	session->sendQueue_.moveFront(numOfBytes);
 
 	session->sendPending_ = 0;
 
-	// Ãß°¡
-	int useSize = session->sendQueue_.useSize();
-
-	//sessionLock_.unlock();
-
-	if (useSize > 0)
+	if (session->sendQueue_.useSize() > 0)
 		this->postSend(session);
 
-	//printf("sendq usesize: %d\n", useSize);
+	//sessionLock_.unlock();
 
 	this->decrementIoCount(session);
 }

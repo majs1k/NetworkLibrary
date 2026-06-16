@@ -1,8 +1,6 @@
 #pragma once
 #include "../RPC/RPCStub.h"
 
-class Session;
-
 class PacketHandler : public IPacketHandler
 {
 public:

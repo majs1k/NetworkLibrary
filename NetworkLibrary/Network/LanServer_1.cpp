@@ -6,8 +6,6 @@
 #include "../Utils/Profiler.h"
 #pragma comment(lib, "winmm.lib")
 
-LanServer* server = nullptr;
-
 LanServer::LanServer()
 {
 	WSADATA wsa;
@@ -162,7 +160,9 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 	auto it = sessionMap_.find(sessionId);
 
 	if (it == sessionMap_.end())
+	{
 		return false;
+	}
 
 	Session* session = (*it).second;
 
@@ -177,16 +177,12 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 	HEADER header;
 	header.size = packet.useSize();
 
-	//sessionLock_.lock();
-
 	session->sendQueue_.lock();
 
 	session->sendQueue_.enqueue((char*)&header, sizeof(HEADER));
 	session->sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
 
 	session->sendQueue_.unlock();
-
-	//sessionLock_.unlock();
 
 	this->postSend(session);
 
@@ -198,16 +194,20 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 /// FighterServer
 //bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 //{
-//	Session* session = this->findSession(sessionId);
+//	sessionMapLock_.lock();
 //
-//	if (!session)
+//	auto it = sessionMap_.find(sessionId);
+//
+//	if (it == sessionMap_.end())
 //		return false;
+//
+//	Session* session = (*it).second;
+//
+//	sessionMapLock_.unlock();
 //
 //	FIGHTER_HEADER header;
 //	header.code = PACKET_CODE;
 //	header.size = packet.useSize() - sizeof(unsigned char);
-//
-//	//sessionLock_.lock();
 //
 //	session->sendQueue_.lock();
 //
@@ -216,9 +216,11 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 //
 //	session->sendQueue_.unlock();
 //
-//	//sessionLock_.unlock();
+//	this->postSend(session);
 //
-//	this->postSend();
+//	InterlockedIncrement(&sendMessageCount_);
+//
+//	return true;
 //}
 
 int LanServer::acceptTps()
@@ -275,7 +277,10 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 		int port = ntohs(clientAddr.sin_port);
 
 		if (!server->onConnectionRequest(ip, port))
+		{
+			closesocket(clientSock);
 			continue;
+		}
 
 		Session* session = new Session();
 		// idSeed_는 이 스레드에서만 변경 가능하므로 인터락 적용 x

@@ -12,15 +12,20 @@ namespace PacketGenerator
         public static string proxyHeader =
 @"#pragma once
 
+class LanServer;
+
 class RPCProxy
 {{
+public:
+	LanServer* server;
+
 public:{0}
 }};
 ";
 
         public static string proxyHeaderFunc =
 @"
-	static void {0}(__int64 sessionId{1});";
+	void {0}(__int64 sessionId{1});";
 
         public static string funcParam =
 @"{0} {1}";
@@ -64,7 +69,7 @@ public:
 {0}
 }};
 
-class RPCStub : public Singleton<RPCStub>
+class RPCStub
 {{
 private:
 	IPacketHandler* handle_ = nullptr;

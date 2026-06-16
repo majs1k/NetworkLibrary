@@ -102,12 +102,13 @@ public:
 		// 1초의 진동주기 (현재 os에서는 천만 -> 100ns 단위 측정 가능)
 		QueryPerformanceFrequency(&freq_);
 
-		HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, this->profilerThread, this, 0, nullptr);
-		CloseHandle(hThread);
+		//HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, this->profilerThread, this, 0, nullptr);
 	}
 
 	~Profiler()
 	{
+		//CloseHandle(hThread);
+
 		for (auto& p : profileMap_)
 		{
 			delete p.second;
@@ -160,6 +161,11 @@ public:
 		QueryPerformanceCounter(&endTime);
 
 		Profile* profile = this->find(name);
+
+		if ((endTime.QuadPart - profile->startTime_.QuadPart) < 0)
+		{
+			DebugBreak();
+		}
 
 		// 100ns 단위 환산
 		__int64 timeDiff = (__int64)((endTime.QuadPart - profile->startTime_.QuadPart) * 10'000'000 / freq_.QuadPart);

@@ -1,5 +1,6 @@
 #include "Player.h"
-#include "../RPC/RPCProxy.h"
+#include "FighterServer.h"
+//#include "../RPC/RPCProxy.h"
 #include "../Utils/Random.h"
 #include "../Utils/TickController.h"
 
@@ -160,7 +161,7 @@ void PlayerManager::createPlayer(__int64 sessionId)
 	player->initialize(sessionId);
 
 	/// TODO: Lock 필요
-	playerList_.insert({ sessionId, player });
+	playerMap_.insert({ sessionId, player });
 	playerCount_++;
 
 	int playerId = player->playerId();
@@ -170,9 +171,9 @@ void PlayerManager::createPlayer(__int64 sessionId)
 	char hp = player->hp();
 
 	// 내 캐릭터 정보 나에게
-	RPCProxy::sc_create_my_character(sessionId, playerId, direction, x, y, hp);
+	proxy.sc_create_my_character(sessionId, playerId, direction, x, y, hp);
 
-	for (auto& p : playerList_)
+	for (auto& p : playerMap_)
 	{
 		Player* other = p.second;
 
@@ -180,30 +181,30 @@ void PlayerManager::createPlayer(__int64 sessionId)
 			continue;
 
 		// 내 캐릭터 정보 남에게
-		RPCProxy::sc_create_other_character(other->sessionId(), playerId, direction, x, y, hp);
+		proxy.sc_create_other_character(other->sessionId(), playerId, direction, x, y, hp);
 
 		// 남 캐릭터 정보 나에게
-		RPCProxy::sc_create_other_character(sessionId, other->playerId(), other->direction(), (short)other->x(), (short)other->y(), other->hp());
+		proxy.sc_create_other_character(sessionId, other->playerId(), other->direction(), (short)other->x(), (short)other->y(), other->hp());
 
 		if (other->action() == MOVE_DIR_NONE)
 			continue;
 
 		// 남 캐릭터 이동중이면 나에게
-		RPCProxy::sc_start_move(sessionId, other->playerId(), other->action(), (short)other->x(), (short)other->y());
+		proxy.sc_start_move(sessionId, other->playerId(), other->action(), (short)other->x(), (short)other->y());
 	}
 }
 
 void PlayerManager::removePlayer(__int64 sessionId)
 {
-	auto it = playerList_.find(sessionId);
+	auto it = playerMap_.find(sessionId);
 
-	if (it == playerList_.end())
+	if (it == playerMap_.end())
 		return;
 
 	Player* player = (*it).second;
 
 	/// TODO: Lock 필요
-	playerList_.erase(sessionId);
+	playerMap_.erase(sessionId);
 
 	delete player;
 
@@ -212,7 +213,7 @@ void PlayerManager::removePlayer(__int64 sessionId)
 
 void PlayerManager::update()
 {
-	for (auto& p : playerList_)
+	for (auto& p : playerMap_)
 	{
 		Player* player = p.second;
 

@@ -24,7 +24,7 @@ public:
 	virtual bool sc_damage(__int64 sessionId, int attackID, int damageID, char damageHP);
 };
 
-class RPCStub : public Singleton<RPCStub>
+class RPCStub
 {
 private:
 	IPacketHandler* handle_ = nullptr;

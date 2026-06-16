@@ -1,13 +1,8 @@
 #include <conio.h>
-
-//#include "./Network/LanServer.h"
-#include "./Network/TestServer.h"
-
-//#include "./Contents/PacketHandler.h"
-//#include "./Contents/Player.h"
-
+#include "./Contents/TestServer.h"
 #include "./Utils/ConfigLoader.h"
 #include "./Utils/CrashDump.h"
+#include "./Utils/Profiler.h"
 
 #define CONFIG_FILENAME			L"testconfig.json"
 
@@ -16,8 +11,6 @@ int main()
 	CrashDump().Initialize();
 
 	ConfigLoader::getInstance().load(CONFIG_FILENAME);
-
-	//RPCStub::getInstance().initialize(new PacketHandler());
 
 	TestServer server;
 
@@ -30,10 +23,16 @@ int main()
 		if (c == 'x')
 			break;
 
-		if (c == 'p')
+		else if (c == 'p')
 			server.printTps();
+
+		else if (c == ' ')
+			Profiler::getInstance().save();
+
+		else if (c == 'c')
+			Profiler::getInstance().clear();
 	}
-	
+
 	server.stop();
 
 	return 0;

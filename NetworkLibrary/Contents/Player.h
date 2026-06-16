@@ -93,7 +93,7 @@ class PlayerManager : public Singleton<PlayerManager>
 	friend class PacketHandler;
 
 private:
-	std::unordered_map<__int64, Player*> playerList_{};
+	std::unordered_map<__int64, Player*> playerMap_{};
 	int playerCount_ = 0;
 
 public:

@@ -1,9 +1,18 @@
 #pragma once
-#include "LanServer.h"
-#include "../Contents/Player.h"
+#include "../Network/LanServer.h"
+#include "../RPC/RPCProxy.h"
+#include "../RPC/RPCStub.h"
+
+extern RPCProxy proxy;
 
 class FighterServer : public LanServer
 {
+private:
+	RPCStub stub;
+
+public:
+	FighterServer();
+
 	bool onConnectionRequest(const std::wstring& ip, int port) override;
 
 	void onAccept(__int64 sessionId) override;

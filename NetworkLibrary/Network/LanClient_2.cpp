@@ -2,6 +2,8 @@
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
 
+/// 아래 코드는 LanServer_2.cpp와 동일한 코드로 사용할것.
+
 void LanClient::postRecv(Session* session)
 {
 	//sessionLock_.lock();

@@ -1,13 +1,16 @@
 #include "PacketHandler.h"
+#include "FighterServer.h"
 #include "Player.h"
-#include "../RPC/RPCProxy.h"
 #include "../Utils/Logger.h"
 
 bool PacketHandler::cs_start_move(__int64 sessionId, char direction, short x, short y)
 {
-	Player* player = PlayerManager::getInstance().findBySessionId(sessionId);
-	if (player == nullptr)
+	auto it = PlayerManager::getInstance().playerMap_.find(sessionId);
+
+	if (it == PlayerManager::getInstance().playerMap_.end())
 		return false;
+
+	Player* player = (*it).second;
 
 	// 이동 오류 체크
 	int deltaX = abs(x - player->x_);
@@ -40,14 +43,14 @@ bool PacketHandler::cs_start_move(__int64 sessionId, char direction, short x, sh
 	player->x_ = x;
 	player->y_ = y;
 
-	for (auto& p : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerMap_)
 	{
 		Player* other = p.second;
 
 		if (other == player)
 			continue;
 
-		RPCProxy::sc_start_move(other->sessionId_, player->playerId_, player->action_,
+		proxy.sc_start_move(other->sessionId_, player->playerId_, player->action_,
 			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
 
@@ -56,9 +59,12 @@ bool PacketHandler::cs_start_move(__int64 sessionId, char direction, short x, sh
 
 bool PacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short y)
 {
-	Player* player = PlayerManager::getInstance().findBySessionId(sessionId);
-	if (player == nullptr)
+	auto it = PlayerManager::getInstance().playerMap_.find(sessionId);
+
+	if (it == PlayerManager::getInstance().playerMap_.end())
 		return false;
+
+	Player* player = (*it).second;
 
 	// 이동 오류 체크
 	int deltaX = abs(x - player->x_);
@@ -76,14 +82,14 @@ bool PacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short 
 	player->x_ = x;
 	player->y_ = y;
 
-	for (auto& p : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerMap_)
 	{
 		Player* other = p.second;
 
 		if (other == player)
 			continue;
 
-		RPCProxy::sc_stop_move(other->sessionId_, player->playerId_, player->direction_,
+		proxy.sc_stop_move(other->sessionId_, player->playerId_, player->direction_,
 			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
 
@@ -92,15 +98,18 @@ bool PacketHandler::cs_stop_move(__int64 sessionId, char action, short x, short 
 
 bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short y)
 {
-	Player* player = PlayerManager::getInstance().findBySessionId(sessionId);
-	if (player == nullptr)
+	auto it = PlayerManager::getInstance().playerMap_.find(sessionId);
+
+	if (it == PlayerManager::getInstance().playerMap_.end())
 		return false;
+
+	Player* player = (*it).second;
 
 	//player->direction_ = direction;
 	//player->x_ = x;
 	//player->y_ = y;
 
-	for (auto& p : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerMap_)
 	{
 		Player* other = p.second;
 
@@ -108,13 +117,13 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 			continue;
 
 		// 단순히 공격 이펙트만 전송
-		RPCProxy::sc_attack1(other->sessionId_, player->playerId_, player->direction_, player->x_, player->y_);
+		proxy.sc_attack1(other->sessionId_, player->playerId_, player->direction_, player->x_, player->y_);
 	}
 
 	Player* target = nullptr;
 	int deltaXMin = ATTACK1_RANGE_X;
 
-	for (auto& p : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerMap_)
 	{
 		Player* other = p.second;
 
@@ -152,20 +161,20 @@ bool PacketHandler::cs_attack1(__int64 sessionId, char direction, short x, short
 	// TODO: 최솟값 0
 	target->hp_ -= ATTACK1_DAMAGE;
 
-	for (auto& p : PlayerManager::getInstance().playerList_)
+	for (auto& p : PlayerManager::getInstance().playerMap_)
 	{
 		Player* other = p.second;
 
-		RPCProxy::sc_damage(other->sessionId_, player->playerId_, target->playerId_, target->hp_);
+		proxy.sc_damage(other->sessionId_, player->playerId_, target->playerId_, target->hp_);
 	}
 
 	if (target->hp_ <= 0)
 	{
-		for (auto& p : PlayerManager::getInstance().playerList_)
+		for (auto& p : PlayerManager::getInstance().playerMap_)
 		{
 			Player* everyPlayer = p.second;
 
-			RPCProxy::sc_character_delete(everyPlayer->sessionId_, target->playerId_);
+			proxy.sc_character_delete(everyPlayer->sessionId_, target->playerId_);
 		}
 
 		/// HOW TO?

@@ -44,7 +44,7 @@ struct OverlappedEx
 	IOType type;
 };
 
-/// TODO: 技记 昏力矫 家南 close 秦具窃.
+/// TODO: 技记 昏力矫 家南 close
 struct Session
 {
 	SOCKET socket_;
@@ -156,13 +156,10 @@ public:
 	static unsigned int __stdcall workerThread(void* param);
 	static unsigned int __stdcall mornitorThread(void* param);
 
-// ------------------------------------------------------- //
-
+private:
 	void postRecv(Session* session);
 	void completeRecv(Session* session, int numOfBytes);
-
 	void postSend(Session* session);
 	void completeSend(Session* session, int numOfBytes);
-
 	void decrementIoCount(Session* session);
 };

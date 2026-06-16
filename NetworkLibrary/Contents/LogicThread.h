@@ -4,8 +4,7 @@
 #include "Player.h"
 #include "../Utils/TickController.h"
 
-/// 전역으로 링버퍼 하나 두고 메세지 받아서 처리하자.
-
+/// 전역으로 링버퍼 하나 두고 메세지 받아서 처리
 class LogicThread
 {
 private:
@@ -37,5 +36,3 @@ public:
 		return 0;
 	}
 };
-
-LogicThread logicThread;

@@ -1,18 +1,11 @@
 //#include <conio.h>
-//
-//#include "./Network/LanServer.h"
-//#include "./Network/FighterServer.h"
-//
-//#include "./Contents/PacketHandler.h"
-//#include "./Contents/Player.h"
+//#include "./Contents/FighterServer.h"
 //#include "./Contents/LogicThread.h"
-//
 //#include "./Utils/ConfigLoader.h"
 //#include "./Utils/CrashDump.h"
+//#include "./Utils/Profiler.h"
 //
 //#define CONFIG_FILENAME			L"fighterconfig.json"
-//
-//FighterServer server;
 //
 //int main()
 //{
@@ -20,9 +13,11 @@
 //
 //	ConfigLoader::getInstance().load(CONFIG_FILENAME);
 //
-//	RPCStub::getInstance().initialize(new PacketHandler());
+//	FighterServer server;
 //
 //	server.start(config.ip, config.port, config.sessionMax, config.concurrentCount, config.workerCount);
+//
+//	LogicThread logicThread;
 //
 //	logicThread.start();
 //
@@ -33,13 +28,19 @@
 //		if (c == 'x')
 //			break;
 //
-//		if (c == 'p')
+//		else if (c == 'p')
 //			server.printTps();
+//
+//		else if (c == ' ')
+//			Profiler::getInstance().save();
+//
+//		else if (c == 'c')
+//			Profiler::getInstance().clear();
 //	}
 //
-//	server.stop();
-//
 //	logicThread.stop();
+//
+//	server.stop();
 //
 //	return 0;
 //}
