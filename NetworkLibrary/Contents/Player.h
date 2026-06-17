@@ -1,7 +1,4 @@
 #pragma once
-#include <unordered_map>
-#include "../Utils/Singleton.h"
-
 //-----------------------------------------------------------------
 // 초당 이동 픽셀
 //-----------------------------------------------------------------
@@ -35,7 +32,7 @@
 #define ERROR_RANGE				50
 
 //---------------------------------------------------------------
-// 공격범위.
+// 공격범위
 //---------------------------------------------------------------
 #define ATTACK1_RANGE_X		80
 #define ATTACK2_RANGE_X		90
@@ -44,17 +41,21 @@
 #define ATTACK2_RANGE_Y		10
 #define ATTACK3_RANGE_Y		20
 
-
+//---------------------------------------------------------------
+// 공격력
+//---------------------------------------------------------------
 #define ATTACK1_DAMAGE		10
 #define ATTACK2_DAMAGE		20
 #define ATTACK3_DAMAGE		30
 
+//---------------------------------------------------------------
+// 최대 체력
+//---------------------------------------------------------------
 #define MAX_HP				100
-
 
 class Player
 {
-	friend class PacketHandler;
+	friend class FighterServer;
 
 private:
 	int playerId_;
@@ -73,32 +74,9 @@ private:
 public:
 	void initialize(__int64 sessionId);
 
-	int playerId() const;
-	__int64 sessionId() const;
-	int action() const;
-	int direction() const;
-	float x() const;
-	float y() const;
-	char hp() const;
-
 	void move();
 	void moveLeft();
 	void moveRight();
 	void moveUp();
 	void moveDown();
-};
-
-class PlayerManager : public Singleton<PlayerManager>
-{
-	friend class PacketHandler;
-
-private:
-	std::unordered_map<__int64, Player*> playerMap_{};
-	int playerCount_ = 0;
-
-public:
-	void createPlayer(__int64 sessionId);
-	void removePlayer(__int64 sessionId);
-
-	void update();
 };

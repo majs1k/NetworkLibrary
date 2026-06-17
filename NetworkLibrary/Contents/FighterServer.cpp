@@ -1,20 +1,31 @@
+#include <process.h>
 #include "FighterServer.h"
-#include "PacketHandler.h"
 #include "Player.h"
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
-
-RPCProxy proxy;
+#include "../Utils/TickController.h"
+#include <windows.h>
 
 FighterServer::FighterServer()
 {
-	proxy.server = this;
-	stub.initialize(new PacketHandler());
+	proxy_.server_ = this;
+}
+
+bool FighterServer::defaultStart()
+{
+	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, logicThread, this, 0, nullptr);
+
+	return true;
+}
+
+void FighterServer::defaultStop()
+{
+	shutdown_ = true;
 }
 
 bool FighterServer::onConnectionRequest(const std::wstring& ip, int port)
 {
-	if (sessionCount_ >= sessionMax_)
+	if (sessionCount() >= sessionMax())
 	{
 		LOG(L"[Network] session limit over");
 
@@ -26,12 +37,12 @@ bool FighterServer::onConnectionRequest(const std::wstring& ip, int port)
 
 void FighterServer::onAccept(__int64 sessionId)
 {
-	PlayerManager::getInstance().createPlayer(sessionId);
+	this->createPlayer(sessionId);
 }
 
 void FighterServer::onRelease(__int64 sessionId)
 {
-	PlayerManager::getInstance().removePlayer(sessionId);
+	this->removePlayer(sessionId);
 }
 
 void FighterServer::onRecv(__int64 sessionId, Packet& packet)
@@ -40,10 +51,10 @@ void FighterServer::onRecv(__int64 sessionId, Packet& packet)
 	packet >> type;
 
 	// 함수의 인자 자료형 주의 필요 (이후 패킷헤더 수정시 참고)
-	if (!stub.packetProc(sessionId, packet, type))
+	if (!packetProc(sessionId, packet, type))
 	{
 		/// IOcount 감소시키는걸로 수정해야 할거 같은데...
-		disconnect(sessionId);
+		//disconnect(sessionId);
 
 		return;
 	}
@@ -52,4 +63,299 @@ void FighterServer::onRecv(__int64 sessionId, Packet& packet)
 void FighterServer::onError(int errorCode, wchar_t* str)
 {
 
+}
+
+void FighterServer::createPlayer(__int64 sessionId)
+{
+	// db 구현시 플레이어 id 조회
+	Player* player = new Player();
+	player->initialize(sessionId);
+
+	/// TODO: Lock 필요
+	playerMapLock_.lock();
+
+	playerMap_.insert({ sessionId, player });
+	playerCount_++;
+
+	int playerId = player->playerId_;
+	char direction = player->direction_;
+	short x = static_cast<short>(player->x_);
+	short y = static_cast<short>(player->y_);
+	char hp = player->hp_;
+
+	// 내 캐릭터 정보 나에게
+	proxy_.sc_create_my_character(sessionId, playerId, direction, x, y, hp);
+
+	/// 이거 맵 전체에다 락을 거는거랑
+	/// 복사해서 사용하는거랑 뭐가 더 효율이 좋을지?? 개수에 따라 다름??
+	for (auto& p : playerMap_)
+	{
+		Player* other = p.second;
+
+		if (other->playerId_ == playerId)
+			continue;
+
+		// 내 캐릭터 정보 남에게
+		proxy_.sc_create_other_character(other->sessionId_, playerId, direction, x, y, hp);
+
+		// 남 캐릭터 정보 나에게
+		proxy_.sc_create_other_character(sessionId, other->playerId_, other->direction_,
+			static_cast<short>(other->x_), static_cast<short>(other->y_), other->hp_);
+
+		if (other->action_ == MOVE_DIR_NONE)
+			continue;
+
+		// 남 캐릭터 이동중이면 나에게
+		proxy_.sc_start_move(sessionId, other->playerId_, other->action_,
+			static_cast<short>(other->x_), static_cast<short>(other->y_));
+	}
+
+	playerMapLock_.unlock();
+}
+
+void FighterServer::removePlayer(__int64 sessionId)
+{
+	playerMapLock_.lock();
+
+	auto it = playerMap_.find(sessionId);
+
+	if (it == playerMap_.end())
+		return;
+
+	Player* player = (*it).second;
+
+	/// TODO: Lock 필요
+	playerMap_.erase(sessionId);
+
+	delete player;
+
+	playerCount_--;
+
+	playerMapLock_.unlock();
+}
+
+unsigned int __stdcall FighterServer::logicThread(void* param)
+{
+	FighterServer* server = (FighterServer*)param;
+
+	while (!server->shutdown_)
+	{
+		server->update();
+
+		TickController::getInstance().update();
+	}
+
+	return 0;
+}
+
+void FighterServer::update()
+{
+	playerMapLock_.lock();
+
+	for (auto& p : playerMap_)
+	{
+		Player* player = p.second;
+
+		if (player->action_ == MOVE_DIR_NONE)
+			continue;
+
+		player->move();
+	}
+
+	playerMapLock_.unlock();
+}
+
+bool FighterServer::cs_start_move(__int64 sessionId, char direction, short x, short y)
+{
+	playerMapLock_.lock();
+
+	auto it = playerMap_.find(sessionId);
+
+	if (it == playerMap_.end())
+		return false;
+
+	Player* player = (*it).second;
+
+	// 이동 오류 체크
+	int deltaX = abs(x - player->x_);
+	int deltaY = abs(y - player->y_);
+
+	if (ERROR_RANGE < deltaX || ERROR_RANGE < deltaY)
+	{
+		LOG(L"[Network] invalid coord session=%d", sessionId);
+
+		DebugBreak();
+		return false;
+	}
+
+	player->action_ = direction;
+
+	switch (direction)
+	{
+	case MOVE_DIR_LL:
+	case MOVE_DIR_LU:
+	case MOVE_DIR_LD:
+		player->direction_ = MOVE_DIR_LL;
+		break;
+
+	case MOVE_DIR_RR:
+	case MOVE_DIR_RU:
+	case MOVE_DIR_RD:
+		player->direction_ = MOVE_DIR_RR;
+		break;
+	}
+
+	player->x_ = x;
+	player->y_ = y;
+
+	for (auto& p : playerMap_)
+	{
+		Player* other = p.second;
+
+		if (other == player)
+			continue;
+
+		proxy_.sc_start_move(other->sessionId_, player->playerId_, player->action_,
+			static_cast<short>(player->x_), static_cast<short>(player->y_));
+	}
+
+	playerMapLock_.unlock();
+
+	return true;
+}
+
+bool FighterServer::cs_stop_move(__int64 sessionId, char action, short x, short y)
+{
+	playerMapLock_.lock();
+
+	auto it = playerMap_.find(sessionId);
+
+	if (it == playerMap_.end())
+		return false;
+
+	Player* player = (*it).second;
+
+	// 이동 오류 체크
+	int deltaX = abs(x - player->x_);
+	int deltaY = abs(y - player->y_);
+
+	if (ERROR_RANGE < deltaX || ERROR_RANGE < deltaY)
+	{
+		LOG(L"[Network] invalid coord session=%d", sessionId);
+
+		DebugBreak();
+
+		return false;
+	}
+
+	player->action_ = MOVE_DIR_NONE;
+	player->direction_ = action;
+	player->x_ = x;
+	player->y_ = y;
+
+	for (auto& p : playerMap_)
+	{
+		Player* other = p.second;
+
+		if (other == player)
+			continue;
+
+		proxy_.sc_stop_move(other->sessionId_, player->playerId_, player->direction_,
+			static_cast<short>(player->x_), static_cast<short>(player->y_));
+	}
+
+	playerMapLock_.unlock();
+
+	return true;
+}
+
+bool FighterServer::cs_attack1(__int64 sessionId, char direction, short x, short y)
+{
+	auto it = playerMap_.find(sessionId);
+
+	if (it == playerMap_.end())
+		return false;
+
+	Player* player = (*it).second;
+
+	//player->direction_ = direction;
+	//player->x_ = x;
+	//player->y_ = y;
+
+	for (auto& p : playerMap_)
+	{
+		Player* other = p.second;
+
+		if (other == player)
+			continue;
+
+		// 단순히 공격 이펙트만 전송
+		proxy_.sc_attack1(other->sessionId_, player->playerId_, player->direction_, player->x_, player->y_);
+	}
+
+	Player* target = nullptr;
+	int deltaXMin = ATTACK1_RANGE_X;
+
+	for (auto& p : playerMap_)
+	{
+		Player* other = p.second;
+
+		if (player->playerId_ == other->playerId_)
+			continue;
+
+		int deltaY = abs(player->y_ - other->y_);
+
+		if (ATTACK1_RANGE_Y < deltaY)
+			continue;
+
+		if (player->direction_ == MOVE_DIR_RR)
+		{
+			int deltaX = abs(other->x_ - player->x_);
+			if (other->x_ < player->x_ || deltaXMin <= deltaX)
+				continue;
+
+			deltaXMin = deltaX;
+			target = other;
+		}
+		else
+		{
+			int deltaX = abs(other->x_ - player->x_);
+			if (player->x_ < other->x_ || deltaXMin <= deltaX)
+				continue;
+
+			deltaXMin = deltaX;
+			target = other;
+		}
+	}
+
+	if (!target)
+		return true;
+
+	// TODO: 최솟값 0
+	target->hp_ -= ATTACK1_DAMAGE;
+
+	for (auto& p : playerMap_)
+	{
+		Player* reciever = p.second;
+
+		proxy_.sc_damage(reciever->sessionId_, player->playerId_, target->playerId_, target->hp_);
+	}
+
+	if (target->hp_ <= 0)
+	{
+		for (auto& p : playerMap_)
+		{
+			Player* reciever = p.second;
+
+			proxy_.sc_character_delete(reciever->sessionId_, target->playerId_);
+		}
+
+		/// HOW TO?
+		//server->decrementIoCount(target->sessionId_);
+		//PlayerManager::getInstance().removePlayer(target->playerId_);
+
+		return true;
+	}
+
+	return true;
 }

@@ -54,7 +54,7 @@ int	Packet::moveReadPos(int size)
 
 Packet& Packet::operator = (const Packet& packet)
 {
-
+	return *this;
 }
 
 Packet& Packet::operator << (char value)
@@ -202,18 +202,18 @@ Packet& Packet::operator >> (double& value)
 	return *this;
 }
 
-int	Packet::read(char* chpDest, int size)
+int	Packet::read(char* dest, int size)
 {
-	memcpy(chpDest, buffer_ + readPos_, size);
+	memcpy(dest, buffer_ + readPos_, size);
 	readPos_ += size;
 
 	return size;
 }
 
-int	Packet::write(char* chpSrc, int size)
+int	Packet::write(char* src, int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈
-	memcpy(buffer_ + writePos_, chpSrc, size);
+	memcpy(buffer_ + writePos_, src, size);
 	writePos_ += size;
 
 	return size;

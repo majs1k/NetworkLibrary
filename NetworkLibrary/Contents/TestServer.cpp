@@ -4,7 +4,7 @@
 
 bool TestServer::onConnectionRequest(const std::wstring& ip, int port)
 {
-	if (sessionCount_ >= sessionMax_)
+	if (sessionCount() >= sessionMax())
 	{
 		LOG(L"[Network] session limit over");
 

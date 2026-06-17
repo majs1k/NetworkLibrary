@@ -110,6 +110,9 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 
 		int messageSize = header.size;
 
+		if (messageSize < 0)
+			break;
+
 		if (useSize < sizeof(HEADER) + messageSize)
 			break;
 
@@ -137,28 +140,17 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 	this->decrementIoCount(session);
 }
 
-
-#include "../RPC/RPCStub.h"
-#include <iostream>
-
 /// FighterServer
 //void LanServer::completeRecv(Session* session, int numOfBytes)
 //{
-//	//sessionLock_.lock();
-//
 //	session->recvQueue_.moveRear(numOfBytes);
-//
-//	//sessionLock_.unlock();
 //
 //	while (1)
 //	{
-//		//sessionLock_.lock();
-//
 //		int useSize = session->recvQueue_.useSize();
 //
 //		if (session->recvQueue_.isFull())
 //		{
-//			//sessionLock_.unlock();
 //
 //			LOG_INFO(L"recvQueue full");
 //
@@ -167,18 +159,12 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 //			return;
 //		}
 //
-//		//sessionLock_.unlock();
-//
 //		if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char))
 //			break;
 //
 //		FIGHTER_HEADER header;
 //
-//		//sessionLock_.lock();
-//
 //		session->recvQueue_.peek((char*)&header, sizeof(FIGHTER_HEADER));
-//
-//		//sessionLock_.unlock();
 //
 //		if (header.code != PACKET_CODE)
 //		{
@@ -191,18 +177,17 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 //
 //		int messageSize = header.size;
 //
-//		if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char) + messageSize)
+//		if (messageSize < 0)
 //			break;
 //
-//		//sessionLock_.lock();
+//		if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char) + messageSize)
+//			break;
 //
 //		session->recvQueue_.moveFront(sizeof(FIGHTER_HEADER));
 //
 //		Packet packet;
 //
 //		session->recvQueue_.dequeue(packet.getBufferPtr(), sizeof(unsigned char) + messageSize);
-//
-//		//sessionLock_.unlock();
 //
 //		packet.moveWritePos(sizeof(unsigned char) + messageSize);
 //
@@ -251,7 +236,7 @@ void LanServer::postSend(Session* session)
 
 		//PRO_BEGIN(L"send 1");
 		//PRO_BEGIN(L"send 2");
-		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&session->sendOverlapped_, NULL);
+		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
 		//PRO_END(L"send 1");
 	}
 	else
@@ -265,7 +250,7 @@ void LanServer::postSend(Session* session)
 
 		//PRO_BEGIN(L"send 1");
 		//PRO_BEGIN(L"send 2");
-		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&session->sendOverlapped_, NULL);
+		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
 		//PRO_END(L"send 1");
 	}
 
@@ -308,7 +293,8 @@ void LanServer::completeSend(Session* session, int numOfBytes)
 
 	session->sendQueue_.moveFront(numOfBytes);
 
-	session->sendPending_ = 0;
+	//session->sendPending_ = 0;
+	InterlockedExchange(&session->sendPending_, 0);
 
 	if (session->sendQueue_.useSize() > 0)
 		this->postSend(session);

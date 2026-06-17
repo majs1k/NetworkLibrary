@@ -54,9 +54,6 @@
     <ClCompile Include="Contents\FighterServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Contents\PacketHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Contents\Player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -125,13 +122,10 @@
     <ClInclude Include="Contents\FighterServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Contents\PacketHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Contents\LogicThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Contents\Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\RingBufferTemplate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

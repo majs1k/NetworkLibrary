@@ -60,6 +60,6 @@ public:
 	Packet& operator >> (__int64& value);
 	Packet& operator >> (double& value);
 
-	int	read(char* chpDest, int size);
-	int	write(char* chpSrc, int size);
+	int	read(char* dest, int size);
+	int	write(char* src, int size);
 };

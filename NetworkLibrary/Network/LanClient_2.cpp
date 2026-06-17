@@ -138,7 +138,6 @@ void LanClient::completeRecv(Session* session, int numOfBytes)
 }
 
 
-#include "../RPC/RPCStub.h"
 #include <iostream>
 
 /// FighterServer

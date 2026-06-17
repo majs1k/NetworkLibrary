@@ -14,10 +14,10 @@ namespace PacketGenerator
 
 class LanServer;
 
-class RPCProxy
+class ServerProxy
 {{
 public:
-	LanServer* server;
+	LanServer* server_;
 
 public:{0}
 }};
@@ -33,21 +33,21 @@ public:{0}
 // -------------------------------------------------------------------
 
         public static string proxyCpp =
-@"#include ""RPCProxy.h""
+@"#include ""ServerProxy.h""
 #include ""../Network/LanServer.h""
 #include ""../Utils/Packet.h""
 {0}";
 
         public static string proxyCppFunc =
 @"
-void RPCProxy::{0}(__int64 sessionId{1})
+void ServerProxy::{0}(__int64 sessionId{1})
 {{
 	Packet packet;
 
 	packet << static_cast<unsigned char>({2});
 	packet{3};
 
-	server->sendPacket(sessionId, packet);
+	server_->sendPacket(sessionId, packet);
 }}
 ";
 
@@ -58,25 +58,15 @@ void RPCProxy::{0}(__int64 sessionId{1})
 
         public static string stubHeader =
 @"#pragma once
-#include ""../Utils/Singleton.h""
 
+class LanServer;
 class Packet;
 
-class IPacketHandler
+class ServerStub
 {{
 public:
-	virtual ~IPacketHandler() = 0;
-{0}
-}};
-
-class RPCStub
-{{
-private:
-	IPacketHandler* handle_ = nullptr;
-
-public:
-	void initialize(IPacketHandler* handle);
 	bool packetProc(__int64 sessionId, Packet& packet, unsigned char type);
+{0}
 }};
 ";
 
@@ -87,23 +77,13 @@ public:
 // -------------------------------------------------------------------
 
         public static string stubCpp =
-@"#include ""RPCStub.h""
+@"#include ""ServerStub.h""
 #include ""../Utils/Packet.h""
 
-IPacketHandler::~IPacketHandler()
-{{
-
-}}
-{0}
-void RPCStub::initialize(IPacketHandler* handle)
-{{
-	handle_ = handle;
-}}
-
-bool RPCStub::packetProc(__int64 sessionId, Packet& packet, unsigned char type)
+bool ServerStub::packetProc(__int64 sessionId, Packet& packet, unsigned char type)
 {{
 	switch (type)
-	{{{1}
+	{{{0}
 	default:
 	{{
 		// 로그 추가
@@ -112,11 +92,12 @@ bool RPCStub::packetProc(__int64 sessionId, Packet& packet, unsigned char type)
 	}}
 	}}
 }}
+{1}
 ";
 
         public static string stubCppFunc1 =
 @"
-bool IPacketHandler::{0}(__int64 sessionId{1})
+bool ServerStub::{0}(__int64 sessionId{1})
 {{
 	return true;
 }}
@@ -129,7 +110,7 @@ bool IPacketHandler::{0}(__int64 sessionId{1})
 {1}
 		packet{2};
 
-		return handle_->{3}(sessionId{4});
+		return this->{3}(sessionId{4});
 		break;
 	}}
 ";

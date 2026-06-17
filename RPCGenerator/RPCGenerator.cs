@@ -36,7 +36,7 @@ class RPCGenerator
             }
 
             string proxyHeader = string.Format(RPCFormat.proxyHeader, proxyFunc);
-            File.WriteAllText("RPCProxy.h", proxyHeader);
+            File.WriteAllText("ServerProxy.h", proxyHeader);
         }
     }
 
@@ -69,7 +69,7 @@ class RPCGenerator
             }
 
             string proxyCpp = string.Format(RPCFormat.proxyCpp, proxyFunc);
-            File.WriteAllText("RPCProxy.cpp", proxyCpp);
+            File.WriteAllText("ServerProxy.cpp", proxyCpp);
         }
     }
 
@@ -99,7 +99,7 @@ class RPCGenerator
             }
 
             string stubHeader = string.Format(RPCFormat.stubHeader, stubFunc);
-            File.WriteAllText("RPCStub.h", stubHeader);
+            File.WriteAllText("ServerStub.h", stubHeader);
         }
     }
 
@@ -144,8 +144,8 @@ class RPCGenerator
                     parsed.PacketType, funcParam2, shiftParam, parsed.Name, funcParam1);
             }
 
-            string stubCpp = string.Format(RPCFormat.stubCpp, stubFunc1, stubFunc2);
-            File.WriteAllText("RPCStub.cpp", stubCpp);
+            string stubCpp = string.Format(RPCFormat.stubCpp, stubFunc2, stubFunc1);
+            File.WriteAllText("ServerStub.cpp", stubCpp);
         }
     }
 }

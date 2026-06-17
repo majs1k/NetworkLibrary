@@ -43,7 +43,7 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	// L4 송신버퍼 사이즈 옵션
 	int sndBufSize = 0;
-	//setsockopt(listenSocket_, SOL_SOCKET, SO_SNDBUF, (const char*)(&sndBufSize), sizeof(sndBufSize));
+	setsockopt(listenSocket_, SOL_SOCKET, SO_SNDBUF, (const char*)(&sndBufSize), sizeof(sndBufSize));
 
 	int size = 0;
 	int len = sizeof(size);
@@ -77,6 +77,8 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	// manual reset
 	hExitEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+	this->defaultStart();
 
 	LOG_INFO(L"[NETWORK] server start");
 
@@ -118,12 +120,29 @@ void LanServer::stop()
 	// IOCP 삭제
 	CloseHandle(hIOCP_);
 
+	this->defaultStop();
+
 	LOG_INFO(L"[NETWORK] server exit");
+}
+
+bool LanServer::defaultStart()
+{
+	return true;
+}
+
+void LanServer::defaultStop()
+{
+
 }
 
 int LanServer::sessionCount() const
 {
 	return sessionCount_;
+}
+
+int LanServer::sessionMax() const
+{
+	return sessionMax_;
 }
 
 bool LanServer::disconnect(__int64 sessionId)
@@ -133,7 +152,11 @@ bool LanServer::disconnect(__int64 sessionId)
 	auto it = sessionMap_.find(sessionId);
 
 	if (it == sessionMap_.end())
+	{
+		sessionMapLock_.unlock();
+
 		return false;
+	}
 
 	Session* session = (*it).second;
 
@@ -161,6 +184,8 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 
 	if (it == sessionMap_.end())
 	{
+		sessionMapLock_.unlock();
+
 		return false;
 	}
 
@@ -199,7 +224,12 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 //	auto it = sessionMap_.find(sessionId);
 //
 //	if (it == sessionMap_.end())
+//	{
+//		sessionMapLock_.unlock();
+//
 //		return false;
+//
+//	}
 //
 //	Session* session = (*it).second;
 //
@@ -211,7 +241,7 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 //
 //	session->sendQueue_.lock();
 //
-//	session->sendQueue_.enqueue((char*)&header, sizeof(HEADER));
+//	session->sendQueue_.enqueue((char*)&header, sizeof(FIGHTER_HEADER));
 //	session->sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
 //
 //	session->sendQueue_.unlock();
@@ -296,10 +326,15 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 
 		//LOG_INFO(L"[NETWORK] session create ip=%s port=%d count=%d", ip.c_str(), port, server->sessionCount_);
 
-		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
+		HANDLE h = CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
+		if (h == NULL)
+		{
+			printf("%d\n", GetLastError());
+		}
 
 		server->postRecv(session);
 
+		// 위치 주의
 		server->onAccept(session->sessionId_);
 	}
 

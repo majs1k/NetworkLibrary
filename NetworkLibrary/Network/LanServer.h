@@ -92,7 +92,7 @@ class Packet;
 
 class LanServer
 {
-protected:
+private:
 	SOCKET listenSocket_;
 
 	std::wstring serverIp_;
@@ -127,7 +127,11 @@ public:
 
 	bool start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount);
 	void stop();
+
+	virtual bool defaultStart();
+	virtual void defaultStop();
 	int sessionCount() const;
+	int sessionMax() const;
 
 	/// false가 반환되면 뭘 해야함???
 	bool disconnect(__int64 sessionId);
@@ -135,11 +139,10 @@ public:
 
 	// (외부/해외/공격)IP 차단 기능 + 패치 후 점검 white ip만 가능케
 	virtual bool onConnectionRequest(const std::wstring& ip, int port) = 0;
-
 	// 인자 미정
 	// Session 포인터, socket -> 컨텐츠로 절대 전달 x
 	virtual void onAccept(__int64 sessionId) = 0;
-
+	// release후, 즉 세션 삭제 후 호출됨 주의
 	virtual void onRelease(__int64 sessionId) = 0;
 
 	virtual void onRecv(__int64 sessionId, Packet& packet) = 0;

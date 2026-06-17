@@ -9,21 +9,21 @@
 
 struct ChatMsg
 {
-	unsigned short len;
-	char message[128];
+	unsigned short len_;
+	char message_[128];
 };
 
 inline Packet& operator<<(Packet& packet, ChatMsg* chatMsg)
 {
-	packet << chatMsg->len;
-	packet.write(chatMsg->message, chatMsg->len);
+	packet << chatMsg->len_;
+	packet.write(chatMsg->message_, chatMsg->len_);
 }
 
 inline Packet& operator>>(Packet& packet, ChatMsg* chatMsg)
 {
-	packet >> chatMsg->len;
-	packet.read(chatMsg->message, chatMsg->len);
+	packet >> chatMsg->len_;
+	packet.read(chatMsg->message_, chatMsg->len_);
 }
 
-#include "../RPC/RPCProxy.cpp"
-#include "../RPC/RPCStub.cpp"
+#include "../RPC/ServerProxy.cpp"
+#include "../RPC/ServerStub.cpp"
