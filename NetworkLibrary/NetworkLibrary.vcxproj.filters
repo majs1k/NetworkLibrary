@@ -125,7 +125,13 @@
     <ClInclude Include="Contents\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\RingBufferTemplate.h">
+    <ClInclude Include="Utils\PacketT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

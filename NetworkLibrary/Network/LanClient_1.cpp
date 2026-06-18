@@ -112,6 +112,8 @@ bool LanClient::disconnect()
 	CloseHandle(hIOCP_);
 
 	LOG_INFO(L"[NETWORK] client exit");
+
+	return true;
 }
 
 bool LanClient::sendPacket(Packet& packet)

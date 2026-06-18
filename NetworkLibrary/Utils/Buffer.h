@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include <Windows.h>
+#include "Lock.h"
 
 // -------------------------------------------------------------------
 //
@@ -24,10 +26,11 @@ protected:
 	int writePos_;
 	int readPos_;
 
-	int refCount_;
+	LONG refCount_;
+	Lock lock_;
 
 public:
-	Buffer(int bufferSize)
+	Buffer(int bufferSize = 100)
 		:capacity_(bufferSize), writePos_(0), readPos_(0)
 	{
 		buffer_ = (char*)malloc(capacity_);
@@ -36,6 +39,26 @@ public:
 	~Buffer()
 	{
 		free(buffer_);
+	}
+
+	void increase(int count)
+	{
+		InterlockedExchange(&refCount_, count);
+	}
+
+	int decrease()
+	{
+		return InterlockedDecrement(&refCount_);
+	}
+
+	void lock()
+	{
+		lock_.lock();
+	}
+
+	void unlock()
+	{
+		lock_.unlock();
 	}
 
 	void initialize()

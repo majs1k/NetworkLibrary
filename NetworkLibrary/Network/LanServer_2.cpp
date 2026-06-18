@@ -1,4 +1,5 @@
 #include "LanServer.h"
+#include "Session.h"
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
 #include "../Utils/Profiler.h"
@@ -203,14 +204,96 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 //	this->decrementIoCount(session);
 //}
 
+/// ver1
+//void LanServer::postSend(Session* session)
+//{
+//	//sessionLock_.lock();
+//
+//	if (InterlockedExchange(&session->sendPending_, 1) == 1)
+//	{
+//		//sessionLock_.unlock();
+//
+//		return;
+//	}
+//
+//	// WSASend() 이전에 호출해야, 
+//	// 다른 스레드에서 send 완료통지로 ioCount 내려서 0이 되는 상황 차단
+//	InterlockedIncrement(&session->ioCount_);
+//
+//	ZeroMemory(&session->sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
+//
+//	//sessionLock_.unlock();
+//
+//	int retval;
+//
+//	WSABUF wsaBuf[2];
+//
+//	//sessionLock_.lock();
+//
+//	if (session->sendQueue_.useSize() <= session->sendQueue_.directDequeueSize())
+//	{
+//		// buf 1개
+//		wsaBuf[0].buf = session->sendQueue_.getFrontBufferPtr();
+//		wsaBuf[0].len = session->sendQueue_.useSize();
+//
+//		//PRO_BEGIN(L"send 1");
+//		//PRO_BEGIN(L"send 2");
+//		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
+//		//PRO_END(L"send 1");
+//	}
+//	else
+//	{
+//		// buf 2개
+//		wsaBuf[0].buf = session->sendQueue_.getFrontBufferPtr();
+//		wsaBuf[0].len = session->sendQueue_.directEnqueueSize();
+//
+//		wsaBuf[1].buf = session->sendQueue_.getBufferPtr();
+//		wsaBuf[1].len = session->sendQueue_.useSize() - session->sendQueue_.directEnqueueSize();
+//
+//		//PRO_BEGIN(L"send 1");
+//		//PRO_BEGIN(L"send 2");
+//		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
+//		//PRO_END(L"send 1");
+//	}
+//
+//	//sessionLock_.unlock();
+//
+//	if (retval == SOCKET_ERROR)
+//	{
+//		int error = WSAGetLastError();
+//
+//		if (error == ERROR_IO_PENDING)
+//		{
+//			//printf("send Direct IO\n");
+//		}
+//		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
+//		{
+//			this->decrementIoCount(session);
+//
+//			return;
+//		}
+//		else
+//		{
+//			LOG(L"WSASend() error: %d, iocount: %d", error, session->ioCount_);
+//			DebugBreak();
+//			this->decrementIoCount(session);
+//
+//			return;
+//		}
+//	}
+//	else
+//	{
+//		//printf("send Fast IO\n");
+//	}
+//}
+
+#define MAX_WSABUF 50
+
+/// ver2
 void LanServer::postSend(Session* session)
 {
-	//sessionLock_.lock();
-
 	if (InterlockedExchange(&session->sendPending_, 1) == 1)
 	{
-		//sessionLock_.unlock();
-
 		return;
 	}
 
@@ -220,41 +303,34 @@ void LanServer::postSend(Session* session)
 
 	ZeroMemory(&session->sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
 
-	//sessionLock_.unlock();
-
 	int retval;
 
-	WSABUF wsaBuf[2];
+	WSABUF wsaBuf[MAX_WSABUF];
 
-	//sessionLock_.lock();
+	int count = 0;
 
-	if (session->sendQueue_.useSize() <= session->sendQueue_.directDequeueSize())
+	session->sendPackets_.lock();
+
+	for (int i = 0; i < session->sendPackets_.useSize() && i < MAX_WSABUF; i++)
 	{
-		// buf 1개
-		wsaBuf[0].buf = session->sendQueue_.getFrontBufferPtr();
-		wsaBuf[0].len = session->sendQueue_.useSize();
+		Buffer* buffer = nullptr;
 
-		//PRO_BEGIN(L"send 1");
-		//PRO_BEGIN(L"send 2");
-		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-		//PRO_END(L"send 1");
-	}
-	else
-	{
-		// buf 2개
-		wsaBuf[0].buf = session->sendQueue_.getFrontBufferPtr();
-		wsaBuf[0].len = session->sendQueue_.directEnqueueSize();
+		session->sendPackets_.dequeue(&buffer);
 
-		wsaBuf[1].buf = session->sendQueue_.getBufferPtr();
-		wsaBuf[1].len = session->sendQueue_.useSize() - session->sendQueue_.directEnqueueSize();
+		wsaBuf[i].buf = reinterpret_cast<char*>(buffer->getBufferPtr());
+		wsaBuf[i].len = buffer->useSize();
 
-		//PRO_BEGIN(L"send 1");
-		//PRO_BEGIN(L"send 2");
-		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-		//PRO_END(L"send 1");
+		//if(buffer->useSize() > 2)
+		//	printf("%lld\n", *(__int64*)buffer->getBufferPtr());
+
+		session->sendPendings_.enqueue(buffer);
+
+		count++;
 	}
 
-	//sessionLock_.unlock();
+	session->sendPackets_.unlock();
+
+	retval = WSASend(session->socket_, wsaBuf, count, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -273,7 +349,7 @@ void LanServer::postSend(Session* session)
 		else
 		{
 			LOG(L"WSASend() error: %d, iocount: %d", error, session->ioCount_);
-			DebugBreak();
+			//DebugBreak();
 			this->decrementIoCount(session);
 
 			return;
@@ -285,21 +361,43 @@ void LanServer::postSend(Session* session)
 	}
 }
 
+/// ver1
+//void LanServer::completeSend(Session* session, int numOfBytes)
+//{
+//	//PRO_END(L"send 2");
+//
+//	//sessionLock_.lock();
+//
+//	session->sendQueue_.moveFront(numOfBytes);
+//
+//	//session->sendPending_ = 0;
+//	InterlockedExchange(&session->sendPending_, 0);
+//
+//	if (session->sendQueue_.useSize() > 0)
+//		this->postSend(session);
+//
+//	//sessionLock_.unlock();
+//
+//	this->decrementIoCount(session);
+//}
+
+/// ver2
 void LanServer::completeSend(Session* session, int numOfBytes)
 {
-	//PRO_END(L"send 2");
+	/// 그냥 전달 바이트수는 신경 쓰지말고, buffer의 카운트만 줄인다?..
+	for (int i = 0; i < session->sendPendings_.useSize(); i++)
+	{
+		Buffer* buffer = nullptr;
 
-	//sessionLock_.lock();
+		session->sendPendings_.dequeue(&buffer);
 
-	session->sendQueue_.moveFront(numOfBytes);
+		this->decrementBufferCount(buffer);
+	}
 
-	//session->sendPending_ = 0;
 	InterlockedExchange(&session->sendPending_, 0);
 
-	if (session->sendQueue_.useSize() > 0)
+	if (session->sendPackets_.useSize() > 0)
 		this->postSend(session);
-
-	//sessionLock_.unlock();
 
 	this->decrementIoCount(session);
 }
@@ -309,6 +407,16 @@ void LanServer::decrementIoCount(Session* session)
 	if (InterlockedDecrement(&session->ioCount_) == 0)
 	{
 		this->disconnect(session->sessionId_);
+
+		return;
+	}
+}
+
+void LanServer::decrementBufferCount(Buffer* buffer)
+{
+	if (buffer->decrease() == 0)
+	{
+		delete buffer;
 
 		return;
 	}

@@ -23,7 +23,7 @@ public:
 
 	int useSize() const
 	{
-
+		return queue_.size();
 	}
 
 	int freeSize() const
@@ -31,15 +31,25 @@ public:
 		
 	}
 
+	void increase()
+	{
+		refCount_++;
+	}
+
+	void decrease()
+	{
+		refCount_--;
+	}
+
 	void enqueue(T value)
 	{
 		queue_.push(value);
 	}
 
-	void dequeue(T value)
+	void dequeue(T* value)
 	{
-		value = q.front();
-		q.pop();
+		*value = queue_.front();
+		queue_.pop();
 	}
 
 	int peek(char* data, int size) const

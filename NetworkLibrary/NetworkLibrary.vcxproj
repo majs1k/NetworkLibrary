@@ -148,6 +148,8 @@
     <ClInclude Include="Contents\TestServer.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />
+    <ClInclude Include="Network\Session.h" />
+    <ClInclude Include="Utils\Buffer.h" />
     <ClInclude Include="Utils\ConfigLoader.h" />
     <ClInclude Include="Utils\CrashDump.h" />
     <ClInclude Include="Utils\List.h" />
@@ -161,7 +163,7 @@
     <ClInclude Include="Utils\Profiler.h" />
     <ClInclude Include="Utils\Random.h" />
     <ClInclude Include="Utils\RingBuffer.h" />
-    <ClInclude Include="Utils\RingBufferTemplate.h" />
+    <ClInclude Include="Utils\PacketT.h" />
     <ClInclude Include="Utils\Singleton.h" />
     <ClInclude Include="Utils\TickController.h" />
   </ItemGroup>

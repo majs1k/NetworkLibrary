@@ -1,6 +1,7 @@
 #pragma comment(lib, "ws2_32.lib")
 #include <process.h>
-#include "LanServer.h"	
+#include "LanServer.h"
+#include "Session.h"
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
 #include "../Utils/Profiler.h"
@@ -16,6 +17,8 @@ LanServer::LanServer()
 
 LanServer::~LanServer()
 {
+	///세션맵 정리 추가
+
 	WSACleanup();
 }
 
@@ -175,7 +178,7 @@ bool LanServer::disconnect(__int64 sessionId)
 	return true;
 }
 
-/// TestServer
+/// TestServer ver1
 bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 {
 	sessionMapLock_.lock();
@@ -208,6 +211,42 @@ bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
 	session->sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
 
 	session->sendQueue_.unlock();
+
+	this->postSend(session);
+
+	InterlockedIncrement(&sendMessageCount_);
+
+	return true;
+}
+
+/// TestServer ver2
+bool LanServer::sendPacket(__int64 sessionId, Buffer* buffer)
+{
+	sessionMapLock_.lock();
+
+	auto it = sessionMap_.find(sessionId);
+
+	if (it == sessionMap_.end())
+	{
+		sessionMapLock_.unlock();
+
+		return false;
+	}
+
+	Session* session = (*it).second;
+
+	sessionMapLock_.unlock();
+
+	Buffer* buf = new Buffer();
+	*buf << static_cast<short>(buffer->useSize());
+	buf->increase(1);
+
+	session->sendPackets_.lock();
+
+	session->sendPackets_.enqueue(buf);
+	session->sendPackets_.enqueue(buffer);
+
+	session->sendPackets_.unlock();
 
 	this->postSend(session);
 
@@ -326,11 +365,7 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 
 		//LOG_INFO(L"[NETWORK] session create ip=%s port=%d count=%d", ip.c_str(), port, server->sessionCount_);
 
-		HANDLE h = CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
-		if (h == NULL)
-		{
-			printf("%d\n", GetLastError());
-		}
+		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
 
 		server->postRecv(session);
 
