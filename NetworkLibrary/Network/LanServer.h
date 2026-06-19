@@ -5,15 +5,10 @@
 #include <unordered_map>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <Windows.h>
 #include "../Utils/Lock.h"
+#include <Windows.h>
 
-// ------------------------------------------------------- //
 
-struct HEADER
-{
-	unsigned short size;
-};
 
 // ------------------------------------------------------- //
 
@@ -77,9 +72,7 @@ public:
 
 	/// false가 반환되면 뭘 해야함???
 	bool disconnect(__int64 sessionId);
-	bool sendPacket(__int64 sessionId, Packet& packet);
-
-	bool sendPacket(__int64 sessionId, Buffer* buffer);
+	bool sendPacket(__int64 sessionId, Packet* packet);
 
 	// (외부/해외/공격)IP 차단 기능 + 패치 후 점검 white ip만 가능케
 	virtual bool onConnectionRequest(const std::wstring& ip, int port) = 0;
@@ -109,5 +102,5 @@ private:
 	void postSend(Session* session);
 	void completeSend(Session* session, int numOfBytes);
 	void decrementIoCount(Session* session);
-	void decrementBufferCount(Buffer* buffer);
+	void decrementPacketCount(Packet* packet);
 };

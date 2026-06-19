@@ -2,7 +2,7 @@
 #include "Packet.h"
 
 Packet::Packet(int bufferSize)
-	:capacity_(bufferSize), writePos_(0), readPos_(0)
+	:capacity_(bufferSize), writePos_(sizeof(HEADER)), readPos_(sizeof(HEADER))
 {
 	buffer_ = (char*)malloc(capacity_);
 }
@@ -14,15 +14,17 @@ Packet::~Packet()
 
 void Packet::initialize()
 {
-	writePos_ = 0;
-	readPos_ = 0;
+	writePos_ = sizeof(HEADER);
+	readPos_ = sizeof(HEADER);
 }
 
-void Packet::clear()
+void Packet::setHeader(int size)
 {
-	writePos_ = 0;
-	readPos_ = 0;
+	HEADER* header = (HEADER*)buffer_;
+
+	header->size_ = size;
 }
+
 
 int	Packet::capacity()
 {
@@ -34,10 +36,7 @@ int	Packet::useSize()
 	return writePos_ - readPos_;
 }
 
-char* Packet::getBufferPtr()
-{
-	return buffer_;
-}
+
 
 int	Packet::moveWritePos(int size)
 {

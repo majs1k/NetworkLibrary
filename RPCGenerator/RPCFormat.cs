@@ -42,10 +42,10 @@ public:{0}
 @"
 void ServerProxy::{0}(__int64 sessionId{1})
 {{
-	Packet packet;
+	Packet* packet = new Packet();
 
-	packet << static_cast<unsigned char>({2});
-	packet{3};
+	*packet << static_cast<unsigned char>({2});
+	*packet{3};
 
 	server_->sendPacket(sessionId, packet);
 }}

@@ -1,7 +1,6 @@
 #include "TestServer.h"
 #include "../Utils/Packet.h"
-#include "../Utils/PacketT.h"
-#include "../Utils/Buffer.h"
+#include "../Utils/BufferT.h"
 #include "../Utils/Logger.h"
 
 bool TestServer::onConnectionRequest(const std::wstring& ip, int port)
@@ -36,7 +35,7 @@ void TestServer::onRelease(__int64 sessionId)
 //	packet2 << message.data_;
 //
 //	// 호출부 안에서 패킷 헤더를 삽입
-//	this->sendPacket(sessionId, packet2);
+//	this->sendPacket(sessionId, &packet2);
 //}
 
 /// ver2
@@ -50,13 +49,13 @@ void TestServer::onRecv(__int64 sessionId, Packet& packet)
 	//Packet packet2;
 	//packet2 << message.data_;
 
-	Buffer* buffer = new Buffer();
-	*buffer << message.data_;
+	Packet* p = new Packet();
+	*p << message.data_;
 
-	buffer->increase(1);
+	p->increase(1);
 
 	/// 여러 세션으로 send 가능
-	this->sendPacket(sessionId, buffer);
+	this->sendPacket(sessionId, p);
 }
 
 void TestServer::onError(int errorCode, wchar_t* str)

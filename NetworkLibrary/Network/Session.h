@@ -1,14 +1,16 @@
 #pragma once
 #include <string>
 #include <WinSock2.h>
-#include <Windows.h>
 #include "../Utils/RingBuffer.h"
-#include "../Utils/PacketT.h"
-#include "../Utils/Buffer.h"
+#include "../Utils/BufferT.h"
 #include "../Utils/Lock.h"
+#include <Windows.h>
 
 #define SEND_SIZE				10000
-#define RECV_SIZE				2000
+#define RECV_SIZE				10000
+
+#define SEND_CNT				2000
+
 
 enum class IOType
 {
@@ -21,6 +23,8 @@ struct OverlappedEx
 	WSAOVERLAPPED overlapped;
 	IOType type;
 };
+
+class Packet;
 
 /// TODO: 세션 삭제시 소켓 close
 struct Session
@@ -38,14 +42,15 @@ struct Session
 	RingBuffer recvQueue_{ RECV_SIZE };
 
 	/// 세션 종료시 정리 필요!!! (count 등...)
-	PacketT<Buffer*> sendPackets_;
-	PacketT<Buffer*> sendPendings_;
+	BufferT<Packet*, SEND_CNT> sendQueue2_;
 
 	OverlappedEx sendOverlapped_;
 	OverlappedEx recvOverlapped_;
 
 	LONG ioCount_;
 	LONG sendPending_;
+
+	LONG sendPacketCount_ = 0;
 
 	Lock sessionLock_;
 

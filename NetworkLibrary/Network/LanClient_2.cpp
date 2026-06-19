@@ -110,7 +110,7 @@ void LanClient::completeRecv(Session* session, int numOfBytes)
 
 		//sessionLock_.unlock();
 
-		int messageSize = header.size;
+		int messageSize = header.size_;
 
 		if (useSize < sizeof(HEADER) + messageSize)
 			break;
@@ -121,7 +121,7 @@ void LanClient::completeRecv(Session* session, int numOfBytes)
 
 		Packet packet;
 
-		session->recvQueue_.dequeue(packet.getBufferPtr(), messageSize);
+		session->recvQueue_.dequeue(packet.getPacketPtr(), messageSize);
 
 		//sessionLock_.unlock();
 

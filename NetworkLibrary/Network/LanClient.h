@@ -11,13 +11,6 @@
 
 // ------------------------------------------------------- //
 
-struct HEADER
-{
-	unsigned short size;
-};
-
-// ------------------------------------------------------- //
-
 #define PACKET_CODE				0x89
 
 struct FIGHTER_HEADER

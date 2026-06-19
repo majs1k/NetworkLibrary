@@ -181,7 +181,7 @@ int RingBuffer::moveFront(int size)
 	if (useSize() < size)
 		return 0;
 
-	readPos_ = (readPos_ + size + capacity_) % capacity_;
+	readPos_ = (readPos_ + size) % capacity_;
 	return size;
 }
 
@@ -190,7 +190,7 @@ int RingBuffer::moveRear(int size)
 	if (freeSize() < size)
 		return 0;
 
-	writePos_ = (writePos_ + size + capacity_) % capacity_;
+	writePos_ = (writePos_ + size) % capacity_;
 	return size;
 }
 

@@ -178,49 +178,50 @@ bool LanServer::disconnect(__int64 sessionId)
 	return true;
 }
 
+
 /// TestServer ver1
-bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
-{
-	sessionMapLock_.lock();
-
-	auto it = sessionMap_.find(sessionId);
-
-	if (it == sessionMap_.end())
-	{
-		sessionMapLock_.unlock();
-
-		return false;
-	}
-
-	Session* session = (*it).second;
-
-	sessionMapLock_.unlock();
-
-	//if (ioCount_ == 0)
-	//	return;
-
-	//if(InterlockedIncrement(&ioCount_) == 1)
-	//	return;
-
-	HEADER header;
-	header.size = packet.useSize();
-
-	session->sendQueue_.lock();
-
-	session->sendQueue_.enqueue((char*)&header, sizeof(HEADER));
-	session->sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
-
-	session->sendQueue_.unlock();
-
-	this->postSend(session);
-
-	InterlockedIncrement(&sendMessageCount_);
-
-	return true;
-}
+//bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
+//{
+//	sessionMapLock_.lock();
+//
+//	auto it = sessionMap_.find(sessionId);
+//
+//	if (it == sessionMap_.end())
+//	{
+//		sessionMapLock_.unlock();
+//
+//		return false;
+//	}
+//
+//	Session* session = (*it).second;
+//
+//	sessionMapLock_.unlock();
+//
+//	//if (ioCount_ == 0)
+//	//	return;
+//
+//	//if(InterlockedIncrement(&ioCount_) == 1)
+//	//	return;
+//
+//	HEADER header;
+//	header.size_ = packet->useSize();
+//
+//	session->sendQueue_.lock();
+//
+//	session->sendQueue_.enqueue((char*)&header, sizeof(HEADER));
+//	session->sendQueue_.enqueue(packet->getPacketPtr(), packet->useSize());
+//
+//	session->sendQueue_.unlock();
+//
+//	this->postSend(session);
+//
+//	InterlockedIncrement(&sendMessageCount_);
+//
+//	return true;
+//}
 
 /// TestServer ver2
-bool LanServer::sendPacket(__int64 sessionId, Buffer* buffer)
+bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
 {
 	sessionMapLock_.lock();
 
@@ -237,14 +238,12 @@ bool LanServer::sendPacket(__int64 sessionId, Buffer* buffer)
 
 	sessionMapLock_.unlock();
 
-	Buffer* buf = new Buffer();
-	*buf << static_cast<short>(buffer->useSize());
-	buf->increase(1);
+	// 패킷 헤더 설정
+	packet->setHeader(packet->useSize());
 
 	session->sendPackets_.lock();
 
-	session->sendPackets_.enqueue(buf);
-	session->sendPackets_.enqueue(buffer);
+	session->sendPackets_.enqueue(packet);
 
 	session->sendPackets_.unlock();
 
@@ -424,8 +423,17 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 
 					continue;
 				}
+				// 121 트래픽 많으면 네트워크 연결 끊어버림
+				// 리모트환경 테스트시 발생
+				// 트래픽 줄여서 다시 테스트
+				else if (error == ERROR_SEM_TIMEOUT)
+				{
+					DebugBreak();
+				}
 
 				LOG_INFO(L"GQCS() error: %d", error);
+				
+				DebugBreak();
 
 				server->decrementIoCount(session);
 

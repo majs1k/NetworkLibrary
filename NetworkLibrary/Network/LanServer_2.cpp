@@ -4,6 +4,7 @@
 #include "../Utils/Logger.h"
 #include "../Utils/Profiler.h"
 
+/// ver1
 void LanServer::postRecv(Session* session)
 {
 	//sessionLock_.lock();
@@ -70,25 +71,143 @@ void LanServer::postRecv(Session* session)
 	}
 }
 
-/// TestServer
+/// ver2
+//void LanServer::postRecv(Session* session)
+//{
+//	InterlockedIncrement(&session->ioCount_);
+//
+//	ZeroMemory(&session->recvOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
+//
+//
+//	DWORD flags = 0;
+//	int retval;
+//
+//	WSABUF wsaBuf;
+//
+//	PacketT<Buffer*> p;
+//	/// p의 refCount 증가??
+//	
+//	Buffer* buffer = new Buffer(500);
+//	buffer->increase(1);
+//
+//	p.enqueue(buffer);
+//
+//	wsaBuf.buf = p.getBufferPtr();
+//	wsaBuf.len = 500;
+//
+//	retval = WSARecv(session->socket_, &wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
+//	
+//	if (retval == SOCKET_ERROR)
+//	{
+//		int error = WSAGetLastError();
+//
+//		if (error == ERROR_IO_PENDING)
+//		{
+//			//printf("recv() Direct IO\n");
+//		}
+//		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
+//		{
+//			this->decrementIoCount(session);
+//
+//			return;
+//		}
+//		else
+//		{
+//			LOG(L"WSARecv() error: %d, iocount: %d", error, session->ioCount_);
+//			DebugBreak();
+//			this->decrementIoCount(session);
+//
+//			return;
+//		}
+//	}
+//	else
+//	{
+//		//printf("recv() Fast IO\n");
+//	}
+//}
+
+/// TestServer ver1
+//void LanServer::completeRecv(Session* session, int numOfBytes)
+//{
+//	//sessionLock_.lock();
+//
+//	session->recvQueue_.moveRear(numOfBytes);
+//
+//	//sessionLock_.unlock();
+//
+//	while (1)
+//	{
+//		//sessionLock_.lock();
+//
+//		int useSize = session->recvQueue_.useSize();
+//
+//		if (session->recvQueue_.isFull())
+//		{
+//			//sessionLock_.unlock();
+//
+//			LOG_INFO(L"recvQueue full");
+//
+//			//연결 종료 로직 필요
+//
+//			return;
+//		}
+//
+//		//sessionLock_.unlock();
+//
+//		if (useSize < sizeof(HEADER))
+//			break;
+//
+//		HEADER header;
+//
+//		//sessionLock_.lock();
+//
+//		session->recvQueue_.peek((char*)&header, sizeof(HEADER));
+//
+//		//sessionLock_.unlock();
+//
+//		int messageSize = header.size;
+//
+//		if (messageSize < 0)
+//			break;
+//
+//		if (useSize < sizeof(HEADER) + messageSize)
+//			break;
+//
+//		//sessionLock_.lock();
+//
+//		session->recvQueue_.moveFront(sizeof(HEADER));
+//
+//		Packet packet;
+//
+//		session->recvQueue_.dequeue(packet.getBufferPtr(), messageSize);
+//
+//		//sessionLock_.unlock();
+//
+//		packet.moveWritePos(messageSize);
+//
+//		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
+//
+//		this->onRecv(session->sessionId_, packet);
+//
+//		InterlockedIncrement(&recvMessageCount_);
+//	}
+//
+//	this->postRecv(session);
+//
+//	this->decrementIoCount(session);
+//}
+
+/// TestServer ver2
 void LanServer::completeRecv(Session* session, int numOfBytes)
 {
-	//sessionLock_.lock();
-
 	session->recvQueue_.moveRear(numOfBytes);
-
-	//sessionLock_.unlock();
 
 	while (1)
 	{
-		//sessionLock_.lock();
-
 		int useSize = session->recvQueue_.useSize();
 
 		if (session->recvQueue_.isFull())
 		{
-			//sessionLock_.unlock();
-
 			LOG_INFO(L"recvQueue full");
 
 			//연결 종료 로직 필요
@@ -96,20 +215,14 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 			return;
 		}
 
-		//sessionLock_.unlock();
-
 		if (useSize < sizeof(HEADER))
 			break;
 
 		HEADER header;
 
-		//sessionLock_.lock();
-
 		session->recvQueue_.peek((char*)&header, sizeof(HEADER));
 
-		//sessionLock_.unlock();
-
-		int messageSize = header.size;
+		int messageSize = header.size_;
 
 		if (messageSize < 0)
 			break;
@@ -117,15 +230,11 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 		if (useSize < sizeof(HEADER) + messageSize)
 			break;
 
-		//sessionLock_.lock();
-
 		session->recvQueue_.moveFront(sizeof(HEADER));
 
 		Packet packet;
 
-		session->recvQueue_.dequeue(packet.getBufferPtr(), messageSize);
-
-		//sessionLock_.unlock();
+		session->recvQueue_.dequeue(packet.getPacketPtr(), messageSize);
 
 		packet.moveWritePos(messageSize);
 
@@ -293,9 +402,7 @@ void LanServer::completeRecv(Session* session, int numOfBytes)
 void LanServer::postSend(Session* session)
 {
 	if (InterlockedExchange(&session->sendPending_, 1) == 1)
-	{
 		return;
-	}
 
 	// WSASend() 이전에 호출해야, 
 	// 다른 스레드에서 send 완료통지로 ioCount 내려서 0이 되는 상황 차단
@@ -307,30 +414,58 @@ void LanServer::postSend(Session* session)
 
 	WSABUF wsaBuf[MAX_WSABUF];
 
-	int count = 0;
+	session->sendPacketCount_ = 0;
 
-	session->sendPackets_.lock();
+	session->sendQueue2_.lock();
 
-	for (int i = 0; i < session->sendPackets_.useSize() && i < MAX_WSABUF; i++)
+	int n = session->sendQueue2_.useSize();
+
+	// wsasend() 호출시 wasbuf count 0인 상황 발생시 10022 에러 발생함. 예외처리
+	if (n <= 0)
 	{
-		Buffer* buffer = nullptr;
+		session->sendQueue2_.unlock();
 
-		session->sendPackets_.dequeue(&buffer);
+		InterlockedExchange(&session->sendPending_, 0);
 
-		wsaBuf[i].buf = reinterpret_cast<char*>(buffer->getBufferPtr());
-		wsaBuf[i].len = buffer->useSize();
-
-		//if(buffer->useSize() > 2)
-		//	printf("%lld\n", *(__int64*)buffer->getBufferPtr());
-
-		session->sendPendings_.enqueue(buffer);
-
-		count++;
+		return;
 	}
 
-	session->sendPackets_.unlock();
+	for (int i = 0; i < n && i < MAX_WSABUF; i++)
+	{
+		Packet* packet = nullptr;
 
-	retval = WSASend(session->socket_, wsaBuf, count, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
+		session->sendQueue2_.dequeue(packet);
+
+		wsaBuf[i].buf = reinterpret_cast<char*>(packet->getCompletePtr());
+		wsaBuf[i].len = packet->completeSize();
+
+		//if (p->useSize() > 2)
+		//{
+		//	printf("%lld\n", *(__int64*)wsaBuf[i].buf);
+		//}
+		//else
+		//{
+		//	printf("%d\n", *(unsigned short*)wsaBuf[i].buf);
+		//}
+
+		session->sendPacketCount_++;
+	}
+
+	//if (session->sendPacketCount_ <= 0)
+	//{
+	//	session->sendPackets_.unlock();
+
+	//	InterlockedExchange(&session->sendPending_, 0);
+
+	//	return;
+	//}
+
+	session->sendQueue2_.moveFrontReverse(session->sendPacketCount_);
+
+	session->sendQueue2_.unlock();
+
+	// wsaBuf count가 0이면 10022 에러 발생함
+	retval = WSASend(session->socket_, wsaBuf, session->sendPacketCount_, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -348,10 +483,10 @@ void LanServer::postSend(Session* session)
 		}
 		else
 		{
-			LOG(L"WSASend() error: %d, iocount: %d", error, session->ioCount_);
-			//DebugBreak();
-			this->decrementIoCount(session);
+			LOG(L"WSASend() error: %d", error);
+			DebugBreak();
 
+			this->decrementIoCount(session);
 			return;
 		}
 	}
@@ -381,23 +516,35 @@ void LanServer::postSend(Session* session)
 //	this->decrementIoCount(session);
 //}
 
+
 /// ver2
 void LanServer::completeSend(Session* session, int numOfBytes)
 {
-	/// 그냥 전달 바이트수는 신경 쓰지말고, buffer의 카운트만 줄인다?..
-	for (int i = 0; i < session->sendPendings_.useSize(); i++)
+	Packet* p = nullptr;
+
+	session->sendQueue2_.lock();
+
+	// numOfBytes는 신경 쓰지말고, sendPacketCount_로 처리
+	for (int i = 0; i < session->sendPacketCount_; i++)
 	{
-		Buffer* buffer = nullptr;
+		session->sendQueue2_.dequeue(p);
 
-		session->sendPendings_.dequeue(&buffer);
-
-		this->decrementBufferCount(buffer);
+		this->decrementPacketCount(p);
 	}
+
+	// 여기선 0으로 봤는데 밑에서 size > 0 확인할떄 0이 아니면 send를 못하는 문제 발생가능
+	//int size = session->sendPackets_.useSize();
+
+	session->sendQueue2_.unlock();
 
 	InterlockedExchange(&session->sendPending_, 0);
 
-	if (session->sendPackets_.useSize() > 0)
+	session->sendQueue2_.lock();
+
+	if (session->sendQueue2_.useSize() > 0)
 		this->postSend(session);
+
+	session->sendQueue2_.unlock();
 
 	this->decrementIoCount(session);
 }
@@ -412,11 +559,11 @@ void LanServer::decrementIoCount(Session* session)
 	}
 }
 
-void LanServer::decrementBufferCount(Buffer* buffer)
+void LanServer::decrementPacketCount(Packet* packet)
 {
-	if (buffer->decrease() == 0)
+	if (packet->decrease() == 0)
 	{
-		delete buffer;
+		delete packet;
 
 		return;
 	}
