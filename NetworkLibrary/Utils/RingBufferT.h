@@ -3,20 +3,19 @@
 #include "Lock.h"
 #include <Windows.h>
 
+// 템플릿 클래스의 완전 특수화는 기존 템플릿을 하나도 이어받지 않음..
+// 그래서 char* 버퍼를 사용하는 기존의 RingBuffer 클래스는 유지
 template <typename T, int N>
 class BufferT
 {
 public:
-	T circularQueue_[N]{ };
+	T queue_[N]{ };
 	int capacity_ = N;
-
-	int refCount_ = 0;
 
 	int writePos_ = 0;
 	int readPos_ = 0;
 
 	Lock lock_;
-	int cnt;
 
 public:
 	void clear()
@@ -40,61 +39,64 @@ public:
 		return capacity_ - useSize() - 1;
 	}
 
-	char* getBufferPtr()
-	{
-		return nullptr;
-	}
-
-	void increase()
-	{
-		refCount_++;
-	}
-
-	void decrease()
-	{
-		refCount_--;
-	}
-
 	void enqueue(T value)
 	{
-		int s = freeSize();
-		if (s <= 0)
+		if (freeSize() <= 0)
 		{
 			DebugBreak();
 			return;
 		}
 
-		circularQueue_[writePos_] = value;
+		queue_[writePos_] = value;
 
 		writePos_ = (writePos_ + 1) % capacity_;
-
-		cnt++;
 	}
 
 	void dequeue(T& value)
 	{
 		if (useSize() <= 0)
+		{
 			DebugBreak();
+			return;
+		}
 
-		value = circularQueue_[readPos_];
+		value = queue_[readPos_];
 
 		readPos_ = (readPos_ + 1) % capacity_;
+	}
+
+	void peek(T& value, int idx) const
+	{
+		if (useSize() <= 0)
+		{
+			DebugBreak();
+			return;
+		}
+
+		if (useSize() <= idx)
+		{
+			DebugBreak();
+			return;
+		}
+
+		value = queue_[(readPos_ + idx) % capacity_];
 	}
 
 	int moveFront(int size)
 	{
 		if (useSize() < size)
+		{
+			DebugBreak();
 			return 0;
+		}
 
 		readPos_ = (readPos_ + size) % capacity_;
 		return size;
 	}
 
+	// 위험함. 삭제예정
 	int moveFrontReverse(int size)
 	{
-		if (size > freeSize())
-			return 0;
-
 		readPos_ = (readPos_ - size + capacity_) % capacity_;
 		return size;
 	}
@@ -102,7 +104,10 @@ public:
 	int moveRear(int size)
 	{
 		if (freeSize() < size)
+		{
+			DebugBreak();
 			return 0;
+		}
 
 		writePos_ = (writePos_ + size) % capacity_;
 		return size;
@@ -119,8 +124,3 @@ public:
 	}
 };
 
-//template<>
-//char* PacketT<Buffer*>::getBufferPtr()
-//{
-//	//return circularQueue_front()->getBufferPtr();
-//}

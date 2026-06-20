@@ -10,70 +10,28 @@
 //
 // -------------------------------------------------------------------
 #pragma once
-#include "Lock.h"
-#include <Windows.h>
-
-// ------------------------------------------------------- //
-
-struct HEADER
-{
-	unsigned short size_;
-};
-
-// ------------------------------------------------------- //
 
 class Packet
 {
 protected:
 	char* buffer_;
+
 	int	capacity_;
 
 	int writePos_;
 	int readPos_;
 
-	LONG refCount_;
-	//Lock lock_;
-
 public:
 	// 디폴트 사이즈?
 	Packet(int bufferSize = 200);
 	~Packet();
-	void initialize();
 
-	void setHeader(int size);
+	void initialize();
 
 	int	capacity();
 	int	useSize();
 
-	//char* getBufferPtr()
-	//{
-	//	return buffer_;
-	//}
-
-	char* getPacketPtr()
-	{
-		return buffer_ + sizeof(HEADER);
-	}
-
-	char* getCompletePtr()
-	{
-		return buffer_;
-	}
-
-	int completeSize()
-	{
-		return writePos_;
-	}
-
-	void increase(int count)
-	{
-		InterlockedExchange(&refCount_, count);
-	}
-
-	int decrease()
-	{
-		return InterlockedDecrement(&refCount_);
-	}
+	char* getBufferPtr();
 
 	//getBufferPtr()로 버퍼 내용 수정할 경우 사용
 	int	moveWritePos(int size);
@@ -101,6 +59,6 @@ public:
 	Packet& operator >> (__int64& value);
 	Packet& operator >> (double& value);
 
-	int	read(char* dest, int size);
-	int	write(char* src, int size);
+	int	read(char* chpDest, int size);
+	int	write(char* chpSrc, int size);
 };

@@ -24,7 +24,7 @@
     <ClCompile Include="Utils\Lock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Packet.cpp">
+    <ClCompile Include="Utils\SendPacket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utils\RingBuffer.cpp">
@@ -60,6 +60,9 @@
     <ClCompile Include="Contents\RPCModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\Packet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -92,7 +95,7 @@
     <ClInclude Include="Utils\MemoryPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\Packet.h">
+    <ClInclude Include="Utils\SendPacket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Profiler.h">
@@ -125,10 +128,13 @@
     <ClInclude Include="Contents\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\BufferT.h">
+    <ClInclude Include="Utils\RingBufferT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Network\Session.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Packet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

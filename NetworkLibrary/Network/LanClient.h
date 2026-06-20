@@ -4,21 +4,10 @@
 #include <unordered_map>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <Windows.h>
 #include "Session.h"
 #include "../Utils/RingBuffer.h"
 #include "../Utils/Lock.h"
-
-// ------------------------------------------------------- //
-
-#define PACKET_CODE				0x89
-
-struct FIGHTER_HEADER
-{
-	unsigned char code;
-	unsigned char size;
-	//unsigned char type;
-};
+#include <Windows.h>
 
 // ------------------------------------------------------- //
 
@@ -65,9 +54,7 @@ public:
 
 	void postRecv(Session* session);
 	void completeRecv(Session* session, int numOfBytes);
-
 	void postSend(Session* session);
 	void completeSend(Session* session, int numOfBytes);
-
 	void decrementIoCount(Session* session);
 };

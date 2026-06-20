@@ -2,7 +2,7 @@
 #include <string>
 #include <WinSock2.h>
 #include "../Utils/RingBuffer.h"
-#include "../Utils/BufferT.h"
+#include "../Utils/RingBufferT.h"
 #include "../Utils/Lock.h"
 #include <Windows.h>
 
@@ -10,7 +10,6 @@
 #define RECV_SIZE				10000
 
 #define SEND_CNT				2000
-
 
 enum class IOType
 {
@@ -25,6 +24,7 @@ struct OverlappedEx
 };
 
 class Packet;
+class SendPacket;
 
 /// TODO: 세션 삭제시 소켓 close
 struct Session
@@ -42,7 +42,7 @@ struct Session
 	RingBuffer recvQueue_{ RECV_SIZE };
 
 	/// 세션 종료시 정리 필요!!! (count 등...)
-	BufferT<Packet*, SEND_CNT> sendQueue2_;
+	BufferT<SendPacket*, SEND_CNT> sendQueueT_;
 
 	OverlappedEx sendOverlapped_;
 	OverlappedEx recvOverlapped_;

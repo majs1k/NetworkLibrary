@@ -3,6 +3,7 @@
 #include "LanServer.h"
 #include "Session.h"
 #include "../Utils/Packet.h"
+#include "../Utils/SendPacket.h"
 #include "../Utils/Logger.h"
 #include "../Utils/Profiler.h"
 #pragma comment(lib, "winmm.lib")
@@ -46,7 +47,7 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	// L4 송신버퍼 사이즈 옵션
 	int sndBufSize = 0;
-	setsockopt(listenSocket_, SOL_SOCKET, SO_SNDBUF, (const char*)(&sndBufSize), sizeof(sndBufSize));
+	//setsockopt(listenSocket_, SOL_SOCKET, SO_SNDBUF, (const char*)(&sndBufSize), sizeof(sndBufSize));
 
 	int size = 0;
 	int len = sizeof(size);
@@ -150,6 +151,36 @@ int LanServer::sessionMax() const
 
 bool LanServer::disconnect(__int64 sessionId)
 {
+	//sessionMapLock_.lock();
+
+	//auto it = sessionMap_.find(sessionId);
+
+	//if (it == sessionMap_.end())
+	//{
+	//	sessionMapLock_.unlock();
+
+	//	return false;
+	//}
+
+	//Session* session = (*it).second;
+
+	//sessionMap_.erase(sessionId);
+
+	//sessionMapLock_.unlock();
+
+	//onRelease(sessionId);
+
+	//delete session;
+
+	////LOG_INFO(L"[NETWORK] session delete");
+
+	//InterlockedDecrement(&sessionCount_);
+
+	return true;
+}
+
+bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
+{
 	sessionMapLock_.lock();
 
 	auto it = sessionMap_.find(sessionId);
@@ -163,66 +194,35 @@ bool LanServer::disconnect(__int64 sessionId)
 
 	Session* session = (*it).second;
 
-	sessionMap_.erase(sessionId);
-
 	sessionMapLock_.unlock();
 
-	delete session;
+	//if (ioCount_ == 0)
+	//	return;
 
-	//LOG_INFO(L"[NETWORK] session delete");
+	//if(InterlockedIncrement(&ioCount_) == 1)
+	//	return;
 
-	onRelease(sessionId);
+	HEADER header;
+	header.size_ = packet->useSize();
 
-	InterlockedDecrement(&sessionCount_);
+	session->sendQueue_.lock();
+
+	session->sendQueue_.enqueue((char*)&header, sizeof(HEADER));
+	session->sendQueue_.enqueue(packet->getBufferPtr(), packet->useSize());
+
+	session->sendQueue_.unlock();
+
+	this->postSend(session);
+
+	InterlockedIncrement(&sendMessageCount_);
 
 	return true;
 }
 
-
-/// TestServer ver1
-//bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
-//{
-//	sessionMapLock_.lock();
-//
-//	auto it = sessionMap_.find(sessionId);
-//
-//	if (it == sessionMap_.end())
-//	{
-//		sessionMapLock_.unlock();
-//
-//		return false;
-//	}
-//
-//	Session* session = (*it).second;
-//
-//	sessionMapLock_.unlock();
-//
-//	//if (ioCount_ == 0)
-//	//	return;
-//
-//	//if(InterlockedIncrement(&ioCount_) == 1)
-//	//	return;
-//
-//	HEADER header;
-//	header.size_ = packet->useSize();
-//
-//	session->sendQueue_.lock();
-//
-//	session->sendQueue_.enqueue((char*)&header, sizeof(HEADER));
-//	session->sendQueue_.enqueue(packet->getPacketPtr(), packet->useSize());
-//
-//	session->sendQueue_.unlock();
-//
-//	this->postSend(session);
-//
-//	InterlockedIncrement(&sendMessageCount_);
-//
-//	return true;
-//}
-
-/// TestServer ver2
-bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
+bool LanServer::sendPacketSkipCopy(__int64 sessionId, SendPacket* packet)
 {
+	this->incrementPacketRefCount(packet);
+
 	sessionMapLock_.lock();
 
 	auto it = sessionMap_.find(sessionId);
@@ -241,13 +241,13 @@ bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
 	// 패킷 헤더 설정
 	packet->setHeader(packet->useSize());
 
-	session->sendPackets_.lock();
+	session->sendQueueT_.lock();
 
-	session->sendPackets_.enqueue(packet);
+	session->sendQueueT_.enqueue(packet);
 
-	session->sendPackets_.unlock();
+	session->sendQueueT_.unlock();
 
-	this->postSend(session);
+	this->postSendSkipCopy(session);
 
 	InterlockedIncrement(&sendMessageCount_);
 
@@ -476,6 +476,7 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 		else
 		{
 			server->completeSend(session, numOfBytes);
+			//server->completeSendSkipCopy(session, numOfBytes);
 		}
 	}
 
