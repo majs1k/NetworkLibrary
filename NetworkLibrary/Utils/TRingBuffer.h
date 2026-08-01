@@ -1,12 +1,11 @@
 #pragma once
 #include <iostream>
-#include "Lock.h"
-#include <Windows.h>
+#include <mutex>
 
 // 템플릿 클래스의 완전 특수화는 기존 템플릿을 하나도 이어받지 않음..
 // 그래서 char* 버퍼를 사용하는 기존의 RingBuffer 클래스는 유지
 template <typename T, int N>
-class BufferT
+class TRingBuffer
 {
 public:
 	T queue_[N]{ };
@@ -15,7 +14,7 @@ public:
 	int writePos_ = 0;
 	int readPos_ = 0;
 
-	Lock lock_;
+	std::mutex lock_;
 
 public:
 	void clear()
@@ -43,7 +42,7 @@ public:
 	{
 		if (freeSize() <= 0)
 		{
-			DebugBreak();
+			__debugbreak();
 			return;
 		}
 
@@ -56,7 +55,7 @@ public:
 	{
 		if (useSize() <= 0)
 		{
-			DebugBreak();
+			__debugbreak();
 			return;
 		}
 
@@ -69,13 +68,13 @@ public:
 	{
 		if (useSize() <= 0)
 		{
-			DebugBreak();
+			__debugbreak();
 			return;
 		}
 
 		if (useSize() <= idx)
 		{
-			DebugBreak();
+			__debugbreak();
 			return;
 		}
 
@@ -86,7 +85,7 @@ public:
 	{
 		if (useSize() < size)
 		{
-			DebugBreak();
+			__debugbreak();
 			return 0;
 		}
 
@@ -94,18 +93,11 @@ public:
 		return size;
 	}
 
-	// 위험함. 삭제예정
-	int moveFrontReverse(int size)
-	{
-		readPos_ = (readPos_ - size + capacity_) % capacity_;
-		return size;
-	}
-
 	int moveRear(int size)
 	{
 		if (freeSize() < size)
 		{
-			DebugBreak();
+			__debugbreak();
 			return 0;
 		}
 

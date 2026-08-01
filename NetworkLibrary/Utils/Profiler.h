@@ -24,10 +24,9 @@
 #include <unordered_map>
 #include <conio.h>
 #include <process.h>
-#include <timeapi.h>
-#include <Windows.h>
-
+//#include <timeapi.h>
 #include "Singleton.h"
+#include <Windows.h>
 
 #define PROFILER
 
@@ -185,7 +184,12 @@ public:
 		std::wofstream fout(fileName);
 
 		if (!fout.is_open())
-			printf("! logfile error, file open fail.\n");
+		{
+			printf("logfile open error\n");
+			printf("check file directory\n");
+
+			__debugbreak();
+		}
 
 		fout << std::setw(15) << L"Name"
 			<< std::setw(15) << L"Average(us)"
@@ -206,9 +210,9 @@ public:
 			fout << std::fixed << std::setprecision(3)
 				<< std::setw(15) << profile->name_
 				<< std::setw(15) << static_cast<double>(profile->totalTime_ - profile->minTime_ - profile->maxTime_)
-				/ 10 / (profile->call_ - 2)
-				<< std::setw(15) << static_cast<double>(profile->minTime_ / 10)
-				<< std::setw(15) << static_cast<double>(profile->maxTime_ / 10)
+				/ 10.0 / (profile->call_ - 2)
+				<< std::setw(15) << static_cast<double>(profile->minTime_) / 10
+				<< std::setw(15) << static_cast<double>(profile->maxTime_) / 10
 				<< std::setw(15) << profile->call_
 				<< std::endl;
 		}

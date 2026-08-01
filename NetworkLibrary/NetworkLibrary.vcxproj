@@ -91,7 +91,8 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <Optimization>Disabled</Optimization>
-      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,11 +136,10 @@
     <ClCompile Include="Network\LanClient_1.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
-    <ClCompile Include="Utils\Lock.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Packet.cpp" />
+    <ClCompile Include="Utils\RecvPacket.cpp" />
     <ClCompile Include="Utils\SendPacket.cpp" />
-    <ClCompile Include="Utils\RingBuffer.cpp" />
     <ClCompile Include="Utils\TickController.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -153,18 +153,18 @@
     <ClInclude Include="Utils\ConfigLoader.h" />
     <ClInclude Include="Utils\CrashDump.h" />
     <ClInclude Include="Utils\List.h" />
-    <ClInclude Include="Utils\Lock.h" />
     <ClInclude Include="Utils\Logger.h" />
-    <ClInclude Include="Utils\Logger_spdlog.h" />
     <ClInclude Include="Utils\MemoryLeak.h" />
     <ClInclude Include="Utils\MemoryOverflow.h" />
-    <ClInclude Include="Utils\MemoryPool.h" />
+    <ClInclude Include="Utils\TMemoryPool.h" />
+    <ClInclude Include="Utils\Message.h" />
     <ClInclude Include="Utils\Packet.h" />
+    <ClInclude Include="Utils\RecvPacket.h" />
     <ClInclude Include="Utils\SendPacket.h" />
     <ClInclude Include="Utils\Profiler.h" />
     <ClInclude Include="Utils\Random.h" />
     <ClInclude Include="Utils\RingBuffer.h" />
-    <ClInclude Include="Utils\RingBufferT.h" />
+    <ClInclude Include="Utils\TRingBuffer.h" />
     <ClInclude Include="Utils\Singleton.h" />
     <ClInclude Include="Utils\TickController.h" />
   </ItemGroup>

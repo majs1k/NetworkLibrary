@@ -3,7 +3,6 @@
 #include "../Network/LanServer.h"
 #include "../RPC/ServerProxy.h"
 #include "../RPC/ServerStub.h"
-#include "../Utils/Lock.h"
 
 class Player;
 
@@ -17,26 +16,24 @@ private:
 
 	std::unordered_map<__int64, Player*> playerMap_{};
 	int playerCount_ = 0;
-	Lock playerMapLock_;
 
 public:
 	FighterServer();
-	bool defaultStart() override;
-	void defaultStop() override;
 
 	bool onConnectionRequest(const std::wstring& ip, int port) override;
 	void onAccept(__int64 sessionId) override;
 	void onRelease(__int64 sessionId) override;
-	void onRecv(__int64 sessionId, Packet& packet) override;
+	void onRecv(__int64 sessionId, Packet* packet) override;
+	void onRecv(__int64 sessionId, RecvPacket* packet) override;
 	void onError(int errorCode, wchar_t* str) override;
+
+	static unsigned int __stdcall logicThread(void* param);
+	void update();
 
 	// ----------------------------------------------------- //
 
 	void createPlayer(__int64 sessionId);
 	void removePlayer(__int64 sessionId);
-
-	static unsigned int __stdcall logicThread(void* param);
-	void update();
 
 	// ----------------------------------------------------- //
 

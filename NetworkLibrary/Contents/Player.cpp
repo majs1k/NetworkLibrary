@@ -14,6 +14,8 @@ void Player::initialize(__int64 sessionId)
 
 	x_ = RAND(RANGE_MOVE_LEFT, RANGE_MOVE_RIGHT);
 	y_ = RAND(RANGE_MOVE_TOP, RANGE_MOVE_BOTTOM);
+	//x_ = 0;
+	//y_ = 0;
 	hp_ = MAX_HP;
 }
 

@@ -9,18 +9,11 @@
 FighterServer::FighterServer()
 {
 	proxy_.server_ = this;
-}
 
-bool FighterServer::defaultStart()
-{
 	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, logicThread, this, 0, nullptr);
 
-	return true;
-}
-
-void FighterServer::defaultStop()
-{
-	shutdown_ = true;
+	// 종료시
+	//shutdown_ = true;
 }
 
 bool FighterServer::onConnectionRequest(const std::wstring& ip, int port)
@@ -43,21 +36,38 @@ void FighterServer::onAccept(__int64 sessionId)
 void FighterServer::onRelease(__int64 sessionId)
 {
 	this->removePlayer(sessionId);
+
+	for (auto& p : playerMap_)
+	{
+		Player* player = p.second;
+
+		//if (player->sessionId_ == sessionId)
+		//	continue;
+
+		proxy_.sc_character_delete(player->sessionId_, sessionId);
+	}
 }
 
-void FighterServer::onRecv(__int64 sessionId, Packet& packet)
+void FighterServer::onRecv(__int64 sessionId, Packet* packet)
 {
 	unsigned char type;
-	packet >> type;
+	*packet >> type;
 
 	// 함수의 인자 자료형 주의 필요 (이후 패킷헤더 수정시 참고)
-	if (!packetProc(sessionId, packet, type))
+	if (!packetProc(sessionId, *packet, type))
 	{
 		/// IOcount 감소시키는걸로 수정해야 할거 같은데...
 		//disconnect(sessionId);
 
 		return;
 	}
+
+	delete packet;
+}
+
+void FighterServer::onRecv(__int64 sessionId, RecvPacket* packet)
+{
+
 }
 
 void FighterServer::onError(int errorCode, wchar_t* str)
@@ -65,14 +75,38 @@ void FighterServer::onError(int errorCode, wchar_t* str)
 
 }
 
+unsigned int __stdcall FighterServer::logicThread(void* param)
+{
+	FighterServer* server = (FighterServer*)param;
+
+	while (!server->shutdown_)
+	{
+		server->update();
+
+		TickController::getInstance().update();
+	}
+
+	return 0;
+}
+
+void FighterServer::update()
+{
+	for (auto& p : playerMap_)
+	{
+		Player* player = p.second;
+
+		if (player->action_ == MOVE_DIR_NONE)
+			continue;
+
+		player->move();
+	}
+}
+
 void FighterServer::createPlayer(__int64 sessionId)
 {
 	// db 구현시 플레이어 id 조회
 	Player* player = new Player();
 	player->initialize(sessionId);
-
-	/// TODO: Lock 필요
-	playerMapLock_.lock();
 
 	playerMap_.insert({ sessionId, player });
 	playerCount_++;
@@ -109,14 +143,10 @@ void FighterServer::createPlayer(__int64 sessionId)
 		proxy_.sc_start_move(sessionId, other->playerId_, other->action_,
 			static_cast<short>(other->x_), static_cast<short>(other->y_));
 	}
-
-	playerMapLock_.unlock();
 }
 
 void FighterServer::removePlayer(__int64 sessionId)
 {
-	playerMapLock_.lock();
-
 	auto it = playerMap_.find(sessionId);
 
 	if (it == playerMap_.end())
@@ -124,51 +154,15 @@ void FighterServer::removePlayer(__int64 sessionId)
 
 	Player* player = (*it).second;
 
-	/// TODO: Lock 필요
 	playerMap_.erase(sessionId);
 
 	delete player;
 
 	playerCount_--;
-
-	playerMapLock_.unlock();
-}
-
-unsigned int __stdcall FighterServer::logicThread(void* param)
-{
-	FighterServer* server = (FighterServer*)param;
-
-	while (!server->shutdown_)
-	{
-		server->update();
-
-		TickController::getInstance().update();
-	}
-
-	return 0;
-}
-
-void FighterServer::update()
-{
-	playerMapLock_.lock();
-
-	for (auto& p : playerMap_)
-	{
-		Player* player = p.second;
-
-		if (player->action_ == MOVE_DIR_NONE)
-			continue;
-
-		player->move();
-	}
-
-	playerMapLock_.unlock();
 }
 
 bool FighterServer::cs_start_move(__int64 sessionId, char direction, short x, short y)
 {
-	playerMapLock_.lock();
-
 	auto it = playerMap_.find(sessionId);
 
 	if (it == playerMap_.end())
@@ -219,15 +213,11 @@ bool FighterServer::cs_start_move(__int64 sessionId, char direction, short x, sh
 			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
 
-	playerMapLock_.unlock();
-
 	return true;
 }
 
 bool FighterServer::cs_stop_move(__int64 sessionId, char action, short x, short y)
 {
-	playerMapLock_.lock();
-
 	auto it = playerMap_.find(sessionId);
 
 	if (it == playerMap_.end())
@@ -263,8 +253,6 @@ bool FighterServer::cs_stop_move(__int64 sessionId, char action, short x, short 
 		proxy_.sc_stop_move(other->sessionId_, player->playerId_, player->direction_,
 			static_cast<short>(player->x_), static_cast<short>(player->y_));
 	}
-
-	playerMapLock_.unlock();
 
 	return true;
 }
@@ -343,16 +331,7 @@ bool FighterServer::cs_attack1(__int64 sessionId, char direction, short x, short
 
 	if (target->hp_ <= 0)
 	{
-		for (auto& p : playerMap_)
-		{
-			Player* reciever = p.second;
-
-			proxy_.sc_character_delete(reciever->sessionId_, target->playerId_);
-		}
-
-		/// HOW TO?
-		//server->decrementIoCount(target->sessionId_);
-		//PlayerManager::getInstance().removePlayer(target->playerId_);
+		this->disconnect(target->sessionId_);
 
 		return true;
 	}

@@ -1,9 +1,10 @@
 #pragma once
 #include <string>
+#include <mutex>
 #include <WinSock2.h>
 #include "../Utils/RingBuffer.h"
-#include "../Utils/RingBufferT.h"
-#include "../Utils/Lock.h"
+#include "../Utils/TRingBuffer.h"
+#include "../Utils/RecvPacket.h"
 #include <Windows.h>
 
 #define SEND_SIZE				10000
@@ -25,6 +26,7 @@ struct OverlappedEx
 
 class Packet;
 class SendPacket;
+class RecvPacket;
 
 /// TODO: 세션 삭제시 소켓 close
 struct Session
@@ -42,7 +44,8 @@ struct Session
 	RingBuffer recvQueue_{ RECV_SIZE };
 
 	/// 세션 종료시 정리 필요!!! (count 등...)
-	BufferT<SendPacket*, SEND_CNT> sendQueueT_;
+	TRingBuffer<SendPacket*, SEND_CNT> sendQueueT_;
+	RecvPacket* recvPacket_;
 
 	OverlappedEx sendOverlapped_;
 	OverlappedEx recvOverlapped_;
@@ -52,7 +55,7 @@ struct Session
 
 	LONG sendPacketCount_ = 0;
 
-	Lock sessionLock_;
+	std::recursive_mutex sessionLock_;
 
 	void initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
 	{
@@ -64,6 +67,11 @@ struct Session
 
 		sendQueue_.clear();
 		recvQueue_.clear();
+
+		recvPacket_ = new RecvPacket();
+		PacketBuffer* buffer = new PacketBuffer();
+		recvPacket_->initialize(buffer);
+		recvPacket_->incrementRef();
 
 		sendOverlapped_.type = IOType::SEND;
 		recvOverlapped_.type = IOType::RECV;

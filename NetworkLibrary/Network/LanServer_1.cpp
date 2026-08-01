@@ -1,12 +1,13 @@
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "winmm.lib")
+
 #include <process.h>
 #include "LanServer.h"
 #include "Session.h"
 #include "../Utils/Packet.h"
 #include "../Utils/SendPacket.h"
 #include "../Utils/Logger.h"
-#include "../Utils/Profiler.h"
-#pragma comment(lib, "winmm.lib")
+//#include "../Utils/Profiler.h"
 
 LanServer::LanServer()
 {
@@ -18,8 +19,6 @@ LanServer::LanServer()
 
 LanServer::~LanServer()
 {
-	///세션맵 정리 추가
-
 	WSACleanup();
 }
 
@@ -38,12 +37,14 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	// 링거 옵션 - closesocekt() 호출시 즉시 리턴, 연결 강제 종료
 	// 서버 클라 둘다 설정할 것
-	LINGER optval;
-	optval.l_onoff = 1;
-	optval.l_linger = 0;
+	LINGER lin;
+	lin.l_onoff = 1;
+	lin.l_linger = 0;
+	setsockopt(listenSocket_, SOL_SOCKET, SO_LINGER, (char*)&lin, sizeof(lin));
 
-	if (setsockopt(listenSocket_, SOL_SOCKET, SO_LINGER, (char*)&optval, sizeof(optval)) == SOCKET_ERROR)
-		ERR(L"setsockopt() error");
+	// 네이글 옵션 해제
+	int nagleFlag = 1;
+	setsockopt(listenSocket_, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&nagleFlag), sizeof(nagleFlag));
 
 	// L4 송신버퍼 사이즈 옵션
 	int sndBufSize = 0;
@@ -61,10 +62,10 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 	InetPton(AF_INET, serverIp_.c_str(), &serverAddr.sin_addr);
 	serverAddr.sin_port = htons(serverPort_);
 
-	if (::bind(listenSocket_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+	if (bind(listenSocket_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 		ERR(L"bind() error");
 
-	if (::listen(listenSocket_, SOMAXCONN) == SOCKET_ERROR)
+	if (listen(listenSocket_, SOMAXCONN) == SOCKET_ERROR)
 		ERR(L"listen() error");
 
 	hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, concurrentThreadCount_);
@@ -81,8 +82,6 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	// manual reset
 	hExitEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-
-	this->defaultStart();
 
 	LOG_INFO(L"[NETWORK] server start");
 
@@ -115,28 +114,18 @@ void LanServer::stop()
 	CloseHandle(hMonitorThread_);
 	CloseHandle(hExitEvent);
 
-	// 세션 정리
+	// 세션맵 정리
 	for (auto& session : sessionMap_)
 	{
 		delete session.second;
 	}
 
+	//sessionMap_.clear();
+
 	// IOCP 삭제
 	CloseHandle(hIOCP_);
 
-	this->defaultStop();
-
 	LOG_INFO(L"[NETWORK] server exit");
-}
-
-bool LanServer::defaultStart()
-{
-	return true;
-}
-
-void LanServer::defaultStop()
-{
-
 }
 
 int LanServer::sessionCount() const
@@ -151,34 +140,27 @@ int LanServer::sessionMax() const
 
 bool LanServer::disconnect(__int64 sessionId)
 {
-	//sessionMapLock_.lock();
+	sessionMapLock_.lock();
 
-	//auto it = sessionMap_.find(sessionId);
+	auto it = sessionMap_.find(sessionId);
 
-	//if (it == sessionMap_.end())
-	//{
-	//	sessionMapLock_.unlock();
+	if (it == sessionMap_.end())
+	{
+		sessionMapLock_.unlock();
 
-	//	return false;
-	//}
+		return false;
+	}
 
-	//Session* session = (*it).second;
+	Session* session = (*it).second;
 
-	//sessionMap_.erase(sessionId);
+	sessionMapLock_.unlock();
 
-	//sessionMapLock_.unlock();
-
-	//onRelease(sessionId);
-
-	//delete session;
-
-	////LOG_INFO(L"[NETWORK] session delete");
-
-	//InterlockedDecrement(&sessionCount_);
+	closesocket(session->socket_);
 
 	return true;
 }
 
+/// TestServer
 bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
 {
 	sessionMapLock_.lock();
@@ -194,6 +176,8 @@ bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
 
 	Session* session = (*it).second;
 
+	std::lock_guard<std::recursive_mutex> lock(session->sessionLock_);
+
 	sessionMapLock_.unlock();
 
 	//if (ioCount_ == 0)
@@ -202,52 +186,17 @@ bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
 	//if(InterlockedIncrement(&ioCount_) == 1)
 	//	return;
 
-	HEADER header;
+	TEST_HEADER header;
 	header.size_ = packet->useSize();
 
 	session->sendQueue_.lock();
 
-	session->sendQueue_.enqueue((char*)&header, sizeof(HEADER));
+	session->sendQueue_.enqueue((char*)&header, sizeof(TEST_HEADER));
 	session->sendQueue_.enqueue(packet->getBufferPtr(), packet->useSize());
 
 	session->sendQueue_.unlock();
 
-	this->postSend(session);
-
-	InterlockedIncrement(&sendMessageCount_);
-
-	return true;
-}
-
-bool LanServer::sendPacketSkipCopy(__int64 sessionId, SendPacket* packet)
-{
-	this->incrementPacketRefCount(packet);
-
-	sessionMapLock_.lock();
-
-	auto it = sessionMap_.find(sessionId);
-
-	if (it == sessionMap_.end())
-	{
-		sessionMapLock_.unlock();
-
-		return false;
-	}
-
-	Session* session = (*it).second;
-
-	sessionMapLock_.unlock();
-
-	// 패킷 헤더 설정
-	packet->setHeader(packet->useSize());
-
-	session->sendQueueT_.lock();
-
-	session->sendQueueT_.enqueue(packet);
-
-	session->sendQueueT_.unlock();
-
-	this->postSendSkipCopy(session);
+	this->sendPost(session);
 
 	InterlockedIncrement(&sendMessageCount_);
 
@@ -255,7 +204,43 @@ bool LanServer::sendPacketSkipCopy(__int64 sessionId, SendPacket* packet)
 }
 
 /// FighterServer
-//bool LanServer::sendPacket(__int64 sessionId, Packet& packet)
+//bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
+//{
+//	sessionMapLock_.lock();
+//
+//	auto it = sessionMap_.find(sessionId);
+//
+//	if (it == sessionMap_.end())
+//	{
+//		sessionMapLock_.unlock();
+//
+//		return false;
+//	}
+//
+//	Session* session = (*it).second;
+//
+//	sessionMapLock_.unlock();
+//
+//	FIGHTER_HEADER header;
+//	header.code = PACKET_CODE;
+//	header.size = packet->useSize() - sizeof(unsigned char);
+//
+//	session->sendQueue_.lock();
+//
+//	session->sendQueue_.enqueue((char*)&header, sizeof(FIGHTER_HEADER));
+//	session->sendQueue_.enqueue(packet->getBufferPtr(), packet->useSize());
+//
+//	session->sendQueue_.unlock();
+//
+//	this->sendPost(session);
+//
+//	InterlockedIncrement(&sendMessageCount_);
+//
+//	return true;
+//}
+
+/// MMOServer
+//bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
 //{
 //	sessionMapLock_.lock();
 //
@@ -273,25 +258,61 @@ bool LanServer::sendPacketSkipCopy(__int64 sessionId, SendPacket* packet)
 //
 //	sessionMapLock_.unlock();
 //
-//	FIGHTER_HEADER header;
-//	header.code = PACKET_CODE;
-//	header.size = packet.useSize() - sizeof(unsigned char);
+//	MMO_HEADER header;
+//	header.size = packet->useSize();
 //
 //	session->sendQueue_.lock();
 //
-//	session->sendQueue_.enqueue((char*)&header, sizeof(FIGHTER_HEADER));
-//	session->sendQueue_.enqueue(packet.getBufferPtr(), packet.useSize());
+//	session->sendQueue_.enqueue((char*)&header, sizeof(MMO_HEADER));
+//	session->sendQueue_.enqueue(packet->getBufferPtr(), packet->useSize());
 //
 //	session->sendQueue_.unlock();
 //
-//	this->postSend(session);
+//	this->sendPost(session);
 //
 //	InterlockedIncrement(&sendMessageCount_);
 //
 //	return true;
 //}
 
-int LanServer::acceptTps()
+bool LanServer::sendPacketZeroCopy(__int64 sessionId, SendPacket* packet)
+{
+	//PRO(L"sendPacket() 2");
+
+	sessionMapLock_.lock();
+
+	auto it = sessionMap_.find(sessionId);
+
+	if (it == sessionMap_.end())
+	{
+		sessionMapLock_.unlock();
+
+		return false;
+	}
+
+	Session* session = (*it).second;
+
+	sessionMapLock_.unlock();
+
+	session->sendQueueT_.lock();
+
+	// 패킷 헤더 설정
+	SendPacket* p = new SendPacket();
+	*p << packet->useSize();
+
+	session->sendQueueT_.enqueue(p);
+	session->sendQueueT_.enqueue(packet);
+
+	session->sendQueueT_.unlock();
+
+	this->sendPostZeroCopy(session);
+
+	InterlockedIncrement(&sendMessageCount_);
+
+	return true;
+}
+
+int LanServer::acceptMessageTps()
 {
 	return acceptTps_;
 }
@@ -366,7 +387,7 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 
 		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
 
-		server->postRecv(session);
+		server->recvPost(session);
 
 		// 위치 주의
 		server->onAccept(session->sessionId_);
@@ -432,7 +453,7 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 				}
 
 				LOG_INFO(L"GQCS() error: %d", error);
-				
+
 				DebugBreak();
 
 				server->decrementIoCount(session);
@@ -467,11 +488,11 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 			if (numOfBytes == 0)
 			{
 				server->decrementIoCount(session);
-
-				continue;
 			}
-
-			server->completeRecv(session, numOfBytes);
+			else
+			{
+				server->completeRecv(session, numOfBytes);
+			}
 		}
 		else
 		{

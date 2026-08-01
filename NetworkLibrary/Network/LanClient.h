@@ -52,9 +52,9 @@ public:
 
 	// ------------------------------------------------------- //
 
-	void postRecv(Session* session);
+	void recvPost(Session* session);
 	void completeRecv(Session* session, int numOfBytes);
-	void postSend(Session* session);
+	void sendPost(Session* session);
 	void completeSend(Session* session, int numOfBytes);
 	void decrementIoCount(Session* session);
 };

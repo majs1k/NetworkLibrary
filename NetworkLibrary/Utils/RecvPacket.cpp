@@ -1,52 +1,20 @@
 #include <iostream>
-#include "SendPacket.h"
+#include "RecvPacket.h"
 
-SendPacket::SendPacket(int bufferSize)
-	:capacity_(bufferSize), writePos_(0), readPos_(0)
-{
-	buffer_ = (char*)malloc(capacity_);
-}
-
-SendPacket::~SendPacket()
-{
-	free(buffer_);
-}
-
-void SendPacket::initialize()
-{
-	writePos_ =0;
-	readPos_ = 0;
-}
-
-int	SendPacket::capacity()
-{
-	return capacity_;
-}
-
-int	SendPacket::useSize()
-{
-	return writePos_ - readPos_;
-}
-
-int	SendPacket::moveWritePos(int size)
+int	RecvPacket::moveWritePos(int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈, 음수 이동 제한?
 	writePos_ += size;
 	return size;
 }
 
-int	SendPacket::moveReadPos(int size)
+int	RecvPacket::moveReadPos(int size)
 {
 	readPos_ += size;
 	return size;
 }
 
-SendPacket& SendPacket::operator = (const SendPacket& SendPacket)
-{
-	return *this;
-}
-
-SendPacket& SendPacket::operator << (char value)
+RecvPacket& RecvPacket::operator << (char value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(char));
 	writePos_ += sizeof(char);
@@ -54,7 +22,7 @@ SendPacket& SendPacket::operator << (char value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (unsigned char value)
+RecvPacket& RecvPacket::operator << (unsigned char value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(unsigned char));
 	writePos_ += sizeof(unsigned char);
@@ -62,7 +30,7 @@ SendPacket& SendPacket::operator << (unsigned char value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (short value)
+RecvPacket& RecvPacket::operator << (short value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(short));
 	writePos_ += sizeof(short);
@@ -70,7 +38,7 @@ SendPacket& SendPacket::operator << (short value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (unsigned short value)
+RecvPacket& RecvPacket::operator << (unsigned short value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(unsigned short));
 	writePos_ += sizeof(unsigned short);
@@ -78,7 +46,7 @@ SendPacket& SendPacket::operator << (unsigned short value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (int value)
+RecvPacket& RecvPacket::operator << (int value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(int));
 	writePos_ += sizeof(int);
@@ -86,16 +54,16 @@ SendPacket& SendPacket::operator << (int value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (unsigned int value)
+RecvPacket& RecvPacket::operator << (unsigned int value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(unsigned int));
-	//*(unsigned int*)(buffer_ + writePos_) = value;
+	//*(unsigned int*)(bufferPtr_ + writePos_) = value;
 	writePos_ += sizeof(unsigned int);
 
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (float value)
+RecvPacket& RecvPacket::operator << (float value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(float));
 	writePos_ += sizeof(float);
@@ -103,7 +71,7 @@ SendPacket& SendPacket::operator << (float value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (__int64 value)
+RecvPacket& RecvPacket::operator << (__int64 value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(__int64));
 	writePos_ += sizeof(__int64);
@@ -111,7 +79,7 @@ SendPacket& SendPacket::operator << (__int64 value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator << (double value)
+RecvPacket& RecvPacket::operator << (double value)
 {
 	memcpy(buffer_ + writePos_, &value, sizeof(double));
 	writePos_ += sizeof(double);
@@ -119,7 +87,7 @@ SendPacket& SendPacket::operator << (double value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (char& value)
+RecvPacket& RecvPacket::operator >> (char& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(char));
 	readPos_ += sizeof(char);
@@ -127,7 +95,7 @@ SendPacket& SendPacket::operator >> (char& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (unsigned char& value)
+RecvPacket& RecvPacket::operator >> (unsigned char& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(unsigned char));
 	readPos_ += sizeof(unsigned char);
@@ -135,7 +103,7 @@ SendPacket& SendPacket::operator >> (unsigned char& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (short& value)
+RecvPacket& RecvPacket::operator >> (short& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(short));
 	readPos_ += sizeof(short);
@@ -143,7 +111,7 @@ SendPacket& SendPacket::operator >> (short& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (unsigned short& value)
+RecvPacket& RecvPacket::operator >> (unsigned short& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(unsigned short));
 	readPos_ += sizeof(unsigned short);
@@ -151,7 +119,7 @@ SendPacket& SendPacket::operator >> (unsigned short& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (int& value)
+RecvPacket& RecvPacket::operator >> (int& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(int));
 	readPos_ += sizeof(int);
@@ -159,7 +127,7 @@ SendPacket& SendPacket::operator >> (int& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (unsigned int& value)
+RecvPacket& RecvPacket::operator >> (unsigned int& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(unsigned int));
 	readPos_ += sizeof(unsigned int);
@@ -167,7 +135,7 @@ SendPacket& SendPacket::operator >> (unsigned int& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (float& value)
+RecvPacket& RecvPacket::operator >> (float& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(float));
 	readPos_ += sizeof(float);
@@ -175,7 +143,7 @@ SendPacket& SendPacket::operator >> (float& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (__int64& value)
+RecvPacket& RecvPacket::operator >> (__int64& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(__int64));
 	readPos_ += sizeof(__int64);
@@ -183,7 +151,7 @@ SendPacket& SendPacket::operator >> (__int64& value)
 	return *this;
 }
 
-SendPacket& SendPacket::operator >> (double& value)
+RecvPacket& RecvPacket::operator >> (double& value)
 {
 	memcpy(&value, buffer_ + readPos_, sizeof(double));
 	readPos_ += sizeof(double);
@@ -191,18 +159,18 @@ SendPacket& SendPacket::operator >> (double& value)
 	return *this;
 }
 
-int	SendPacket::read(char* dest, int size)
+int	RecvPacket::read(char* chpDest, int size)
 {
-	memcpy(dest, buffer_ + readPos_, size);
+	memcpy(chpDest, buffer_ + readPos_, size);
 	readPos_ += size;
 
 	return size;
 }
 
-int	SendPacket::write(char* src, int size)
+int	RecvPacket::write(char* chpSrc, int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈
-	memcpy(buffer_ + writePos_, src, size);
+	memcpy(buffer_ + writePos_, chpSrc, size);
 	writePos_ += size;
 
 	return size;

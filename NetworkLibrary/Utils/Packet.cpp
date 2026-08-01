@@ -4,12 +4,12 @@
 Packet::Packet(int bufferSize)
 	:capacity_(bufferSize), writePos_(0), readPos_(0)
 {
-	buffer_ = (char*)malloc(capacity_);
+	buffer_ = new char[capacity_];
 }
 
 Packet::~Packet()
 {
-	free(buffer_);
+	delete buffer_;
 }
 
 void Packet::initialize()
@@ -196,18 +196,18 @@ Packet& Packet::operator >> (double& value)
 	return *this;
 }
 
-int	Packet::read(char* chpDest, int size)
+int	Packet::read(char* dest, int size)
 {
-	memcpy(chpDest, buffer_ + readPos_, size);
+	memcpy(dest, buffer_ + readPos_, size);
 	readPos_ += size;
 
 	return size;
 }
 
-int	Packet::write(char* chpSrc, int size)
+int	Packet::write(char* src, int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈
-	memcpy(buffer_ + writePos_, chpSrc, size);
+	memcpy(buffer_ + writePos_, src, size);
 	writePos_ += size;
 
 	return size;

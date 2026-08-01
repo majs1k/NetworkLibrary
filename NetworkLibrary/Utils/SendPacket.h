@@ -10,15 +10,7 @@
 //
 // -------------------------------------------------------------------
 #pragma once
-#include "Lock.h"
 #include <Windows.h>
-
-// ------------------------------------------------------- //
-
-struct HEADER
-{
-	unsigned short size_;
-};
 
 // ------------------------------------------------------- //
 
@@ -39,29 +31,12 @@ public:
 	~SendPacket();
 	void initialize();
 
-	void setHeader(int size);
-
 	int	capacity();
 	int	useSize();
 
-	//char* getBufferPtr()
-	//{
-	//	return buffer_;
-	//}
-
-	char* getSendPacketPtr()
-	{
-		return buffer_ + sizeof(HEADER);
-	}
-
-	char* getCompletePtr()
+	char* getBufferPtr()
 	{
 		return buffer_;
-	}
-
-	int completeSize()
-	{
-		return writePos_;
 	}
 
 	void incrementRef()

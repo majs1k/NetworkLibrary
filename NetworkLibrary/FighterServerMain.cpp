@@ -8,7 +8,7 @@
 //
 //int main()
 //{
-//	CrashDump().Initialize();
+//	CrashDump().initialize();
 //
 //	ConfigLoader::getInstance().load(CONFIG_FILENAME);
 //

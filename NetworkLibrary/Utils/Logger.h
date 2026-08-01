@@ -17,8 +17,8 @@
 //-------------------------------------------------------------------------
 #pragma once
 #include <fstream>
-#include <Windows.h>
 #include "Singleton.h"
+#include <Windows.h>
 
 enum class LogLevel
 {

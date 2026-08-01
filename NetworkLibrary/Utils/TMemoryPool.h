@@ -27,12 +27,11 @@
 #include <iostream>
 #include <fstream>
 #include <list>
-#include <windows.h>
 
 #define DEBUG_MEMORYPOOL
 
 template <class T>
-class MemoryPool
+class TMemoryPool
 {
 private:
 	struct Node
@@ -71,7 +70,7 @@ private:
 #endif
 
 public:
-	MemoryPool(int size, bool isPlacementNew = false)
+	TMemoryPool(int size, bool isPlacementNew = false)
 	{
 		top_ = nullptr;
 		size_ = size;
@@ -97,7 +96,7 @@ public:
 		}
 	}
 
-	~MemoryPool()
+	~TMemoryPool()
 	{
 		Node* cur = top_;
 
@@ -106,7 +105,7 @@ public:
 			Node* next = cur->next_;
 
 			cur->data_.~T();
-			::free(cur);
+			free(cur);
 
 			cur = next;
 		}

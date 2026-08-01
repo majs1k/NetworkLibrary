@@ -2,24 +2,23 @@
 //
 // 크래시 덤프
 // 
-// Initialize() 호출 필요
+// initialize() 호출 필요
 // 덤프 + exe + pdb 세트로 보관
 // 덤프 파일사이즈 == 프로세스의 메모리 사용량
 // 
 // 네이티브 전용 디버그 사용
 // 
 //-------------------------------------------------------------------------
-#pragma once
 #pragma comment(lib, "Dbghelp.lib")
+#include <stdio.h>
 #include <Windows.h>
-#include <DbgHelp.h>
+#include <minidumpapiset.h>
 #include <crtdbg.h>
-#include <Psapi.h>
 
 class CrashDump
 {
 public:
-	static void Initialize()
+	static void initialize()
 	{
 		SetUnhandledExceptionFilter(UnhandledExceptionFilter);
 
@@ -34,7 +33,6 @@ public:
 	}
 
 private:
-
 	static LONG WINAPI UnhandledExceptionFilter(EXCEPTION_POINTERS* exceptionInfo)
 	{
 		if (InterlockedExchange(&s_Dumping, 1) != 0)
@@ -52,9 +50,13 @@ private:
 		SYSTEMTIME st;
 		GetLocalTime(&st);
 
+		wprintf(L"\n\ncrash error : %04d.%02d.%02d/%02d.%02d.%02d\n",
+			st.wYear, st.wMonth, st.wDay,
+			st.wHour, st.wMinute, st.wSecond);
+
 		WCHAR fileName[MAX_PATH];
 
-		wsprintfW(fileName,	L"Dump_%04d%02d%02d_%02d%02d%02d.dmp",
+		wsprintfW(fileName, L"Dump_%04d%02d%02d_%02d%02d%02d.dmp",
 			st.wYear, st.wMonth, st.wDay,
 			st.wHour, st.wMinute, st.wSecond);
 
@@ -84,6 +86,8 @@ private:
 #endif
 
 		CloseHandle(hFile);
+
+		wprintf(L"dump save finish\n");
 	}
 
 	static void ForceCrash()

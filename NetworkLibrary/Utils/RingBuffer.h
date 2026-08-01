@@ -11,7 +11,8 @@
 //
 // -------------------------------------------------------------------
 #pragma once
-#include "Lock.h"
+#include <iostream>
+#include <mutex>
 
 #define SAFETY_PERCENT		80
 
@@ -24,35 +25,209 @@ private:
 	int writePos_;
 	int readPos_;
 
-	Lock lock_;
+	std::recursive_mutex lock_;
 	int safeSize_;
 
 public:
-	RingBuffer(int bufferSize = 100);
-	~RingBuffer();
+	RingBuffer(int bufferSize)
+		:capacity_(bufferSize), writePos_(0), readPos_(0)
+	{
+		buffer_ = new char[capacity_];
 
-	void clear();
-	void resize(int size);
+		safeSize_ = capacity_ * SAFETY_PERCENT / 100;
+	}
 
-	int useSize() const;
-	int freeSize() const;
-	int safeSize() const;
-	bool isFull() const;
+	~RingBuffer()
+	{
+		delete buffer_;
+	}
 
-	char* getBufferPtr() const;
-	char* getFrontBufferPtr() const;
-	char* getRearBufferPtr() const;
+	void clear()
+	{
+		writePos_ = 0;
+		readPos_ = 0;
+	}
 
-	int enqueue(const char* data, int size);
-	int dequeue(char* data, int size);
-	int peek(char* data, int size) const;
+	void resize(int size)
+	{
+		if (capacity_ > size)
+			return;
 
-	int directEnqueueSize() const;
-	int directDequeueSize() const;
+		char* newBuffer = new char[size];
 
-	int moveFront(int size);
-	int moveRear(int size);
+		if (readPos_ <= writePos_)
+		{
+			memcpy(newBuffer, buffer_ + readPos_, useSize());
+		}
+		else
+		{
+			memcpy(newBuffer, buffer_ + readPos_, directDequeueSize());
+			memcpy(newBuffer + directDequeueSize(), buffer_, useSize() - directDequeueSize());
+		}
 
-	void lock();
-	void unlock();
+		int s = useSize();
+
+		readPos_ = 0;
+		writePos_ = s;
+
+		delete buffer_;
+
+		buffer_ = newBuffer;
+		capacity_ = size;
+		safeSize_ = capacity_ * SAFETY_PERCENT / 100;
+	}
+
+	int useSize() const
+	{
+		//return readPos_ <= writePos_
+		//	? writePos_ - readPos_
+		//	: writePos_ + capacity_ - readPos_;
+
+		int r = readPos_;
+		int w = writePos_;
+
+		return r <= w
+			? w - r
+			: w + capacity_ - r;
+	}
+
+	int freeSize() const
+	{
+		return capacity_ - useSize() - 1;
+	}
+
+	int safeSize() const
+	{
+		return safeSize_;
+	}
+
+	bool isFull() const
+	{
+		return ((writePos_ + 1) % capacity_ == readPos_);
+	}
+
+	char* getBufferPtr() const
+	{
+		return buffer_;
+	}
+
+	char* getFrontBufferPtr() const
+	{
+		return buffer_ + readPos_;
+	}
+
+	char* getRearBufferPtr() const
+	{
+		return buffer_ + writePos_;
+	}
+
+	int enqueue(const char* data, int size)
+	{
+		/// 1회 리사이즈 로직으로 변경 필요
+		if (freeSize() < size)
+		{
+			printf("enqueue over!\n");
+			__debugbreak();
+			return 0;
+		}
+
+		if (capacity_ < writePos_ + size)
+		{
+			memcpy(buffer_ + writePos_, data, capacity_ - writePos_);
+			memcpy(buffer_, data + (capacity_ - writePos_), size - (capacity_ - writePos_));
+		}
+		else
+			memcpy(buffer_ + writePos_, data, size);
+
+		writePos_ = (writePos_ + size) % capacity_;
+
+		return size;
+	}
+
+	int dequeue(char* data, int size)
+	{
+		/// 이후 삭제
+		if (useSize() < size)
+		{
+			printf("dequeue over!\n");
+			__debugbreak();
+			return 0;
+		}
+
+		if (capacity_ < readPos_ + size)
+		{
+			memcpy(data, buffer_ + readPos_, capacity_ - readPos_);
+			memcpy(data + (capacity_ - readPos_), buffer_, size - (capacity_ - readPos_));
+		}
+		else
+			memcpy(data, buffer_ + readPos_, size);
+
+		readPos_ = (readPos_ + size) % capacity_;
+
+		return size;
+	}
+
+	int peek(char* data, int size) const
+	{
+		if (useSize() < size)
+			return 0;
+
+		if (capacity_ < readPos_ + size)
+		{
+			memcpy(data, buffer_ + readPos_, capacity_ - readPos_);
+			memcpy(data + capacity_ - readPos_, buffer_, size - (capacity_ - readPos_));
+		}
+		else
+			memcpy(data, buffer_ + readPos_, size);
+
+		return size;
+	}
+
+	int directEnqueueSize() const
+	{
+		if (readPos_ <= writePos_)
+		{
+			if (readPos_ == 0)
+				return capacity_ - writePos_ - 1;
+
+			return capacity_ - writePos_;
+		}
+		else
+			return readPos_ - writePos_ - 1;
+	}
+
+	int directDequeueSize() const
+	{
+		return readPos_ <= writePos_
+			? writePos_ - readPos_
+			: capacity_ - readPos_;
+	}
+
+	int moveFront(int size)
+	{
+		if (useSize() < size)
+			return 0;
+
+		readPos_ = (readPos_ + size) % capacity_;
+		return size;
+	}
+
+	int moveRear(int size)
+	{
+		if (freeSize() < size)
+			return 0;
+
+		writePos_ = (writePos_ + size) % capacity_;
+		return size;
+	}
+
+	void lock()
+	{
+		lock_.lock();
+	}
+
+	void unlock()
+	{
+		lock_.unlock();
+	}
 };

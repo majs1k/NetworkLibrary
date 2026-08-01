@@ -10,8 +10,8 @@
 //
 // -------------------------------------------------------------------
 #pragma once
-#include <Windows.h>
 #include "Singleton.h"
+#include <Windows.h>
 
 #define TARGET_FPS      50
 

@@ -1,5 +1,6 @@
 #include "ServerStub.h"
 #include "../Utils/Packet.h"
+#include <iostream>
 
 bool ServerStub::packetProc(__int64 sessionId, Packet& packet, unsigned char type)
 {
