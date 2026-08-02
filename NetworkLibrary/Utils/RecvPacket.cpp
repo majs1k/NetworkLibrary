@@ -1,14 +1,14 @@
 #include <iostream>
 #include "RecvPacket.h"
 
-int	RecvPacket::moveWritePos(int size)
+int	RecvPacket::MoveWritePos(int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈, 음수 이동 제한?
 	writePos_ += size;
 	return size;
 }
 
-int	RecvPacket::moveReadPos(int size)
+int	RecvPacket::MoveReadPos(int size)
 {
 	readPos_ += size;
 	return size;
@@ -159,7 +159,7 @@ RecvPacket& RecvPacket::operator >> (double& value)
 	return *this;
 }
 
-int	RecvPacket::read(char* chpDest, int size)
+int	RecvPacket::Read(char* chpDest, int size)
 {
 	memcpy(chpDest, buffer_ + readPos_, size);
 	readPos_ += size;
@@ -167,7 +167,7 @@ int	RecvPacket::read(char* chpDest, int size)
 	return size;
 }
 
-int	RecvPacket::write(char* chpSrc, int size)
+int	RecvPacket::Write(char* chpSrc, int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈
 	memcpy(buffer_ + writePos_, chpSrc, size);

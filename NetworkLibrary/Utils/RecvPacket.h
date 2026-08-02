@@ -24,7 +24,7 @@ public:
 		free(buffer_);
 	}
 
-	void initialize()
+	void Initialize()
 	{
 		refCount_ = 1;
 	}
@@ -49,47 +49,47 @@ public:
 	//	free(buffer_);
 	//}
 
-	int	capacity()
+	int	Capacity()
 	{
 		return capacity_;
 	}
 
-	int	useSize()
+	int	UseSize()
 	{
 		return writePos_ - readPos_;
 	}
 
-	int freeSize()
+	int FreeSize()
 	{
 		return capacity_ - writePos_;
 	}
 
-	bool isFull()
+	bool IsFull()
 	{
 		return writePos_ == capacity_;
 	}
 
-	char* getBufferPtr()
+	char* GetBufferPtr()
 	{
 		return buffer_;
 	}
 
-	char* getWriteBufferPtr()
+	char* GetWriteBufferPtr()
 	{
 		return buffer_ + writePos_;
 	}
 
-	char* getReadBufferPtr()
+	char* GetReadBufferPtr()
 	{
 		return buffer_ + readPos_;
 	}
 
-	void initialize()
+	void Initialize()
 	{
 		refCount_ = 1;
 	}
 
-	void initialize(PacketBuffer* buf)
+	void Initialize(PacketBuffer* buf)
 	{
 		packetBuffer_ = buf;
 
@@ -116,9 +116,9 @@ public:
 		return *this;
 	}
 
-	int peek(char* data, int size)
+	int Peek(char* data, int size)
 	{
-		if (useSize() < size)
+		if (UseSize() < size)
 			return 0;
 
 		memcpy(data, buffer_ + readPos_, size);
@@ -126,13 +126,13 @@ public:
 		return size;
 	}
 
-	void incrementRef()
+	void IncrementRef()
 	{
 		InterlockedIncrement(&packetBuffer_->refCount_);
 		InterlockedIncrement(&refCount_);
 	}
 
-	int decrementRef()
+	int DecrementRef()
 	{
 		if (InterlockedDecrement(&packetBuffer_->refCount_) == 0)
 		{
@@ -143,8 +143,8 @@ public:
 	}
 
 	//getBufferPtr()로 버퍼 내용 수정할 경우 사용
-	int	moveWritePos(int size);
-	int	moveReadPos(int size);
+	int	MoveWritePos(int size);
+	int	MoveReadPos(int size);
 
 	RecvPacket& operator << (char value);
 	RecvPacket& operator << (unsigned char value);
@@ -166,6 +166,6 @@ public:
 	RecvPacket& operator >> (__int64& value);
 	RecvPacket& operator >> (double& value);
 
-	int	read(char* chpDest, int size);
-	int	write(char* chpSrc, int size);
+	int	Read(char* chpDest, int size);
+	int	Write(char* chpSrc, int size);
 };

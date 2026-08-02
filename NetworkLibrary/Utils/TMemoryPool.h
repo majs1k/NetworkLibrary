@@ -28,7 +28,7 @@
 #include <fstream>
 #include <list>
 
-#define DEBUG_MEMORYPOOL
+//#define DEBUG_MEMORYPOOL
 
 template <class T>
 class TMemoryPool
@@ -105,7 +105,7 @@ public:
 			Node* next = cur->next_;
 
 			cur->data_.~T();
-			free(cur);
+			Free(cur);
 
 			cur = next;
 		}
@@ -126,7 +126,7 @@ public:
 	}
 
 #ifdef DEBUG_MEMORYPOOL
-	T* alloc(const char* fileName, int lineNum)
+	T* Alloc(const char* fileName, int lineNum)
 	{
 		if (size_ <= 0)
 		{
@@ -162,7 +162,7 @@ public:
 		return value;
 	}
 #else
-	T* alloc()
+	T* Alloc()
 	{
 		if (size_ <= 0)
 		{
@@ -185,7 +185,7 @@ public:
 	}
 #endif
 
-	bool free(T* value)
+	bool Free(T* value)
 	{
 		if (isPlacementNew_)
 			value->~T();
@@ -231,17 +231,17 @@ public:
 		return true;
 	}
 
-	int	capacity()
+	int	Capacity()
 	{
 		return capacity_;
 	}
 
-	int	size()
+	int	Size()
 	{
 		return size_;
 	}
 };
 
 #ifdef DEBUG_MEMORYPOOL
-#define alloc()			alloc(__FILE__, __LINE__)
+#define Alloc()			Alloc(__FILE__, __LINE__)
 #endif

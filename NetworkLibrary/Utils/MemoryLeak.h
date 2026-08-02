@@ -34,13 +34,13 @@ private:
 	std::list<MemoryAlloc*> list_;
 
 public:
-	void insert(void* ptr, size_t size, const char* fileName, int line)
+	void Insert(void* ptr, size_t size, const char* fileName, int line)
 	{
 		MemoryAlloc* p = new MemoryAlloc(ptr, size, fileName, line);
 		list_.push_back(p);
 	}
 
-	void remove(void* ptr)
+	void Remove(void* ptr)
 	{
 		std::list<MemoryAlloc*>::iterator it = list_.begin();
 		for (; it != list_.end();) 
@@ -83,7 +83,7 @@ inline void* operator new (size_t size, const char* File, int Line)
 {
 	void* ptr = malloc(size);
 
-	MemoryLeak::getInstance().insert(ptr, size, File, Line);
+	MemoryLeak::Instance().Insert(ptr, size, File, Line);
 
 	return ptr;
 }
@@ -92,7 +92,7 @@ inline void* operator new[](size_t size, const char* File, int Line)
 {
 	void* ptr = malloc(size);
 
-	MemoryLeak::getInstance().insert(ptr, size, File, Line);
+	MemoryLeak::Instance().Insert(ptr, size, File, Line);
 
 	return ptr;
 }
@@ -108,16 +108,16 @@ inline void operator delete[](void* ptr, const char* File, int Line)
 // 실제로 사용할 delete
 inline void operator delete (void* ptr)
 {
-	MemoryLeak::getInstance().remove(ptr);
+	MemoryLeak::Instance().Remove(ptr);
 
-	free(ptr);
+	Free(ptr);
 }
 
 inline void operator delete[](void* ptr)
 {
-	MemoryLeak::getInstance().remove(ptr);
+	MemoryLeak::Instance().Remove(ptr);
 
-	free(ptr);
+	Free(ptr);
 }
 
 //#define MEMORY_LEAK

@@ -5,9 +5,9 @@
 #include "LanServer.h"
 #include "Session.h"
 #include "../Utils/Packet.h"
-#include "../Utils/SendPacket.h"
 #include "../Utils/Logger.h"
-//#include "../Utils/Profiler.h"
+#include "../Utils/Profiler.h"
+#include <Windows.h>
 
 LanServer::LanServer()
 {
@@ -22,7 +22,7 @@ LanServer::~LanServer()
 	WSACleanup();
 }
 
-bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount)
+bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount)
 {
 	serverIp_ = ip;
 	serverPort_ = port;
@@ -72,13 +72,13 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	for (int i = 0; i < workerThreadCount_; i++)
 	{
-		HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, workerThread, this, 0, nullptr);
+		HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, WorkerThread, this, 0, nullptr);
 		hWorkerThread_.push_back(hThread);
 	}
 
-	hAcceptThread_ = (HANDLE)_beginthreadex(nullptr, 0, acceptThread, this, 0, nullptr);
+	hAcceptThread_ = (HANDLE)_beginthreadex(nullptr, 0, AcceptThread, this, 0, nullptr);
 
-	hMonitorThread_ = (HANDLE)_beginthreadex(nullptr, 0, mornitorThread, this, 0, nullptr);
+	hMonitorThread_ = (HANDLE)_beginthreadex(nullptr, 0, MornitorThread, this, 0, nullptr);
 
 	// manual reset
 	hExitEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -88,7 +88,7 @@ bool LanServer::start(std::wstring ip, int port, int sessionMax, int concurrentC
 	return true;
 }
 
-void LanServer::stop()
+void LanServer::Stop()
 {
 	// accept thread 종료
 	closesocket(listenSocket_);
@@ -128,17 +128,17 @@ void LanServer::stop()
 	LOG_INFO(L"[NETWORK] server exit");
 }
 
-int LanServer::sessionCount() const
+int LanServer::SessionCount() const
 {
 	return sessionCount_;
 }
 
-int LanServer::sessionMax() const
+int LanServer::SessionMax() const
 {
 	return sessionMax_;
 }
 
-bool LanServer::disconnect(__int64 sessionId)
+bool LanServer::Disconnect(__int64 sessionId)
 {
 	sessionMapLock_.lock();
 
@@ -161,8 +161,73 @@ bool LanServer::disconnect(__int64 sessionId)
 }
 
 /// TestServer
-bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
+bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 {
+	sessionMapLock_.lock();
+
+	auto it = sessionMap_.find(sessionId);
+
+	if (it == sessionMap_.end())
+	{
+		sessionMapLock_.unlock();
+
+		return false;
+	}
+
+	Session* session = (*it).second;
+
+	session->sessionLock_.lock();
+
+	//if (ioCount_ == 0)
+	//	return;
+
+	//if(InterlockedIncrement(&ioCount_) == 1)
+	//	return;
+
+
+	TEST_HEADER header;
+	header.size_ = packet->UseSize();
+
+	//session->sendQueue_.Lock();
+
+	session->sendQueue_.Enqueue((char*)&header, sizeof(TEST_HEADER));
+	session->sendQueue_.Enqueue(packet->GetBufferPtr(), packet->UseSize());
+
+	delete packet;
+
+	//session->sendQueue_.Unlock();
+
+
+	/// FighterServer
+	//FIGHTER_HEADER header;
+	//header.code = PACKET_CODE;
+	//header.size = packet->UseSize() - sizeof(unsigned char);
+
+	//session->sendQueue_.Lock();
+
+	//session->sendQueue_.Enqueue((char*)&header, sizeof(FIGHTER_HEADER));
+	//session->sendQueue_.Enqueue(packet->GetBufferPtr(), packet->UseSize());
+
+	//delete packet;
+	//
+	//session->sendQueue_.Unlock();
+
+
+	this->SendPost(session);
+
+	sessionMapLock_.unlock();
+
+	session->sessionLock_.unlock();
+
+	InterlockedIncrement(&sendMessageCount_);
+
+	return true;
+}
+
+bool LanServer::SendPacketZeroCopy(__int64 sessionId, Packet* packet)
+{
+	//PRO(L"sendPacket() 2");
+
 	sessionMapLock_.lock();
 
 	auto it = sessionMap_.find(sessionId);
@@ -180,159 +245,25 @@ bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
 
 	sessionMapLock_.unlock();
 
-	//if (ioCount_ == 0)
-	//	return;
-
-	//if(InterlockedIncrement(&ioCount_) == 1)
-	//	return;
-
-	TEST_HEADER header;
-	header.size_ = packet->useSize();
-
-	session->sendQueue_.lock();
-
-	session->sendQueue_.enqueue((char*)&header, sizeof(TEST_HEADER));
-	session->sendQueue_.enqueue(packet->getBufferPtr(), packet->useSize());
-
-	session->sendQueue_.unlock();
-
-	this->sendPost(session);
-
-	InterlockedIncrement(&sendMessageCount_);
-
-	return true;
-}
-
-/// FighterServer
-//bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
-//{
-//	sessionMapLock_.lock();
-//
-//	auto it = sessionMap_.find(sessionId);
-//
-//	if (it == sessionMap_.end())
-//	{
-//		sessionMapLock_.unlock();
-//
-//		return false;
-//	}
-//
-//	Session* session = (*it).second;
-//
-//	sessionMapLock_.unlock();
-//
-//	FIGHTER_HEADER header;
-//	header.code = PACKET_CODE;
-//	header.size = packet->useSize() - sizeof(unsigned char);
-//
-//	session->sendQueue_.lock();
-//
-//	session->sendQueue_.enqueue((char*)&header, sizeof(FIGHTER_HEADER));
-//	session->sendQueue_.enqueue(packet->getBufferPtr(), packet->useSize());
-//
-//	session->sendQueue_.unlock();
-//
-//	this->sendPost(session);
-//
-//	InterlockedIncrement(&sendMessageCount_);
-//
-//	return true;
-//}
-
-/// MMOServer
-//bool LanServer::sendPacket(__int64 sessionId, Packet* packet)
-//{
-//	sessionMapLock_.lock();
-//
-//	auto it = sessionMap_.find(sessionId);
-//
-//	if (it == sessionMap_.end())
-//	{
-//		sessionMapLock_.unlock();
-//
-//		return false;
-//
-//	}
-//
-//	Session* session = (*it).second;
-//
-//	sessionMapLock_.unlock();
-//
-//	MMO_HEADER header;
-//	header.size = packet->useSize();
-//
-//	session->sendQueue_.lock();
-//
-//	session->sendQueue_.enqueue((char*)&header, sizeof(MMO_HEADER));
-//	session->sendQueue_.enqueue(packet->getBufferPtr(), packet->useSize());
-//
-//	session->sendQueue_.unlock();
-//
-//	this->sendPost(session);
-//
-//	InterlockedIncrement(&sendMessageCount_);
-//
-//	return true;
-//}
-
-bool LanServer::sendPacketZeroCopy(__int64 sessionId, SendPacket* packet)
-{
-	//PRO(L"sendPacket() 2");
-
-	sessionMapLock_.lock();
-
-	auto it = sessionMap_.find(sessionId);
-
-	if (it == sessionMap_.end())
-	{
-		sessionMapLock_.unlock();
-
-		return false;
-	}
-
-	Session* session = (*it).second;
-
-	sessionMapLock_.unlock();
-
-	session->sendQueueT_.lock();
+	//session->sendQueueT_.Lock();
 
 	// 패킷 헤더 설정
-	SendPacket* p = new SendPacket();
-	*p << packet->useSize();
+	Packet* header = new Packet();
+	*header << packet->UseSize();
 
-	session->sendQueueT_.enqueue(p);
-	session->sendQueueT_.enqueue(packet);
+	session->sendQueue2_.Enqueue(header);
+	session->sendQueue2_.Enqueue(packet);
 
-	session->sendQueueT_.unlock();
+	//session->sendQueueT_.Unlock();
 
-	this->sendPostZeroCopy(session);
+	this->SendPostZeroCopy(session);
 
 	InterlockedIncrement(&sendMessageCount_);
 
 	return true;
 }
 
-int LanServer::acceptMessageTps()
-{
-	return acceptTps_;
-}
-
-int LanServer::recvMessageTps()
-{
-	return recvMessageTps_;
-}
-
-int LanServer::sendMessageTps()
-{
-	return sendMessageTps_;
-}
-
-void LanServer::printTps()
-{
-	wprintf(L"acceptTps: %d\nrecvMessageTps: %d\nsendMessageTps: %d\n", acceptTps_, recvMessageTps_, sendMessageTps_);
-}
-
-unsigned int __stdcall LanServer::acceptThread(void* param)
+unsigned int __stdcall LanServer::AcceptThread(void* param)
 {
 	LanServer* server = (LanServer*)param;
 
@@ -365,7 +296,7 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 		std::wstring ip = str;
 		int port = ntohs(clientAddr.sin_port);
 
-		if (!server->onConnectionRequest(ip, port))
+		if (!server->OnConnectionRequest(ip, port))
 		{
 			closesocket(clientSock);
 			continue;
@@ -373,7 +304,7 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 
 		Session* session = new Session();
 		// idSeed_는 이 스레드에서만 변경 가능하므로 인터락 적용 x
-		session->initialize(clientSock, ip, port, ++(server->idSeed_));
+		session->Initialize(clientSock, ip, port, ++(server->idSeed_));
 
 		server->sessionMapLock_.lock();
 
@@ -387,16 +318,16 @@ unsigned int __stdcall LanServer::acceptThread(void* param)
 
 		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
 
-		server->recvPost(session);
+		server->RecvPost(session);
 
 		// 위치 주의
-		server->onAccept(session->sessionId_);
+		server->OnAccept(session->sessionId_);
 	}
 
 	return 0;
 }
 
-unsigned int __stdcall LanServer::workerThread(void* param)
+unsigned int __stdcall LanServer::WorkerThread(void* param)
 {
 	LanServer* server = (LanServer*)param;
 
@@ -428,19 +359,10 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 			if (overlapped != nullptr)
 			{
 				// 64 상대가 연결을 끊었을때 (numOfBytes == 0)
-				if (error == ERROR_NETNAME_DELETED)
+				// 1236 clientSock 닫았을때
+				if (error == ERROR_NETNAME_DELETED || error == ERROR_CONNECTION_ABORTED)
 				{
-					server->decrementIoCount(session);
-
-					continue;
-				}
-				// 1236 clientSock 닫혓을때
-				// ioCount 도입했기 때문에 뜨면 안됨
-				else if (error == ERROR_CONNECTION_ABORTED)
-				{
-					LOG_INFO(L"GQCS() error: ERROR_CONNECTION_ABORTED");
-
-					server->decrementIoCount(session);
+					server->DecrementIoCount(session);
 
 					continue;
 				}
@@ -449,14 +371,12 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 				// 트래픽 줄여서 다시 테스트
 				else if (error == ERROR_SEM_TIMEOUT)
 				{
-					DebugBreak();
+					__debugbreak();
 				}
 
 				LOG_INFO(L"GQCS() error: %d", error);
 
-				DebugBreak();
-
-				server->decrementIoCount(session);
+				__debugbreak();
 
 				continue;
 			}
@@ -487,16 +407,16 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 			// 상대가 closesocket()시 (rst x) 발생
 			if (numOfBytes == 0)
 			{
-				server->decrementIoCount(session);
+				server->DecrementIoCount(session);
 			}
 			else
 			{
-				server->completeRecv(session, numOfBytes);
+				server->CompleteRecv(session, numOfBytes);
 			}
 		}
 		else
 		{
-			server->completeSend(session, numOfBytes);
+			server->CompleteSend(session, numOfBytes);
 			//server->completeSendSkipCopy(session, numOfBytes);
 		}
 	}
@@ -504,13 +424,24 @@ unsigned int __stdcall LanServer::workerThread(void* param)
 	return 0;
 }
 
-unsigned int __stdcall LanServer::mornitorThread(void* param)
+unsigned int __stdcall LanServer::MornitorThread(void* param)
 {
 	LanServer* server = (LanServer*)param;
 
 	// 시간차는 int형으로 선언
 	int sleepTime = 0;
-	DWORD lastSecond = timeGetTime();
+	DWORD lastTime = timeGetTime();
+
+	system("cls");
+
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	// 콘솔창 커서 숨기기
+	CONSOLE_CURSOR_INFO cursorInfo;
+	GetConsoleCursorInfo(hConsole, &cursorInfo);
+
+	cursorInfo.bVisible = FALSE;
+	SetConsoleCursorInfo(hConsole, &cursorInfo);
 
 	while (1)
 	{
@@ -522,21 +453,19 @@ unsigned int __stdcall LanServer::mornitorThread(void* param)
 		{
 			DWORD curTime = timeGetTime();
 
-			while (1)
-			{
-				int deltaTime = curTime - lastSecond;
+			sleepTime = CLOCKS_PER_SEC - (curTime - lastTime);
+			lastTime += CLOCKS_PER_SEC;
 
-				sleepTime = CLOCKS_PER_SEC - deltaTime;
+			LONG acceptTps = InterlockedExchange(&server->acceptCount_, 0);
+			LONG recvMessageTps = InterlockedExchange(&server->recvMessageCount_, 0);
+			LONG sendMessageTps = InterlockedExchange(&server->sendMessageCount_, 0);
 
-				lastSecond += CLOCKS_PER_SEC;
+			COORD pos = { 0, 0 };
+			SetConsoleCursorPosition(hConsole, pos);
 
-				server->acceptTps_ = InterlockedExchange(&server->acceptCount_, 0);
-				server->recvMessageTps_ = InterlockedExchange(&server->recvMessageCount_, 0);
-				server->sendMessageTps_ = InterlockedExchange(&server->sendMessageCount_, 0);
-
-				if (sleepTime > 0)
-					break;
-			}
+			std::cout << "Acpt TPS : " << acceptTps << std::endl;
+			std::cout << "Recv TPS : " << recvMessageTps << std::endl;
+			std::cout << "Send TPS : " << sendMessageTps << std::endl;
 		}
 		break;
 

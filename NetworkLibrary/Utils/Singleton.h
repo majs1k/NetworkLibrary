@@ -20,7 +20,7 @@ protected:
 	~Singleton() {}
 
 public:
-	static T& getInstance()
+	static T& Instance()
 	{
 		static T instance;
 		return instance;

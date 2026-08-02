@@ -6,7 +6,6 @@
 #include <WS2tcpip.h>
 #include "Session.h"
 #include "../Utils/RingBuffer.h"
-#include "../Utils/Lock.h"
 #include <Windows.h>
 
 // ------------------------------------------------------- //
@@ -36,25 +35,25 @@ public:
 	LanClient();
 	~LanClient();
 
-	bool connect();
-	bool disconnect();
-	bool sendPacket(Packet& packet);
+	bool Connect();
+	bool Disconnect();
+	bool SendPacket(Packet& packet);
 
-	virtual void onEnterJoinServer() = 0;
+	virtual void OnEnterJoinServer() = 0;
 
-	virtual void onLeaveServer() = 0;
+	virtual void OnLeaveServer() = 0;
 
-	virtual void onRecv(__int64 sessionId, Packet& packet) = 0;
+	virtual void OnRecv(__int64 sessionId, Packet& packet) = 0;
 
-	virtual void onError(int errorCode, wchar_t* str) = 0;
+	virtual void OnError(int errorCode, wchar_t* str) = 0;
 
-	static unsigned int __stdcall workerThread(void* param);
+	static unsigned int __stdcall WorkerThread(void* param);
 
 	// ------------------------------------------------------- //
 
-	void recvPost(Session* session);
-	void completeRecv(Session* session, int numOfBytes);
-	void sendPost(Session* session);
-	void completeSend(Session* session, int numOfBytes);
-	void decrementIoCount(Session* session);
+	void RecvPost(Session* session);
+	void CompleteRecv(Session* session, int numOfBytes);
+	void SendPost(Session* session);
+	void CompleteSend(Session* session, int numOfBytes);
+	void DecrementIoCount(Session* session);
 };

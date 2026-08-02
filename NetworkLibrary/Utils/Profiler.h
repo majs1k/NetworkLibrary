@@ -24,7 +24,6 @@
 #include <unordered_map>
 #include <conio.h>
 #include <process.h>
-//#include <timeapi.h>
 #include "Singleton.h"
 #include <Windows.h>
 
@@ -32,9 +31,9 @@
 
 #ifdef PROFILER
 
-#define PRO(name)				ProfileGuard pg(name)
-#define PRO_BEGIN(name)			Profiler::getInstance().beginProfile(name)
-#define PRO_END(name)			Profiler::getInstance().endProfile(name)
+#define PRO(Name)				ProfileGuard pg(Name)
+#define PRO_BEGIN(Name)			Profiler::Instance().BeginProfile(Name)
+#define PRO_END(Name)			Profiler::Instance().EndProfile(Name)
 
 #else
 #define PRO(name)
@@ -60,12 +59,12 @@ public:
 	{
 	}
 
-	std::wstring name()
+	std::wstring Name()
 	{
 		return name_;
 	}
 
-	void update(__int64 time)
+	void Update(__int64 time)
 	{
 		totalTime_ += time;
 		call_++;
@@ -77,7 +76,7 @@ public:
 			maxTime_ = time;
 	}
 
-	void clear()
+	void Clear()
 	{
 		totalTime_ = 0;
 		minTime_ = INT_MAX;
@@ -114,24 +113,24 @@ public:
 		}
 	}
 
-	void insert(Profile* profile)
+	void Insert(Profile* profile)
 	{
-		profileMap_.insert({ profile->name(), profile });
+		profileMap_.insert({ profile->Name(), profile });
 	}
 
-	void clear()
+	void Clear()
 	{
 		for (auto& p : profileMap_)
 		{
-			p.second->clear();
+			p.second->Clear();
 		}
 
 		std::wcout << L"Profiler clear" << std::endl;
 	}
 
-	Profile* find(const std::wstring& name)
+	Profile* Find(const std::wstring& Name)
 	{
-		auto it = profileMap_.find(name);
+		auto it = profileMap_.find(Name);
 
 		if (it != profileMap_.end())
 			return (*it).second;
@@ -139,27 +138,27 @@ public:
 			return nullptr;
 	}
 
-	void beginProfile(const std::wstring& name)
+	void BeginProfile(const std::wstring& Name)
 	{
 		// Profiler 리스트에서 들고 오거나, 없다면 리스트에 추가
-		Profile* profile = this->find(name);
+		Profile* profile = this->Find(Name);
 
 		if (profile == nullptr)
 		{
-			profile = new Profile(name);
+			profile = new Profile(Name);
 
-			Profiler::getInstance().insert(profile);
+			this->Insert(profile);
 		}
 
 		QueryPerformanceCounter(&(profile->startTime_));
 	}
 
-	void endProfile(const std::wstring& name)
+	void EndProfile(const std::wstring& Name)
 	{
 		LARGE_INTEGER endTime;
 		QueryPerformanceCounter(&endTime);
 
-		Profile* profile = this->find(name);
+		Profile* profile = this->Find(Name);
 
 		if ((endTime.QuadPart - profile->startTime_.QuadPart) < 0)
 		{
@@ -169,10 +168,10 @@ public:
 		// 100ns 단위 환산
 		__int64 timeDiff = (__int64)((endTime.QuadPart - profile->startTime_.QuadPart) * 10'000'000 / freq_.QuadPart);
 
-		profile->update(timeDiff);
+		profile->Update(timeDiff);
 	}
 
-	void save()
+	void Save()
 	{
 		SYSTEMTIME st;
 		GetLocalTime(&st);
@@ -222,7 +221,7 @@ public:
 		wprintf(L"profiler saved\n");
 	}
 
-	static unsigned int __stdcall profilerThread(void* param)
+	static unsigned int __stdcall ProfilerThread(void* param)
 	{
 		Profiler* profiler = reinterpret_cast<Profiler*>(param);
 
@@ -231,10 +230,10 @@ public:
 			int c = _getch();
 
 			if (c == ' ')
-				profiler->save();
+				profiler->Save();
 
 			else if (c == 'c')
-				profiler->clear();
+				profiler->Clear();
 
 			else if (c == 'x')
 				return 0;
@@ -254,11 +253,11 @@ public:
 	ProfileGuard(const std::wstring& name)
 	{
 		name_ = name;
-		Profiler::getInstance().beginProfile(name_);
+		Profiler::Instance().BeginProfile(name_);
 	}
 
 	~ProfileGuard()
 	{
-		Profiler::getInstance().endProfile(name_);
+		Profiler::Instance().EndProfile(name_);
 	}
 };

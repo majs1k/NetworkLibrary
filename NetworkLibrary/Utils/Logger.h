@@ -27,9 +27,9 @@ enum class LogLevel
 	ERR,
 };
 
-#define LOG(fmt, ...)		        Logger::getInstance().log(LogLevel::DEFAULT, fmt, ##__VA_ARGS__)
-#define LOG_INFO(fmt, ...)          Logger::getInstance().log(LogLevel::INFO, fmt, ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...)         Logger::getInstance().log(LogLevel::ERR, fmt, ##__VA_ARGS__)
+#define LOG(fmt, ...)		        Logger::Instance().Log(LogLevel::DEFAULT, fmt, ##__VA_ARGS__)
+#define LOG_INFO(fmt, ...)          Logger::Instance().Log(LogLevel::INFO, fmt, ##__VA_ARGS__)
+#define LOG_ERROR(fmt, ...)         Logger::Instance().Log(LogLevel::ERR, fmt, ##__VA_ARGS__)
 
 class Logger : public Singleton<Logger>
 {
@@ -41,7 +41,7 @@ public:
 	Logger();
 	~Logger();
 
-	void log(LogLevel level, const WCHAR* fmt, ...);
+	void Log(LogLevel level, const WCHAR* fmt, ...);
 };
 
 #define ERR(message)      SocketError(message)

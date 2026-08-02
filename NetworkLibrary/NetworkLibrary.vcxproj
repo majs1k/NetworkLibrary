@@ -119,6 +119,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <Optimization>Disabled</Optimization>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,7 +141,6 @@
     <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Packet.cpp" />
     <ClCompile Include="Utils\RecvPacket.cpp" />
-    <ClCompile Include="Utils\SendPacket.cpp" />
     <ClCompile Include="Utils\TickController.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -160,7 +161,6 @@
     <ClInclude Include="Utils\Message.h" />
     <ClInclude Include="Utils\Packet.h" />
     <ClInclude Include="Utils\RecvPacket.h" />
-    <ClInclude Include="Utils\SendPacket.h" />
     <ClInclude Include="Utils\Profiler.h" />
     <ClInclude Include="Utils\Random.h" />
     <ClInclude Include="Utils\RingBuffer.h" />

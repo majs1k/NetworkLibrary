@@ -18,27 +18,27 @@ TickController::TickController()
 	fps_ = 0;
 }
 
-float TickController::deltaTime() const
+float TickController::DeltaTime() const
 {
 	return deltaTime_;
 }
 
-int TickController::fps() const
+int TickController::Fps() const
 {
 	return fps_;
 }
 
-void TickController::setNormalFps()
+void TickController::SetNormalFps()
 {
 	targetFps_ = TARGET_FPS;
 }
 
-void TickController::setSlowFps()
+void TickController::SetSlowFps()
 {
 	targetFps_ = TARGET_FPS / 2;
 }
 
-void TickController::update()
+void TickController::Update()
 {
 	DWORD lastRunEndTime = runEndTime_;
 	runEndTime_ = timeGetTime();
@@ -68,7 +68,7 @@ void TickController::update()
 	}
 }
 
-void TickController::print()
+void TickController::Print()
 {
 	printf("[Profile] FPS  : %d\n", fps_);
 	printf("---------------------------------\n");

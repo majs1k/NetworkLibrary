@@ -3,7 +3,7 @@
 #include "../Utils/TickController.h"
 #include "../Utils/Logger.h"
 
-void Player::initialize(__int64 sessionId)
+void Player::Initialize(__int64 sessionId)
 {
 	// TODO: db 연동 이후 수정
 	playerId_ = sessionId;
@@ -19,53 +19,53 @@ void Player::initialize(__int64 sessionId)
 	hp_ = MAX_HP;
 }
 
-void Player::move()
+void Player::Move()
 {
 	switch (action_)
 	{
 	case MOVE_DIR_LL:
-		this->moveLeft();
+		this->MoveLeft();
 		break;
 
 	case MOVE_DIR_LU:
-		this->moveLeft();
-		this->moveUp();
+		this->MoveLeft();
+		this->MoveUp();
 		break;
 
 	case MOVE_DIR_UU:
-		this->moveUp();
+		this->MoveUp();
 		break;
 
 	case MOVE_DIR_RU:
-		this->moveRight();
-		this->moveUp();
+		this->MoveRight();
+		this->MoveUp();
 		break;
 
 	case MOVE_DIR_RR:
-		this->moveRight();
+		this->MoveRight();
 		break;
 
 	case MOVE_DIR_RD:
-		this->moveRight();
-		this->moveDown();
+		this->MoveRight();
+		this->MoveDown();
 		break;
 
 	case MOVE_DIR_DD:
-		this->moveDown();
+		this->MoveDown();
 		break;
 
 	case MOVE_DIR_LD:
-		this->moveLeft();
-		this->moveDown();
+		this->MoveLeft();
+		this->MoveDown();
 		break;
 	}
 
 	//LOG_INFO(L"[LOGIC_MOVE] ID: %d / Action: %d / X: %f / Y: %f", (int)sessionId_, (int)action_, x_, y_);
 }
 
-void Player::moveLeft()
+void Player::MoveLeft()
 {
-	float diffX = velocityX * TickController::getInstance().deltaTime() / CLOCKS_PER_SEC;
+	float diffX = velocityX * TickController::Instance().DeltaTime() / CLOCKS_PER_SEC;
 
 	if (RANGE_MOVE_LEFT + diffX <= x_)
 	{
@@ -78,9 +78,9 @@ void Player::moveLeft()
 	action_ = MOVE_DIR_NONE;
 }
 
-void Player::moveRight()
+void Player::MoveRight()
 {
-	float diffX = velocityX * TickController::getInstance().deltaTime() / CLOCKS_PER_SEC;
+	float diffX = velocityX * TickController::Instance().DeltaTime() / CLOCKS_PER_SEC;
 
 	if (x_ + diffX <= RANGE_MOVE_RIGHT)
 	{
@@ -92,9 +92,9 @@ void Player::moveRight()
 	action_ = MOVE_DIR_NONE;
 }
 
-void Player::moveUp()
+void Player::MoveUp()
 {
-	float diffY = velocityY * TickController::getInstance().deltaTime() / CLOCKS_PER_SEC;
+	float diffY = velocityY * TickController::Instance().DeltaTime() / CLOCKS_PER_SEC;
 
 	if (RANGE_MOVE_TOP <= y_ - diffY)
 	{
@@ -106,9 +106,9 @@ void Player::moveUp()
 	action_ = MOVE_DIR_NONE;
 }
 
-void Player::moveDown()
+void Player::MoveDown()
 {
-	float diffY = velocityY * TickController::getInstance().deltaTime() / CLOCKS_PER_SEC;
+	float diffY = velocityY * TickController::Instance().DeltaTime() / CLOCKS_PER_SEC;
 
 	if (y_ + diffY <= RANGE_MOVE_BOTTOM)
 	{

@@ -1,6 +1,5 @@
 #include "TestServer.h"
 #include "../Utils/Packet.h"
-#include "../Utils/SendPacket.h"
 #include "../Utils/RecvPacket.h"
 #include "../Utils/Message.h"
 #include "../Utils/TRingBuffer.h"
@@ -11,17 +10,15 @@
 
 TestServer::TestServer()
 {
-	//proxy_.server_ = this;
-
-	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, logicThread, this, 0, nullptr);
+	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, LogicThread, this, 0, nullptr);
 
 	// 종료시
 	//shutdown_ = true;
 }
 
-bool TestServer::onConnectionRequest(const std::wstring& ip, int port)
+bool TestServer::OnConnectionRequest(const std::wstring& ip, int port)
 {
-	if (sessionCount() >= sessionMax())
+	if (SessionCount() >= SessionMax())
 	{
 		LOG(L"[Network] session limit over");
 
@@ -31,21 +28,20 @@ bool TestServer::onConnectionRequest(const std::wstring& ip, int port)
 	return true;
 }
 
-void TestServer::onAccept(__int64 sessionId)
+void TestServer::OnAccept(__int64 sessionId)
 {
 
 }
 
-void TestServer::onRelease(__int64 sessionId)
+void TestServer::OnRelease(__int64 sessionId)
 {
 
 }
 
-void TestServer::onRecv(__int64 sessionId, Packet* packet)
+void TestServer::OnRecv(__int64 sessionId, Packet* packet)
 {
 	Message* message = new Message();
-	message->setId(sessionId);
-	message->setPacket(packet);
+	message->Initialize(sessionId, packet);
 
 	messageQueue_.push(message);
 
@@ -66,7 +62,7 @@ void TestServer::onRecv(__int64 sessionId, Packet* packet)
 	//this->sendPacketSkipCopy(sessionId, p);
 }
 
-void TestServer::onRecv(__int64 sessionId, RecvPacket* packet)
+void TestServer::OnRecv(__int64 sessionId, RecvPacket* packet)
 {
 	//MESSAGE message;
 	//*packet >> message.data_;
@@ -78,28 +74,28 @@ void TestServer::onRecv(__int64 sessionId, RecvPacket* packet)
 	//this->sendPacket(sessionId, &packet2);
 }
 
-void TestServer::onError(int errorCode, wchar_t* str)
+void TestServer::OnError(int errorCode, wchar_t* str)
 {
 
 }
 
-unsigned int __stdcall TestServer::logicThread(void* param)
+unsigned int __stdcall TestServer::LogicThread(void* param)
 {
 	TestServer* server = (TestServer*)param;
 
 	while (!server->shutdown_)
 	{
-		server->packetProc();
+		server->PacketProc();
 
-		server->update();
+		server->Update();
 
-		TickController::getInstance().update();
+		TickController::Instance().Update();
 	}
 
 	return 0;
 }
 
-void TestServer::packetProc()
+void TestServer::PacketProc()
 {
 	while (1)
 	{
@@ -108,25 +104,27 @@ void TestServer::packetProc()
 		if (message == nullptr)
 			return;
 
-		__int64 sessionId = message->sessionId();
-		Packet* packet = message->packet();
+		__int64 sessionId = message->sessionId_;
+		Packet* packet = message->packet_;
 
-		TEST_BODY bd;
 
-		*packet >> bd.data_;
+		__int64 data;
+
+		*packet >> data;
 
 		delete packet;
 		delete message;
 
-		Packet packet2;
-		packet2 << bd.data_;
+
+		Packet* packet2 = new Packet();
+		*packet2 << data;
 
 		// 호출부 안에서 패킷 헤더를 삽입
-		this->sendPacket(sessionId, &packet2);
+		this->SendPacket(sessionId, packet2);
 	}
 }
 
-void TestServer::update()
+void TestServer::Update()
 {
 
 }

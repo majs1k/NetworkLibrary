@@ -8,13 +8,13 @@
 
 int main()
 {
-	CrashDump().initialize();
+	CrashDump().Initialize();
 
-	ConfigLoader::getInstance().load(CONFIG_FILENAME);
+	ConfigLoader::Instance().Load(CONFIG_FILENAME);
 
 	TestServer server;
 
-	server.start(config.ip, config.port, config.sessionMax, config.concurrentCount, config.workerCount);
+	server.Start(config.ip, config.port, config.sessionMax, config.concurrentCount, config.workerCount);
 
 	while (1)
 	{
@@ -23,17 +23,14 @@ int main()
 		if (c == 'x')
 			break;
 
-		else if (c == 'p')
-			server.printTps();
-
 		else if (c == ' ')
-			Profiler::getInstance().save();
+			Profiler::Instance().Save();
 
 		else if (c == 'c')
-			Profiler::getInstance().clear();
+			Profiler::Instance().Clear();
 	}
 
-	server.stop();
+	server.Stop();
 
 	return 0;
 }

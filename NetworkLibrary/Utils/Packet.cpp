@@ -12,35 +12,35 @@ Packet::~Packet()
 	delete buffer_;
 }
 
-void Packet::initialize()
+void Packet::Initialize()
 {
 	writePos_ = 0;
 	readPos_ = 0;
 }
 
-int	Packet::capacity()
+int	Packet::Capacity()
 {
 	return capacity_;
 }
 
-int	Packet::useSize()
+int	Packet::UseSize()
 {
 	return writePos_ - readPos_;
 }
 
-char* Packet::getBufferPtr()
+char* Packet::GetBufferPtr()
 {
 	return buffer_;
 }
 
-int	Packet::moveWritePos(int size)
+int	Packet::MoveWritePos(int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈, 음수 이동 제한?
 	writePos_ += size;
 	return size;
 }
 
-int	Packet::moveReadPos(int size)
+int	Packet::MoveReadPos(int size)
 {
 	readPos_ += size;
 	return size;
@@ -196,7 +196,7 @@ Packet& Packet::operator >> (double& value)
 	return *this;
 }
 
-int	Packet::read(char* dest, int size)
+int	Packet::Read(char* dest, int size)
 {
 	memcpy(dest, buffer_ + readPos_, size);
 	readPos_ += size;
@@ -204,7 +204,7 @@ int	Packet::read(char* dest, int size)
 	return size;
 }
 
-int	Packet::write(char* src, int size)
+int	Packet::Write(char* src, int size)
 {
 	/// TODO: 버퍼 초과시 리사이즈
 	memcpy(buffer_ + writePos_, src, size);

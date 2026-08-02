@@ -42,13 +42,13 @@ public:
 		delete buffer_;
 	}
 
-	void clear()
+	void Clear()
 	{
 		writePos_ = 0;
 		readPos_ = 0;
 	}
 
-	void resize(int size)
+	void Resize(int size)
 	{
 		if (capacity_ > size)
 			return;
@@ -57,15 +57,15 @@ public:
 
 		if (readPos_ <= writePos_)
 		{
-			memcpy(newBuffer, buffer_ + readPos_, useSize());
+			memcpy(newBuffer, buffer_ + readPos_, UseSize());
 		}
 		else
 		{
-			memcpy(newBuffer, buffer_ + readPos_, directDequeueSize());
-			memcpy(newBuffer + directDequeueSize(), buffer_, useSize() - directDequeueSize());
+			memcpy(newBuffer, buffer_ + readPos_, DirectDequeueSize());
+			memcpy(newBuffer + DirectDequeueSize(), buffer_, UseSize() - DirectDequeueSize());
 		}
 
-		int s = useSize();
+		int s = UseSize();
 
 		readPos_ = 0;
 		writePos_ = s;
@@ -77,7 +77,7 @@ public:
 		safeSize_ = capacity_ * SAFETY_PERCENT / 100;
 	}
 
-	int useSize() const
+	int UseSize() const
 	{
 		//return readPos_ <= writePos_
 		//	? writePos_ - readPos_
@@ -91,43 +91,43 @@ public:
 			: w + capacity_ - r;
 	}
 
-	int freeSize() const
+	int FreeSize() const
 	{
-		return capacity_ - useSize() - 1;
+		return capacity_ - UseSize() - 1;
 	}
 
-	int safeSize() const
+	int SafeSize() const
 	{
 		return safeSize_;
 	}
 
-	bool isFull() const
+	bool IsFull() const
 	{
 		return ((writePos_ + 1) % capacity_ == readPos_);
 	}
 
-	char* getBufferPtr() const
+	char* GetBufferPtr() const
 	{
 		return buffer_;
 	}
 
-	char* getFrontBufferPtr() const
+	char* GetFrontBufferPtr() const
 	{
 		return buffer_ + readPos_;
 	}
 
-	char* getRearBufferPtr() const
+	char* GetRearBufferPtr() const
 	{
 		return buffer_ + writePos_;
 	}
 
-	int enqueue(const char* data, int size)
+	int Enqueue(const char* data, int size)
 	{
-		/// 1회 리사이즈 로직으로 변경 필요
-		if (freeSize() < size)
+		if (FreeSize() < size)
 		{
-			printf("enqueue over!\n");
 			__debugbreak();
+
+			/// TODO: Resize() 1번
 			return 0;
 		}
 
@@ -144,13 +144,14 @@ public:
 		return size;
 	}
 
-	int dequeue(char* data, int size)
+	int Dequeue(char* data, int size)
 	{
 		/// 이후 삭제
-		if (useSize() < size)
+		if (UseSize() < size)
 		{
 			printf("dequeue over!\n");
 			__debugbreak();
+
 			return 0;
 		}
 
@@ -167,9 +168,9 @@ public:
 		return size;
 	}
 
-	int peek(char* data, int size) const
+	int Peek(char* data, int size) const
 	{
-		if (useSize() < size)
+		if (UseSize() < size)
 			return 0;
 
 		if (capacity_ < readPos_ + size)
@@ -183,7 +184,7 @@ public:
 		return size;
 	}
 
-	int directEnqueueSize() const
+	int DirectEnqueueSize() const
 	{
 		if (readPos_ <= writePos_)
 		{
@@ -196,37 +197,37 @@ public:
 			return readPos_ - writePos_ - 1;
 	}
 
-	int directDequeueSize() const
+	int DirectDequeueSize() const
 	{
 		return readPos_ <= writePos_
 			? writePos_ - readPos_
 			: capacity_ - readPos_;
 	}
 
-	int moveFront(int size)
+	int MoveFront(int size)
 	{
-		if (useSize() < size)
+		if (UseSize() < size)
 			return 0;
 
 		readPos_ = (readPos_ + size) % capacity_;
 		return size;
 	}
 
-	int moveRear(int size)
+	int MoveRear(int size)
 	{
-		if (freeSize() < size)
+		if (FreeSize() < size)
 			return 0;
 
 		writePos_ = (writePos_ + size) % capacity_;
 		return size;
 	}
 
-	void lock()
+	void Lock()
 	{
 		lock_.lock();
 	}
 
-	void unlock()
+	void Unlock()
 	{
 		lock_.unlock();
 	}

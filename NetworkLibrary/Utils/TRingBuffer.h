@@ -17,13 +17,13 @@ public:
 	std::mutex lock_;
 
 public:
-	void clear()
+	void Clear()
 	{
 		writePos_ = 0;
 		readPos_ = 0;
 	}
 
-	int useSize() const
+	int UseSize() const
 	{
 		int r = readPos_;
 		int w = writePos_;
@@ -33,14 +33,14 @@ public:
 			: w + capacity_ - r;
 	}
 
-	int freeSize() const
+	int FreeSize() const
 	{
-		return capacity_ - useSize() - 1;
+		return capacity_ - UseSize() - 1;
 	}
 
-	void enqueue(T value)
+	void Enqueue(T value)
 	{
-		if (freeSize() <= 0)
+		if (FreeSize() <= 0)
 		{
 			__debugbreak();
 			return;
@@ -51,9 +51,9 @@ public:
 		writePos_ = (writePos_ + 1) % capacity_;
 	}
 
-	void dequeue(T& value)
+	void Dequeue(T& value)
 	{
-		if (useSize() <= 0)
+		if (UseSize() <= 0)
 		{
 			__debugbreak();
 			return;
@@ -64,15 +64,15 @@ public:
 		readPos_ = (readPos_ + 1) % capacity_;
 	}
 
-	void peek(T& value, int idx) const
+	void Peek(T& value, int idx) const
 	{
-		if (useSize() <= 0)
+		if (UseSize() <= 0)
 		{
 			__debugbreak();
 			return;
 		}
 
-		if (useSize() <= idx)
+		if (UseSize() <= idx)
 		{
 			__debugbreak();
 			return;
@@ -81,9 +81,9 @@ public:
 		value = queue_[(readPos_ + idx) % capacity_];
 	}
 
-	int moveFront(int size)
+	int MoveFront(int size)
 	{
-		if (useSize() < size)
+		if (UseSize() < size)
 		{
 			__debugbreak();
 			return 0;
@@ -93,9 +93,9 @@ public:
 		return size;
 	}
 
-	int moveRear(int size)
+	int MoveRear(int size)
 	{
-		if (freeSize() < size)
+		if (FreeSize() < size)
 		{
 			__debugbreak();
 			return 0;
@@ -105,14 +105,13 @@ public:
 		return size;
 	}
 
-	void lock()
+	void Lock()
 	{
 		lock_.lock();
 	}
 
-	void unlock()
+	void Unlock()
 	{
 		lock_.unlock();
 	}
 };
-

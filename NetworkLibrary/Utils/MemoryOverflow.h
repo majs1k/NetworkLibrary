@@ -11,7 +11,7 @@
 class MemoryOverflow : Singleton <MemoryOverflow>
 {
 public:
-	static char* alloc(int size)
+	static char* Alloc(int size)
 	{
 		SYSTEM_INFO si;
 		GetSystemInfo(&si);
@@ -38,7 +38,7 @@ public:
 		return retPtr;
 	}
 
-	static void free(void* ptr)
+	static void Free(void* ptr)
 	{
 		int* p = (int*)ptr - 1;
 		char* addr = (char*)*p;
@@ -48,12 +48,12 @@ public:
 	// 반드시 size_t 여야 함
 	static void* operator new(size_t size)
 	{
-		void* ptr = alloc(size);
+		void* ptr = Alloc(size);
 		return ptr;
 	}
 
 	static void operator delete(void* ptr)
 	{
-		free(ptr);
+		Free(ptr);
 	}
 };

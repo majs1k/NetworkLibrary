@@ -3,30 +3,14 @@
 #include <mutex>
 #include "Packet.h"
 
-class Message
+struct Message
 {
-private:
 	__int64 sessionId_;
 	Packet* packet_;
 
-public:
-	__int64 sessionId()
-	{
-		return sessionId_;
-	}
-
-	Packet* packet()
-	{
-		return packet_;
-	}
-
-	void setId(__int64 sessionId)
+	void Initialize(__int64 sessionId, Packet* packet)
 	{
 		sessionId_ = sessionId;
-	}
-
-	void setPacket(Packet* packet)
-	{
 		packet_ = packet;
 	}
 };

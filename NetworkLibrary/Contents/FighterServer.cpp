@@ -10,15 +10,15 @@ FighterServer::FighterServer()
 {
 	proxy_.server_ = this;
 
-	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, logicThread, this, 0, nullptr);
+	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, LogicThread, this, 0, nullptr);
 
 	// 종료시
 	//shutdown_ = true;
 }
 
-bool FighterServer::onConnectionRequest(const std::wstring& ip, int port)
+bool FighterServer::OnConnectionRequest(const std::wstring& ip, int port)
 {
-	if (sessionCount() >= sessionMax())
+	if (SessionCount() >= SessionMax())
 	{
 		LOG(L"[Network] session limit over");
 
@@ -28,14 +28,14 @@ bool FighterServer::onConnectionRequest(const std::wstring& ip, int port)
 	return true;
 }
 
-void FighterServer::onAccept(__int64 sessionId)
+void FighterServer::OnAccept(__int64 sessionId)
 {
-	this->createPlayer(sessionId);
+	this->CreatePlayer(sessionId);
 }
 
-void FighterServer::onRelease(__int64 sessionId)
+void FighterServer::OnRelease(__int64 sessionId)
 {
-	this->removePlayer(sessionId);
+	this->RemovePlayer(sessionId);
 
 	for (auto& p : playerMap_)
 	{
@@ -48,7 +48,7 @@ void FighterServer::onRelease(__int64 sessionId)
 	}
 }
 
-void FighterServer::onRecv(__int64 sessionId, Packet* packet)
+void FighterServer::OnRecv(__int64 sessionId, Packet* packet)
 {
 	unsigned char type;
 	*packet >> type;
@@ -65,31 +65,31 @@ void FighterServer::onRecv(__int64 sessionId, Packet* packet)
 	delete packet;
 }
 
-void FighterServer::onRecv(__int64 sessionId, RecvPacket* packet)
+void FighterServer::OnRecv(__int64 sessionId, RecvPacket* packet)
 {
 
 }
 
-void FighterServer::onError(int errorCode, wchar_t* str)
+void FighterServer::OnError(int errorCode, wchar_t* str)
 {
 
 }
 
-unsigned int __stdcall FighterServer::logicThread(void* param)
+unsigned int __stdcall FighterServer::LogicThread(void* param)
 {
 	FighterServer* server = (FighterServer*)param;
 
 	while (!server->shutdown_)
 	{
-		server->update();
+		server->Update();
 
-		TickController::getInstance().update();
+		TickController::Instance().Update();
 	}
 
 	return 0;
 }
 
-void FighterServer::update()
+void FighterServer::Update()
 {
 	for (auto& p : playerMap_)
 	{
@@ -98,15 +98,15 @@ void FighterServer::update()
 		if (player->action_ == MOVE_DIR_NONE)
 			continue;
 
-		player->move();
+		player->Move();
 	}
 }
 
-void FighterServer::createPlayer(__int64 sessionId)
+void FighterServer::CreatePlayer(__int64 sessionId)
 {
 	// db 구현시 플레이어 id 조회
 	Player* player = new Player();
-	player->initialize(sessionId);
+	player->Initialize(sessionId);
 
 	playerMap_.insert({ sessionId, player });
 	playerCount_++;
@@ -145,7 +145,7 @@ void FighterServer::createPlayer(__int64 sessionId)
 	}
 }
 
-void FighterServer::removePlayer(__int64 sessionId)
+void FighterServer::RemovePlayer(__int64 sessionId)
 {
 	auto it = playerMap_.find(sessionId);
 
@@ -178,7 +178,7 @@ bool FighterServer::cs_start_move(__int64 sessionId, char direction, short x, sh
 	{
 		LOG(L"[Network] invalid coord session=%d", sessionId);
 
-		DebugBreak();
+		__debugbreak();
 		return false;
 	}
 
@@ -233,7 +233,7 @@ bool FighterServer::cs_stop_move(__int64 sessionId, char action, short x, short 
 	{
 		LOG(L"[Network] invalid coord session=%d", sessionId);
 
-		DebugBreak();
+		__debugbreak();
 
 		return false;
 	}
@@ -331,7 +331,7 @@ bool FighterServer::cs_attack1(__int64 sessionId, char direction, short x, short
 
 	if (target->hp_ <= 0)
 	{
-		this->disconnect(target->sessionId_);
+		this->Disconnect(target->sessionId_);
 
 		return true;
 	}

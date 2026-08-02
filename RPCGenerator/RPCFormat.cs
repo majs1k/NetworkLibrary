@@ -65,7 +65,7 @@ class Packet;
 class ServerStub
 {{
 public:
-	bool packetProc(__int64 sessionId, Packet& packet, unsigned char type);
+	bool PacketProc(__int64 sessionId, Packet& packet, unsigned char type);
 {0}
 }};
 ";
@@ -80,7 +80,7 @@ public:
 @"#include ""ServerStub.h""
 #include ""../Utils/Packet.h""
 
-bool ServerStub::packetProc(__int64 sessionId, Packet& packet, unsigned char type)
+bool ServerStub::PacketProc(__int64 sessionId, Packet& packet, unsigned char type)
 {{
 	switch (type)
 	{{{0}

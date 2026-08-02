@@ -25,7 +25,7 @@ extern ServerConfig config;
 class ConfigLoader : public Singleton<ConfigLoader>
 {
 public:
-    bool load(std::wstring path)
+    bool Load(std::wstring path)
     {
         std::ifstream ifs(path);
 

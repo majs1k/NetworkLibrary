@@ -72,11 +72,11 @@ private:
 	/// TODO: 메세지 쿨타임 추가
 
 public:
-	void initialize(__int64 sessionId);
+	void Initialize(__int64 sessionId);
 
-	void move();
-	void moveLeft();
-	void moveRight();
-	void moveUp();
-	void moveDown();
+	void Move();
+	void MoveLeft();
+	void MoveRight();
+	void MoveUp();
+	void MoveDown();
 };

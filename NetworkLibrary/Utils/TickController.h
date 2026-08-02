@@ -29,12 +29,12 @@ class TickController : public Singleton<TickController>
 public:
 	TickController();
 
-	float deltaTime() const;
-	int fps() const;
+	float DeltaTime() const;
+	int Fps() const;
 
-	void setNormalFps();
-	void setSlowFps();
+	void SetNormalFps();
+	void SetSlowFps();
 
-	void update();
-	void print();
+	void Update();
+	void Print();
 };

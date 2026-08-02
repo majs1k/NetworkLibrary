@@ -20,7 +20,7 @@ Logger::~Logger()
 	fout_.close();
 }
 
-void Logger::log(LogLevel level, const WCHAR* fmt, ...)
+void Logger::Log(LogLevel level, const WCHAR* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -59,7 +59,7 @@ void Logger::log(LogLevel level, const WCHAR* fmt, ...)
 		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
 		threadId, levelStr, userMessage);
 
-	std::wcout << finalMessage;
+	//std::wcout << finalMessage;
 	fout_ << finalMessage;
 }
 

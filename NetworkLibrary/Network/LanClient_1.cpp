@@ -1,9 +1,10 @@
 //#pragma comment(lib, "ws2_32.lib")
+//#pragma comment(lib, "winmm.lib")
+//
 //#include <process.h>
 //#include "LanClient.h"
 //#include "../Utils/Logger.h"
 //#include "../Utils/Profiler.h"
-//#pragma comment(lib, "winmm.lib")
 //
 //LanClient::LanClient()
 //{
@@ -18,7 +19,7 @@
 //	WSACleanup();
 //}
 //
-//bool LanClient::connect()
+//bool LanClient::Connect()
 //{
 //	serverIp_ = L"0.0.0.0";
 //	serverPort_ = SERVER_PORT;
@@ -27,7 +28,7 @@
 //
 //	for (int i = 0; i < WORKER_COUNT; i++)
 //	{
-//		hWorkerThread_[i] = (HANDLE)_beginthreadex(nullptr, 0, workerThread, this, 0, nullptr);
+//		hWorkerThread_[i] = (HANDLE)_beginthreadex(nullptr, 0, WorkerThread, this, 0, nullptr);
 //	}
 //
 //	clientSocket_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -80,18 +81,18 @@
 //	//	ERR(L"iocltsocket error!");
 //
 //	clientSession_ = new Session();
-//	clientSession_->initialize(clientSocket_, serverIp_, serverPort_, 1);
+//	clientSession_->Initialize(clientSocket_, serverIp_, serverPort_, 1);
 //
 //	LOG_INFO(L"[NETWORK] create client");
 //
 //	CreateIoCompletionPort((HANDLE)clientSocket_, hIOCP_, (ULONG_PTR)clientSession_, 0);
 //
-//	onEnterJoinServer();
+//	OnEnterJoinServer();
 //
-//	this->postRecv(clientSession_);
+//	this->RecvPost(clientSession_);
 //}
 //
-//bool LanClient::disconnect()
+//bool LanClient::Disconnect()
 //{
 //	closesocket(clientSocket_);
 //
@@ -116,7 +117,7 @@
 //	return true;
 //}
 //
-//bool LanClient::sendPacket(Packet& packet)
+//bool LanClient::SendPacket(Packet& packet)
 //{
 //
 //
@@ -125,7 +126,7 @@
 //	return true;
 //}
 //
-//unsigned int __stdcall LanClient::workerThread(void* param)
+//unsigned int __stdcall LanClient::WorkerThread(void* param)
 //{
 //	LanClient* client = (LanClient*)param;
 //
@@ -159,7 +160,7 @@
 //				// 64 상대가 연결을 끊었을때 (numOfBytes == 0)
 //				if (error == ERROR_NETNAME_DELETED)
 //				{
-//					client->decrementIoCount(session);
+//					client->DecrementIoCount(session);
 //
 //					continue;
 //				}
@@ -169,14 +170,14 @@
 //				{
 //					LOG_INFO(L"GQCS() error: ERROR_CONNECTION_ABORTED");
 //
-//					client->decrementIoCount(session);
+//					client->DecrementIoCount(session);
 //
 //					continue;
 //				}
 //
 //				LOG_INFO(L"GQCS() error: %d", error);
 //
-//				client->decrementIoCount(session);
+//				client->DecrementIoCount(session);
 //
 //				continue;
 //			}
@@ -207,16 +208,16 @@
 //			// 상대가 closesocket()시 (rst x) 발생
 //			if (numOfBytes == 0)
 //			{
-//				client->decrementIoCount(session);
+//				client->DecrementIoCount(session);
 //
 //				continue;
 //			}
 //
-//			client->completeRecv(session, numOfBytes);
+//			client->CompleteRecv(session, numOfBytes);
 //		}
 //		else
 //		{
-//			client->completeSend(session, numOfBytes);
+//			client->CompleteSend(session, numOfBytes);
 //		}
 //	}
 //

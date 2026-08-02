@@ -20,20 +20,20 @@ private:
 public:
 	FighterServer();
 
-	bool onConnectionRequest(const std::wstring& ip, int port) override;
-	void onAccept(__int64 sessionId) override;
-	void onRelease(__int64 sessionId) override;
-	void onRecv(__int64 sessionId, Packet* packet) override;
-	void onRecv(__int64 sessionId, RecvPacket* packet) override;
-	void onError(int errorCode, wchar_t* str) override;
+	bool OnConnectionRequest(const std::wstring& ip, int port) override;
+	void OnAccept(__int64 sessionId) override;
+	void OnRelease(__int64 sessionId) override;
+	void OnRecv(__int64 sessionId, Packet* packet) override;
+	void OnRecv(__int64 sessionId, RecvPacket* packet) override;
+	void OnError(int errorCode, wchar_t* str) override;
 
-	static unsigned int __stdcall logicThread(void* param);
-	void update();
+	static unsigned int __stdcall LogicThread(void* param);
+	void Update();
 
 	// ----------------------------------------------------- //
 
-	void createPlayer(__int64 sessionId);
-	void removePlayer(__int64 sessionId);
+	void CreatePlayer(__int64 sessionId);
+	void RemovePlayer(__int64 sessionId);
 
 	// ----------------------------------------------------- //
 

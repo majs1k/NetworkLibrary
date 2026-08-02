@@ -18,7 +18,7 @@
 class CrashDump
 {
 public:
-	static void initialize()
+	static void Initialize()
 	{
 		SetUnhandledExceptionFilter(UnhandledExceptionFilter);
 

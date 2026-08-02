@@ -15,7 +15,6 @@ Packet 크기 제한 & 예외처리 적용
 메세지 쿨타임 처리 (3번 허용 후 종료)
 
 warning 제거 , 캐스팅 수정
-
 ```
 
 ## Question
@@ -26,13 +25,20 @@ DLL을 만드는 방법? 클래스로는 불가?
 
 예외처리 try-catch?
 
+목적지로 패킷을 정확히 어떻게 보내는지?
+
 프로파일러 더미 테스트 시 재연결 금지
 
 메모리풀 placement new 활용도?
 
+send시 패킷의 헤더는 어떻게 해야함? 따로 Packet 생성?
+
+복사 비용 아끼려면, 변수 따로 뺴는거도 안됨? ex) int id = packet->id;
+
 disconnect(), sendPacket() false 반환시 동작??
 
 타입은 헤더가 아닌 Packet(직렬화 버퍼)에 포함?
+헤더 처리를 그냥 rpc에서 하면 안됨? SendPacket()에서 하니 너무 불편해서.
 
 sendQ recvQ 수정
 

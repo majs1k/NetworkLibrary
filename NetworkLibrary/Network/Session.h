@@ -25,7 +25,6 @@ struct OverlappedEx
 };
 
 class Packet;
-class SendPacket;
 class RecvPacket;
 
 /// TODO: 세션 삭제시 소켓 close
@@ -44,7 +43,7 @@ struct Session
 	RingBuffer recvQueue_{ RECV_SIZE };
 
 	/// 세션 종료시 정리 필요!!! (count 등...)
-	TRingBuffer<SendPacket*, SEND_CNT> sendQueueT_;
+	TRingBuffer<Packet*, SEND_CNT> sendQueue2_;
 	RecvPacket* recvPacket_;
 
 	OverlappedEx sendOverlapped_;
@@ -57,7 +56,7 @@ struct Session
 
 	std::recursive_mutex sessionLock_;
 
-	void initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
+	void Initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
 	{
 		socket_ = socket;
 		sessionId_ = id;
@@ -65,13 +64,13 @@ struct Session
 		ip_ = ip;
 		port_ = port;
 
-		sendQueue_.clear();
-		recvQueue_.clear();
+		sendQueue_.Clear();
+		recvQueue_.Clear();
 
 		recvPacket_ = new RecvPacket();
 		PacketBuffer* buffer = new PacketBuffer();
-		recvPacket_->initialize(buffer);
-		recvPacket_->incrementRef();
+		recvPacket_->Initialize(buffer);
+		recvPacket_->IncrementRef();
 
 		sendOverlapped_.type = IOType::SEND;
 		recvOverlapped_.type = IOType::RECV;

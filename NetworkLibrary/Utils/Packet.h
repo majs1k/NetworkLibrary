@@ -26,16 +26,16 @@ public:
 	Packet(int bufferSize = 200);
 	~Packet();
 
-	void initialize();
+	void Initialize();
 
-	int	capacity();
-	int	useSize();
+	int	Capacity();
+	int	UseSize();
 
-	char* getBufferPtr();
+	char* GetBufferPtr();
 
-	//getBufferPtr()로 버퍼 내용 수정할 경우 사용
-	int	moveWritePos(int size);
-	int	moveReadPos(int size);
+	// GetBufferPtr()로 버퍼 내용 수정할 경우 사용
+	int	MoveWritePos(int size);
+	int	MoveReadPos(int size);
 
 	Packet& operator = (const Packet& packet);
 
@@ -59,6 +59,6 @@ public:
 	Packet& operator >> (__int64& value);
 	Packet& operator >> (double& value);
 
-	int	read(char* dest, int size);
-	int	write(char* src, int size);
+	int	Read(char* dest, int size);
+	int	Write(char* src, int size);
 };

@@ -16,13 +16,13 @@ struct ChatMsg
 inline Packet& operator<<(Packet& packet, ChatMsg* chatMsg)
 {
 	packet << chatMsg->len_;
-	packet.write(chatMsg->message_, chatMsg->len_);
+	packet.Write(chatMsg->message_, chatMsg->len_);
 }
 
 inline Packet& operator>>(Packet& packet, ChatMsg* chatMsg)
 {
 	packet >> chatMsg->len_;
-	packet.read(chatMsg->message_, chatMsg->len_);
+	packet.Read(chatMsg->message_, chatMsg->len_);
 }
 
 #include "../RPC/ServerProxy.cpp"
