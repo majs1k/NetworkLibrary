@@ -5,11 +5,31 @@
 // 템플릿은 기본자료형 말고도 다 받아서 적용 x
 // TODO: 디버그 모드에서 패킷 사이즈 체크 후 리사이즈?
 // 
-// vs2022 release mode -> 내장함수 최적화
-// memcpy 호출 인라인화 -> 포인터 방식과 성능 동일
-//
 // -------------------------------------------------------------------
 #pragma once
+#include <iostream>
+
+// ------------------------------------------------------- //
+
+struct TEST_HEADER
+{
+	short size_;
+};
+
+// ------------------------------------------------------- //
+
+#define PACKET_CODE				0x89
+
+struct FIGHTER_HEADER
+{
+	unsigned char code;
+	char size;
+	//char type;
+};
+
+// ------------------------------------------------------- //
+
+#define HEADER_SIZE		sizeof(TEST_HEADER)
 
 class Packet
 {
@@ -23,42 +43,233 @@ protected:
 
 public:
 	// 디폴트 사이즈?
-	Packet(int bufferSize = 200);
-	~Packet();
+	Packet(int bufferSize = 200)
+		:capacity_(bufferSize), writePos_(0), readPos_(0)
+	{
+		buffer_ = new char[capacity_];
 
-	void Initialize();
+		writePos_ = HEADER_SIZE;
+		readPos_ = HEADER_SIZE;
+	}
 
-	int	Capacity();
-	int	UseSize();
+	~Packet()
+	{
+		delete buffer_;
+	}
 
-	char* GetBufferPtr();
+	void Initialize()
+	{
+		writePos_ = HEADER_SIZE;
+		readPos_ = HEADER_SIZE;
+	}
 
-	// GetBufferPtr()로 버퍼 내용 수정할 경우 사용
-	int	MoveWritePos(int size);
-	int	MoveReadPos(int size);
+	int	Capacity()
+	{
+		return capacity_;
+	}
 
-	Packet& operator = (const Packet& packet);
+	// 헤더 크기 제외
+	int	UseSize()
+	{
+		return writePos_ - readPos_;
+	}
 
-	Packet& operator << (char value);
-	Packet& operator << (unsigned char value);
-	Packet& operator << (short value);
-	Packet& operator << (unsigned short value);
-	Packet& operator << (int value);
-	Packet& operator << (unsigned int value);
-	Packet& operator << (float value);
-	Packet& operator << (__int64 value);
-	Packet& operator << (double value);
+	//char* GetBufferPtr()
+	//{
+	//	return buffer_;
+	//}
 
-	Packet& operator >> (char& value);
-	Packet& operator >> (unsigned char& value);
-	Packet& operator >> (short& value);
-	Packet& operator >> (unsigned short& value);
-	Packet& operator >> (int& value);
-	Packet& operator >> (unsigned int& value);
-	Packet& operator >> (float& value);
-	Packet& operator >> (__int64& value);
-	Packet& operator >> (double& value);
+	char* GetHeaderPtr()
+	{
+		return buffer_;
+	}
 
-	int	Read(char* dest, int size);
-	int	Write(char* src, int size);
+	char* GetBodyPtr()
+	{
+		return buffer_ + HEADER_SIZE;
+	}
+
+	int TotalUseSize()
+	{
+		return this->UseSize() + HEADER_SIZE;
+	}
+
+	int	MoveWritePos(int size)
+	{
+		/// TODO: 버퍼 초과시 리사이즈, 음수 이동 제한?
+		writePos_ += size;
+		return size;
+	}
+
+	int	MoveReadPos(int size)
+	{
+		readPos_ += size;
+		return size;
+	}
+
+	Packet& operator = (const Packet& packet)
+	{
+
+	}
+
+	Packet& operator << (char value)
+	{
+		*(char*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(char);
+
+		return *this;
+	}
+
+	Packet& operator << (unsigned char value)
+	{
+		*(unsigned char*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(unsigned char);
+
+		return *this;
+	}
+
+	Packet& operator << (short value)
+	{
+		*(short*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(short);
+
+		return *this;
+	}
+
+	Packet& operator << (unsigned short value)
+	{
+		*(unsigned short*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(unsigned short);
+
+		return *this;
+	}
+
+	Packet& operator << (int value)
+	{
+		*(int*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(int);
+
+		return *this;
+	}
+
+	Packet& operator << (unsigned int value)
+	{
+		*(unsigned int*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(unsigned int);
+
+		return *this;
+	}
+
+	Packet& operator << (float value)
+	{
+		*(float*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(float);
+
+		return *this;
+	}
+
+	Packet& operator << (__int64 value)
+	{
+		*(__int64*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(__int64);
+
+		return *this;
+	}
+
+	Packet& operator << (double value)
+	{
+		*(double*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(double);
+
+		return *this;
+	}
+
+	Packet& operator >> (char& value)
+	{
+		value = *(char*)(buffer_ + readPos_);
+		readPos_ += sizeof(char);
+
+		return *this;
+	}
+
+	Packet& operator >> (unsigned char& value)
+	{
+		value = *(unsigned char*)(buffer_ + readPos_);
+		readPos_ += sizeof(unsigned char);
+
+		return *this;
+	}
+
+	Packet& operator >> (short& value)
+	{
+		value = *(short*)(buffer_ + readPos_);
+		readPos_ += sizeof(short);
+
+		return *this;
+	}
+
+	Packet& operator >> (unsigned short& value)
+	{
+		value = *(unsigned short*)(buffer_ + readPos_);
+		readPos_ += sizeof(unsigned short);
+
+		return *this;
+	}
+
+	Packet& operator >> (int& value)
+	{
+		value = *(int*)(buffer_ + readPos_);
+		readPos_ += sizeof(int);
+
+		return *this;
+	}
+
+	Packet& operator >> (unsigned int& value)
+	{
+		value = *(unsigned int*)(buffer_ + readPos_);
+		readPos_ += sizeof(unsigned int);
+
+		return *this;
+	}
+
+	Packet& operator >> (float& value)
+	{
+		value = *(float*)(buffer_ + readPos_);
+		readPos_ += sizeof(float);
+
+		return *this;
+	}
+
+	Packet& operator >> (__int64& value)
+	{
+		value = *(__int64*)(buffer_ + readPos_);
+		readPos_ += sizeof(__int64);
+
+		return *this;
+	}
+
+	Packet& operator >> (double& value)
+	{
+		value = *(double*)(buffer_ + readPos_);
+		readPos_ += sizeof(double);
+
+		return *this;
+	}
+
+	int	Read(char* dest, int size)
+	{
+		memcpy(dest, buffer_ + readPos_, size);
+		readPos_ += size;
+
+		return size;
+	}
+
+	int	Write(char* src, int size)
+	{
+		/// TODO: 버퍼 초과시 리사이즈
+		memcpy(buffer_ + writePos_, src, size);
+		writePos_ += size;
+
+		return size;
+	}
 };

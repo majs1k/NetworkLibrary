@@ -64,6 +64,17 @@ public:
 		readPos_ = (readPos_ + 1) % capacity_;
 	}
 
+	void Dequeue()
+	{
+		if (UseSize() <= 0)
+		{
+			__debugbreak();
+			return;
+		}
+
+		readPos_ = (readPos_ + 1) % capacity_;
+	}
+
 	void Peek(T& value, int idx) const
 	{
 		if (UseSize() <= 0)

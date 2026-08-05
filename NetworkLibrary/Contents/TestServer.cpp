@@ -46,20 +46,16 @@ void TestServer::OnRecv(__int64 sessionId, Packet* packet)
 	messageQueue_.push(message);
 
 
-	//DUMMY_PACKET dum;
-	//*packet >> dum.data_;
+	//__int64 data;
+	//*packet >> data;
 
 	//delete packet;
 
-	//Packet packet2;
-	//packet2 << dum.data_;
+	//Packet* packet2 = new Packet();
+	//*packet2 << data;
 
 	//// 호출부 안에서 패킷 헤더를 삽입
-	//this->sendPacket(sessionId, &packet2);
-
-
-	/// 여러 세션으로 send
-	//this->sendPacketSkipCopy(sessionId, p);
+	//this->SendPacket(sessionId, packet2);
 }
 
 void TestServer::OnRecv(__int64 sessionId, RecvPacket* packet)
@@ -107,14 +103,11 @@ void TestServer::PacketProc()
 		__int64 sessionId = message->sessionId_;
 		Packet* packet = message->packet_;
 
-
 		__int64 data;
-
 		*packet >> data;
 
 		delete packet;
 		delete message;
-
 
 		Packet* packet2 = new Packet();
 		*packet2 << data;

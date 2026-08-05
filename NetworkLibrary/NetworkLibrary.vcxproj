@@ -139,7 +139,6 @@
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
-    <ClCompile Include="Utils\Packet.cpp" />
     <ClCompile Include="Utils\RecvPacket.cpp" />
     <ClCompile Include="Utils\TickController.cpp" />
   </ItemGroup>

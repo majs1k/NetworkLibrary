@@ -174,7 +174,7 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 
 		Packet* packet = new Packet();
 
-		session->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize);
+		session->recvQueue_.Dequeue(packet->GetBodyPtr(), messageSize);
 
 		packet->MoveWritePos(messageSize);
 
@@ -324,6 +324,8 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 
 void LanServer::SendPost(Session* session)
 {
+	//PRO(L"SendPost");
+
 	if (InterlockedExchange(&session->sendPending_, 1) == 1)
 	{
 		return;
@@ -335,7 +337,7 @@ void LanServer::SendPost(Session* session)
 
 	int retval;
 
-	//session->sendQueue_.Lock();
+	session->sessionLock_.lock();
 
 	if (session->sendQueue_.UseSize() <= session->sendQueue_.DirectDequeueSize())
 	{
@@ -343,14 +345,11 @@ void LanServer::SendPost(Session* session)
 		wsaBuf[0].buf = session->sendQueue_.GetFrontBufferPtr();
 		wsaBuf[0].len = session->sendQueue_.UseSize();
 
-		//session->sendQueue_.Unlock();
+		session->sessionLock_.unlock();
 
 		this->IncrementIoCount(session);
 
-		//PRO_BEGIN(L"send 1");
-		//PRO_BEGIN(L"send 2");
 		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-		//PRO_END(L"send 1");
 	}
 	else
 	{
@@ -361,14 +360,11 @@ void LanServer::SendPost(Session* session)
 		wsaBuf[1].buf = session->sendQueue_.GetBufferPtr();
 		wsaBuf[1].len = session->sendQueue_.UseSize() - session->sendQueue_.DirectDequeueSize();
 
-		//session->sendQueue_.Unlock();
+		session->sessionLock_.unlock();
 
 		this->IncrementIoCount(session);
 
-		//PRO_BEGIN(L"send 1");
-		//PRO_BEGIN(L"send 2");
 		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-		//PRO_END(L"send 1");
 	}
 
 	if (retval == SOCKET_ERROR)
@@ -381,6 +377,9 @@ void LanServer::SendPost(Session* session)
 		}
 		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
 		{
+			if (session->ioCount_ == 1)
+				__debugbreak();
+
 			this->DecrementIoCount(session);
 
 			return;
@@ -389,6 +388,7 @@ void LanServer::SendPost(Session* session)
 		{
 			LOG(L"WSASend() error: %d, iocount: %d", error, session->ioCount_);
 			__debugbreak();
+
 			this->DecrementIoCount(session);
 
 			return;
@@ -402,17 +402,20 @@ void LanServer::SendPost(Session* session)
 
 void LanServer::CompleteSend(Session* session, int numOfBytes)
 {
-	/// 락 필요???
-	//session->sendQueue_.lock();
+	//PRO(L"CompleteSend");
+
+	session->sessionLock_.lock();
 
 	session->sendQueue_.MoveFront(numOfBytes);
 
 	InterlockedExchange(&session->sendPending_, 0);
 
-	if (session->sendQueue_.UseSize() > 0)
-		this->SendPost(session);
+	int s = session->sendQueue_.UseSize();
 
-	//session->sendQueue_.unlock();
+	session->sessionLock_.unlock();
+
+	if (s > 0)
+		this->SendPost(session);
 
 	this->DecrementIoCount(session);
 }
@@ -426,24 +429,23 @@ void LanServer::SendPostZeroCopy(Session* session)
 		return;
 
 	ZeroMemory(&session->sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
+	session->sendPacketCount_ = 0;
 
-	session->sendQueue2_.Lock();
+	session->sessionLock_.lock();
 
 	int n = min(session->sendQueue2_.UseSize(), MAX_WSABUF);
 
-	// WsaSend() bufcount 인자 0이면 10022 에러 발생함. 예외처리
+	// WSASend() bufcount 인자 0이면 10022 에러 발생함. 예외처리
 	if (n <= 0)
 	{
 		InterlockedExchange(&session->sendPending_, 0);
 
-		session->sendQueue2_.Unlock();
+		session->sessionLock_.unlock();
 
 		return;
 	}
 
 	WSABUF wsaBuf[MAX_WSABUF];
-
-	session->sendPacketCount_ = 0;
 
 	for (int i = 0; i < n; i++)
 	{
@@ -451,8 +453,8 @@ void LanServer::SendPostZeroCopy(Session* session)
 
 		session->sendQueue2_.Peek(packet, i);
 
-		wsaBuf[i].buf = packet->GetBufferPtr();
-		wsaBuf[i].len = packet->UseSize();
+		wsaBuf[i].buf = packet->GetHeaderPtr();
+		wsaBuf[i].len = packet->TotalUseSize();
 
 		//if (p->useSize() > 2)
 		//{
@@ -466,7 +468,7 @@ void LanServer::SendPostZeroCopy(Session* session)
 		session->sendPacketCount_++;
 	}
 
-	session->sendQueue2_.Unlock();
+	session->sessionLock_.unlock();
 
 	this->IncrementIoCount(session);
 
@@ -516,11 +518,6 @@ void LanServer::CompleteSendZeroCopy(Session* session, int numOfBytes)
 		delete p;
 	}
 
-	// sendPending 획득중에 큐의 useSize()를 확인하면
-	// 여기서 0이어서 postSend()를 생략하는데,
-	// 다른 스레드는 sendQ에 넣지만 pending을 획득 못해서 postSend()를 생략
-	// 데이터가 있음에도 send를 못하는 문제 발생
-
 	InterlockedExchange(&session->sendPending_, 0);
 
 	if (session->sendQueue2_.UseSize() > 0)
@@ -535,24 +532,6 @@ void LanServer::IncrementIoCount(Session* session)
 {
 	InterlockedIncrement(&session->ioCount_);
 }
-
-//void LanServer::DecrementIoCount(Session* session)
-//{
-//	//sessionMapLock_.lock();
-//
-//	session->sessionLock_.lock();
-//
-//	if (InterlockedDecrement(&session->ioCount_) == 0)
-//	{
-//		this->ReleaseSession(session);
-//	}
-//	else
-//	{
-//		//sessionMapLock_.unlock();
-//
-//		session->sessionLock_.unlock();
-//	}
-//}
 
 void LanServer::DecrementIoCount(Session* session)
 {

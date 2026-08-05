@@ -160,7 +160,6 @@ bool LanServer::Disconnect(__int64 sessionId)
 	return true;
 }
 
-/// TestServer
 bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 {
 	sessionMapLock_.lock();
@@ -175,88 +174,31 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 	}
 
 	Session* session = (*it).second;
+	
+	((TEST_HEADER*)(packet->GetHeaderPtr()))->size_ = packet->UseSize();
 
 	session->sessionLock_.lock();
 
-	//if (ioCount_ == 0)
-	//	return;
+	//session->sendQueue_.Enqueue(packet->GetHeaderPtr(), packet->TotalUseSize());
+	//delete packet;
 
-	//if(InterlockedIncrement(&ioCount_) == 1)
-	//	return;
-
-
-	TEST_HEADER header;
-	header.size_ = packet->UseSize();
-
-	//session->sendQueue_.Lock();
-
-	session->sendQueue_.Enqueue((char*)&header, sizeof(TEST_HEADER));
-	session->sendQueue_.Enqueue(packet->GetBufferPtr(), packet->UseSize());
-
-	delete packet;
-
-	//session->sendQueue_.Unlock();
-
+	session->sendQueue2_.Enqueue(packet);
 
 	/// FighterServer
 	//FIGHTER_HEADER header;
 	//header.code = PACKET_CODE;
 	//header.size = packet->UseSize() - sizeof(unsigned char);
 
-	//session->sendQueue_.Lock();
-
 	//session->sendQueue_.Enqueue((char*)&header, sizeof(FIGHTER_HEADER));
 	//session->sendQueue_.Enqueue(packet->GetBufferPtr(), packet->UseSize());
 
-	//delete packet;
-	//
-	//session->sendQueue_.Unlock();
-
-
-	this->SendPost(session);
-
-	sessionMapLock_.unlock();
-
 	session->sessionLock_.unlock();
 
-	InterlockedIncrement(&sendMessageCount_);
 
-	return true;
-}
-
-bool LanServer::SendPacketZeroCopy(__int64 sessionId, Packet* packet)
-{
-	//PRO(L"sendPacket() 2");
-
-	sessionMapLock_.lock();
-
-	auto it = sessionMap_.find(sessionId);
-
-	if (it == sessionMap_.end())
-	{
-		sessionMapLock_.unlock();
-
-		return false;
-	}
-
-	Session* session = (*it).second;
-
-	std::lock_guard<std::recursive_mutex> lock(session->sessionLock_);
+	//this->SendPost(session);
+	this->SendPostZeroCopy(session);
 
 	sessionMapLock_.unlock();
-
-	//session->sendQueueT_.Lock();
-
-	// 패킷 헤더 설정
-	Packet* header = new Packet();
-	*header << packet->UseSize();
-
-	session->sendQueue2_.Enqueue(header);
-	session->sendQueue2_.Enqueue(packet);
-
-	//session->sendQueueT_.Unlock();
-
-	this->SendPostZeroCopy(session);
 
 	InterlockedIncrement(&sendMessageCount_);
 
@@ -416,8 +358,9 @@ unsigned int __stdcall LanServer::WorkerThread(void* param)
 		}
 		else
 		{
-			server->CompleteSend(session, numOfBytes);
-			//server->completeSendSkipCopy(session, numOfBytes);
+			//server->CompleteSend(session, numOfBytes);
+			
+			server->CompleteSendZeroCopy(session, numOfBytes);
 		}
 	}
 
@@ -445,23 +388,25 @@ unsigned int __stdcall LanServer::MornitorThread(void* param)
 
 	while (1)
 	{
-		DWORD dw = WaitForSingleObject(server->hExitEvent, sleepTime);
+		DWORD dw = WaitForSingleObject(server->hExitEvent, 1000);
 
 		switch (dw)
 		{
 		case WAIT_TIMEOUT:
 		{
-			DWORD curTime = timeGetTime();
+			//DWORD curTime = timeGetTime();
 
-			sleepTime = CLOCKS_PER_SEC - (curTime - lastTime);
-			lastTime += CLOCKS_PER_SEC;
+			//sleepTime = CLOCKS_PER_SEC - (curTime - lastTime);
+			//lastTime += CLOCKS_PER_SEC;
 
 			LONG acceptTps = InterlockedExchange(&server->acceptCount_, 0);
 			LONG recvMessageTps = InterlockedExchange(&server->recvMessageCount_, 0);
 			LONG sendMessageTps = InterlockedExchange(&server->sendMessageCount_, 0);
 
-			COORD pos = { 0, 0 };
-			SetConsoleCursorPosition(hConsole, pos);
+			//COORD pos = { 0, 0 };
+			//SetConsoleCursorPosition(hConsole, pos);
+
+			system("cls");
 
 			std::cout << "Acpt TPS : " << acceptTps << std::endl;
 			std::cout << "Recv TPS : " << recvMessageTps << std::endl;

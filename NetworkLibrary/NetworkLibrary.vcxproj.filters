@@ -51,9 +51,6 @@
     <ClCompile Include="Contents\RPCModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\Packet.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Utils\RecvPacket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

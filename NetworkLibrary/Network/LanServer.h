@@ -7,25 +7,7 @@
 #include <WS2tcpip.h>
 //#include <Windows.h>
 
-// ------------------------------------------------------- //
 
-struct TEST_HEADER
-{
-	short size_;
-};
-
-// ------------------------------------------------------- //
-
-#define PACKET_CODE				0x89
-
-struct FIGHTER_HEADER
-{
-	unsigned char code;
-	char size;
-	//char type;
-};
-
-// ------------------------------------------------------- //
 
 class Session;
 class Packet;
@@ -72,7 +54,6 @@ public:
 	/// false가 반환되면 뭘 해야함???
 	bool Disconnect(__int64 sessionId);
 	bool SendPacket(__int64 sessionId, Packet* packet);
-	bool SendPacketZeroCopy(__int64 sessionId, Packet* packet);
 
 	// (외부/해외/공격)IP 차단 기능 + 패치 후 점검 white ip만 가능케
 	virtual bool OnConnectionRequest(const std::wstring& ip, int port) = 0;
