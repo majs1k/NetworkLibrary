@@ -10,6 +10,8 @@
 //
 // -------------------------------------------------------------------
 #pragma once
+#pragma comment(lib, "winmm.lib")
+#include <iostream>
 #include "Singleton.h"
 #include <Windows.h>
 
@@ -27,14 +29,75 @@ class TickController : public Singleton<TickController>
 	int targetFps_;
 
 public:
-	TickController();
+	TickController()
+	{
+		// 시간 해상도 높여야 정확한 Sleep 가능
+		timeBeginPeriod(1);
 
-	float DeltaTime() const;
-	int Fps() const;
+		int time = timeGetTime();
+		frameStartTime_ = time;
+		runEndTime_ = time;
+		lastSecond_ = time;
+		deltaTime_ = 0;
 
-	void SetNormalFps();
-	void SetSlowFps();
+		fpsCount_ = 0;
+		targetFps_ = TARGET_FPS;
+		fps_ = 0;
+	}
 
-	void Update();
-	void Print();
+	float DeltaTime() const
+	{
+		return deltaTime_;
+	}
+
+	int Fps() const
+	{
+		return fps_;
+	}
+
+	void SetNormalFps()
+	{
+		targetFps_ = TARGET_FPS;
+	}
+
+	void SetSlowFps()
+	{
+		targetFps_ = TARGET_FPS / 2;
+	}
+
+	void Update()
+	{
+		DWORD lastRunEndTime = runEndTime_;
+		runEndTime_ = timeGetTime();
+
+		deltaTime_ = runEndTime_ - lastRunEndTime;
+
+		int frameRunTime = runEndTime_ - frameStartTime_;
+
+		// 시간차는 int형으로 선언
+		int frameSpareTime = CLOCKS_PER_SEC / targetFps_ - frameRunTime;
+
+		if (frameSpareTime > 0)
+		{
+			Sleep(frameSpareTime);
+		}
+
+		frameStartTime_ += CLOCKS_PER_SEC / targetFps_;
+
+		fpsCount_++;
+
+		if (CLOCKS_PER_SEC <= runEndTime_ - lastSecond_)
+		{
+			lastSecond_ += CLOCKS_PER_SEC;
+
+			fps_ = fpsCount_;
+			fpsCount_ = 0;
+		}
+	}
+
+	void Print()
+	{
+		printf("[Profile] FPS  : %d\n", fps_);
+		printf("---------------------------------\n");
+	}
 };

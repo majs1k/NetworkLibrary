@@ -24,16 +24,16 @@
 #include <unordered_map>
 #include <conio.h>
 #include <process.h>
-#include "Singleton.h"
+//#include <timeapi.h>
 #include <Windows.h>
 
 #define PROFILER
 
 #ifdef PROFILER
 
-#define PRO(Name)				ProfileGuard pg(Name)
-#define PRO_BEGIN(Name)			Profiler::Instance().BeginProfile(Name)
-#define PRO_END(Name)			Profiler::Instance().EndProfile(Name)
+#define PRO(name)				ProfileGuard pg(name)
+#define PRO_BEGIN(name)			profiler.BeginProfile(name)
+#define PRO_END(name)			profiler.EndProfile(name)
 
 #else
 #define PRO(name)
@@ -59,11 +59,6 @@ public:
 	{
 	}
 
-	std::wstring Name()
-	{
-		return name_;
-	}
-
 	void Update(__int64 time)
 	{
 		totalTime_ += time;
@@ -85,7 +80,10 @@ public:
 	}
 };
 
-class Profiler : public Singleton<Profiler>
+
+#include "ProfilerManager.h"
+
+class Profiler
 {
 private:
 	std::unordered_map<std::wstring, Profile*> profileMap_;
@@ -100,7 +98,8 @@ public:
 		// 1초의 진동주기 (현재 os에서는 천만 -> 100ns 단위 측정 가능)
 		QueryPerformanceFrequency(&freq_);
 
-		//HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, this->profilerThread, this, 0, nullptr);
+		ProfilerManager::Instance().RegisterProfiler(this);
+
 	}
 
 	~Profiler()
@@ -113,11 +112,6 @@ public:
 		}
 	}
 
-	void Insert(Profile* profile)
-	{
-		profileMap_.insert({ profile->Name(), profile });
-	}
-
 	void Clear()
 	{
 		for (auto& p : profileMap_)
@@ -125,12 +119,11 @@ public:
 			p.second->Clear();
 		}
 
-		std::wcout << L"Profiler clear" << std::endl;
 	}
 
-	Profile* Find(const std::wstring& Name)
+	Profile* Find(const std::wstring& name)
 	{
-		auto it = profileMap_.find(Name);
+		auto it = profileMap_.find(name);
 
 		if (it != profileMap_.end())
 			return (*it).second;
@@ -138,27 +131,27 @@ public:
 			return nullptr;
 	}
 
-	void BeginProfile(const std::wstring& Name)
+	void BeginProfile(const std::wstring& name)
 	{
 		// Profiler 리스트에서 들고 오거나, 없다면 리스트에 추가
-		Profile* profile = this->Find(Name);
+		Profile* profile = this->Find(name);
 
 		if (profile == nullptr)
 		{
-			profile = new Profile(Name);
+			profile = new Profile(name);
 
-			this->Insert(profile);
+			profileMap_.insert({ profile->name_, profile });
 		}
 
 		QueryPerformanceCounter(&(profile->startTime_));
 	}
 
-	void EndProfile(const std::wstring& Name)
+	void EndProfile(const std::wstring& name)
 	{
 		LARGE_INTEGER endTime;
 		QueryPerformanceCounter(&endTime);
 
-		Profile* profile = this->Find(Name);
+		Profile* profile = this->Find(name);
 
 		if ((endTime.QuadPart - profile->startTime_.QuadPart) < 0)
 		{
@@ -173,14 +166,17 @@ public:
 
 	void Save()
 	{
+		if (profileMap_.empty())
+			return;
+
 		SYSTEMTIME st;
 		GetLocalTime(&st);
 
 		WCHAR fileName[MAX_PATH];
-		swprintf_s(fileName, MAX_PATH, L"./Log/profiler_%04d%02d%02d_%02d%02d%02d.txt", 
+		swprintf_s(fileName, MAX_PATH, L"./Log/profiler_%04d%02d%02d_%02d%02d%02d.txt",
 			st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 
-		std::wofstream fout(fileName);
+		std::wofstream fout(fileName, std::ios::app);
 
 		if (!fout.is_open())
 		{
@@ -213,35 +209,18 @@ public:
 				<< std::setw(15) << static_cast<double>(profile->minTime_) / 10
 				<< std::setw(15) << static_cast<double>(profile->maxTime_) / 10
 				<< std::setw(15) << profile->call_
-				<< std::endl;
+				<< std::endl << std::endl;
 		}
 
 		fout.close();
 
-		wprintf(L"profiler saved\n");
 	}
 
-	static unsigned int __stdcall ProfilerThread(void* param)
-	{
-		Profiler* profiler = reinterpret_cast<Profiler*>(param);
 
-		while (1)
-		{
-			int c = _getch();
-
-			if (c == ' ')
-				profiler->Save();
-
-			else if (c == 'c')
-				profiler->Clear();
-
-			else if (c == 'x')
-				return 0;
-		}
-
-		return 0;
-	}
 };
+
+extern thread_local Profiler profiler;
+
 
 // RAII
 class ProfileGuard
@@ -253,11 +232,11 @@ public:
 	ProfileGuard(const std::wstring& name)
 	{
 		name_ = name;
-		Profiler::Instance().BeginProfile(name_);
+		profiler.BeginProfile(name_);
 	}
 
 	~ProfileGuard()
 	{
-		Profiler::Instance().EndProfile(name_);
+		profiler.EndProfile(name_);
 	}
 };

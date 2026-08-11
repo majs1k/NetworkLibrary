@@ -16,7 +16,7 @@ public:
 		SYSTEM_INFO si;
 		GetSystemInfo(&si);
 
-		if (size <= 0) 
+		if (size <= 0)
 			return nullptr;
 
 		DWORD pageSize = si.dwPageSize;
@@ -24,7 +24,7 @@ public:
 		size_t dataPages = (size + 4 - 1 + pageSize) / pageSize;
 
 		char* base = (char*)VirtualAlloc(nullptr, (dataPages + 1) * pageSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-		if (!base) 
+		if (!base)
 			return nullptr;
 
 		char* noaccessPtr = base + dataPages * pageSize;

@@ -1,13 +1,12 @@
 #pragma once
 #include <string>
+#include <memory>
 #include <mutex>
-#include <WinSock2.h>
+//#include <WinSock2.h>
 #include "../Utils/RingBuffer.h"
-#include "../Utils/TRingBuffer.h"
-#include "../Utils/RecvPacket.h"
 #include <Windows.h>
 
-#define SEND_SIZE				10000
+#define SEND_SIZE				500
 #define RECV_SIZE				10000
 
 #define SEND_CNT				2000
@@ -39,12 +38,10 @@ struct Session
 	std::wstring ip_;
 	int port_;
 
-	RingBuffer sendQueue_{ SEND_SIZE };
-	RingBuffer recvQueue_{ RECV_SIZE };
+	//RingBuffer sendQueue_{ SEND_SIZE };
+	TRingBuffer<Packet*, SEND_SIZE> sendQueue_;
 
-	/// 세션 종료시 정리 필요!!! (count 등...)
-	TRingBuffer<Packet*, SEND_CNT> sendQueue2_;
-	RecvPacket* recvPacket_;
+	std::shared_ptr<RingBuffer> recvQueue_;
 
 	OverlappedEx sendOverlapped_;
 	OverlappedEx recvOverlapped_;
@@ -65,12 +62,8 @@ struct Session
 		port_ = port;
 
 		sendQueue_.Clear();
-		recvQueue_.Clear();
 
-		recvPacket_ = new RecvPacket();
-		PacketBuffer* buffer = new PacketBuffer();
-		recvPacket_->Initialize(buffer);
-		recvPacket_->IncrementRef();
+		recvQueue_ = std::make_shared<RingBuffer>(RECV_SIZE);
 
 		sendOverlapped_.type = IOType::SEND;
 		recvOverlapped_.type = IOType::RECV;

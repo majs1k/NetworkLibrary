@@ -43,7 +43,7 @@ public:
 	void Remove(void* ptr)
 	{
 		std::list<MemoryAlloc*>::iterator it = list_.begin();
-		for (; it != list_.end();) 
+		for (; it != list_.end();)
 		{
 			if ((*it)->ptr == ptr)
 			{
@@ -110,14 +110,14 @@ inline void operator delete (void* ptr)
 {
 	MemoryLeak::Instance().Remove(ptr);
 
-	Free(ptr);
+	free(ptr);
 }
 
 inline void operator delete[](void* ptr)
 {
 	MemoryLeak::Instance().Remove(ptr);
 
-	Free(ptr);
+	free(ptr);
 }
 
 //#define MEMORY_LEAK

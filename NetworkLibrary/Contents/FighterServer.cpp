@@ -56,18 +56,12 @@ void FighterServer::OnRecv(__int64 sessionId, Packet* packet)
 	// 함수의 인자 자료형 주의 필요 (이후 패킷헤더 수정시 참고)
 	if (!packetProc(sessionId, *packet, type))
 	{
-		/// IOcount 감소시키는걸로 수정해야 할거 같은데...
 		//disconnect(sessionId);
 
 		return;
 	}
 
 	delete packet;
-}
-
-void FighterServer::OnRecv(__int64 sessionId, RecvPacket* packet)
-{
-
 }
 
 void FighterServer::OnError(int errorCode, wchar_t* str)
@@ -120,8 +114,6 @@ void FighterServer::CreatePlayer(__int64 sessionId)
 	// 내 캐릭터 정보 나에게
 	proxy_.sc_create_my_character(sessionId, playerId, direction, x, y, hp);
 
-	/// 이거 맵 전체에다 락을 거는거랑
-	/// 복사해서 사용하는거랑 뭐가 더 효율이 좋을지?? 개수에 따라 다름??
 	for (auto& p : playerMap_)
 	{
 		Player* other = p.second;

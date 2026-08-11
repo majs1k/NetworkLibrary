@@ -78,7 +78,7 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	hAcceptThread_ = (HANDLE)_beginthreadex(nullptr, 0, AcceptThread, this, 0, nullptr);
 
-	hMonitorThread_ = (HANDLE)_beginthreadex(nullptr, 0, MornitorThread, this, 0, nullptr);
+	//hMonitorThread_ = (HANDLE)_beginthreadex(nullptr, 0, MornitorThread, this, 0, nullptr);
 
 	// manual reset
 	hExitEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -160,8 +160,11 @@ bool LanServer::Disconnect(__int64 sessionId)
 	return true;
 }
 
+// lock_guard 사용시, sessionLock이 삭제될 위험 있으므로 사용 안함
 bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 {
+	PRO(L"SendPacket()");
+
 	sessionMapLock_.lock();
 
 	auto it = sessionMap_.find(sessionId);
@@ -174,29 +177,25 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 	}
 
 	Session* session = (*it).second;
-	
+
+
+	/// TestServer
 	((TEST_HEADER*)(packet->GetHeaderPtr()))->size_ = packet->UseSize();
+
+
+	/// FighterServer
+	//((FIGHTER_HEADER*)(packet->GetHeaderPtr()))->code = PACKET_CODE;
+	//((FIGHTER_HEADER*)(packet->GetHeaderPtr()))->size = packet->UseSize() - sizeof(unsigned char);
+
+
 
 	session->sessionLock_.lock();
 
-	//session->sendQueue_.Enqueue(packet->GetHeaderPtr(), packet->TotalUseSize());
-	//delete packet;
-
-	session->sendQueue2_.Enqueue(packet);
-
-	/// FighterServer
-	//FIGHTER_HEADER header;
-	//header.code = PACKET_CODE;
-	//header.size = packet->UseSize() - sizeof(unsigned char);
-
-	//session->sendQueue_.Enqueue((char*)&header, sizeof(FIGHTER_HEADER));
-	//session->sendQueue_.Enqueue(packet->GetBufferPtr(), packet->UseSize());
+	session->sendQueue_.Enqueue(packet);
 
 	session->sessionLock_.unlock();
 
-
-	//this->SendPost(session);
-	this->SendPostZeroCopy(session);
+	this->SendPost(session);
 
 	sessionMapLock_.unlock();
 
@@ -285,6 +284,8 @@ unsigned int __stdcall LanServer::WorkerThread(void* param)
 		// GQCS 호출 반환시 overlapped 구조체 무조건 세팅됨
 		BOOL ret = GetQueuedCompletionStatus(server->hIOCP_, &numOfBytes, (PULONG_PTR)&session, &overlapped, INFINITE);
 
+		PRO(L"GQCS()");
+
 		if (overlapped == nullptr && session == nullptr && numOfBytes == 0)
 		{
 			LOG_INFO(L"[NETWORK] worker thread exit");
@@ -358,9 +359,7 @@ unsigned int __stdcall LanServer::WorkerThread(void* param)
 		}
 		else
 		{
-			//server->CompleteSend(session, numOfBytes);
-			
-			server->CompleteSendZeroCopy(session, numOfBytes);
+			server->CompleteSend(session, numOfBytes);
 		}
 	}
 

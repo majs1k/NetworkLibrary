@@ -1,8 +1,6 @@
 #include "TestServer.h"
 #include "../Utils/Packet.h"
-#include "../Utils/RecvPacket.h"
 #include "../Utils/Message.h"
-#include "../Utils/TRingBuffer.h"
 #include "../Utils/Logger.h"
 #include "../Utils/TickController.h"
 #include <process.h>
@@ -40,34 +38,24 @@ void TestServer::OnRelease(__int64 sessionId)
 
 void TestServer::OnRecv(__int64 sessionId, Packet* packet)
 {
-	Message* message = new Message();
-	message->Initialize(sessionId, packet);
+	//Message* message = new Message();
+	//message->Initialize(sessionId, packet);
 
-	messageQueue_.push(message);
+	//messageQueue_.push(message);
 
+	/// IO 스레드에서 로직을 처리하는 방식
+	__int64 data;
+	*packet >> data;
 
-	//__int64 data;
-	//*packet >> data;
+	delete packet;
 
-	//delete packet;
+	SPacket* packet2 = new SPacket();
+	packet2->Initialize();
 
-	//Packet* packet2 = new Packet();
-	//*packet2 << data;
+	*packet2 << data;
 
-	//// 호출부 안에서 패킷 헤더를 삽입
-	//this->SendPacket(sessionId, packet2);
-}
-
-void TestServer::OnRecv(__int64 sessionId, RecvPacket* packet)
-{
-	//MESSAGE message;
-	//*packet >> message.data_;
-
-	//Packet packet2;
-	//packet2 << message.data_;
-
-	//// 호출부 안에서 패킷 헤더를 삽입
-	//this->sendPacket(sessionId, &packet2);
+	// 호출부 안에서 패킷 헤더를 삽입
+	this->SendPacket(sessionId, packet2);
 }
 
 void TestServer::OnError(int errorCode, wchar_t* str)
@@ -109,7 +97,9 @@ void TestServer::PacketProc()
 		delete packet;
 		delete message;
 
-		Packet* packet2 = new Packet();
+		SPacket* packet2 = new SPacket();
+		packet2->Initialize();
+
 		*packet2 << data;
 
 		// 호출부 안에서 패킷 헤더를 삽입

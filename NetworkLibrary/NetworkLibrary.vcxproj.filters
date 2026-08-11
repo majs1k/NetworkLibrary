@@ -24,9 +24,6 @@
     <ClCompile Include="Utils\Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\TickController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FighterServerMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,7 +48,10 @@
     <ClCompile Include="Contents\RPCModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\RecvPacket.cpp">
+    <ClCompile Include="Utils\ProfilerManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Profiler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,10 +77,10 @@
     <ClInclude Include="Utils\MemoryOverflow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\TMemoryPool.h">
+    <ClInclude Include="Utils\MemoryPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\Profiler.h">
+    <ClInclude Include="Utils\Profiler_Single.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Random.h">
@@ -110,19 +110,19 @@
     <ClInclude Include="Contents\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\TRingBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Network\Session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils\Packet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\RecvPacket.h">
+    <ClInclude Include="Utils\Message.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\Message.h">
+    <ClInclude Include="Utils\ProfilerManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Profiler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

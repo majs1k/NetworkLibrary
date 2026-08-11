@@ -8,6 +8,7 @@
 // -------------------------------------------------------------------
 #pragma once
 #include <iostream>
+#include "RingBuffer.h"
 
 // ------------------------------------------------------- //
 
@@ -29,38 +30,26 @@ struct FIGHTER_HEADER
 
 // ------------------------------------------------------- //
 
+
 #define HEADER_SIZE		sizeof(TEST_HEADER)
+//#define HEADER_SIZE		sizeof(FIGHTER_HEADER)
 
 class Packet
 {
 protected:
-	char* buffer_;
+	char* buffer_{ nullptr };
 
-	int	capacity_;
+	int	capacity_{ 200 };
 
-	int writePos_;
-	int readPos_;
+	int writePos_{ 0 };
+	int readPos_{ 0 };
 
 public:
-	// 디폴트 사이즈?
-	Packet(int bufferSize = 200)
-		:capacity_(bufferSize), writePos_(0), readPos_(0)
-	{
-		buffer_ = new char[capacity_];
 
-		writePos_ = HEADER_SIZE;
-		readPos_ = HEADER_SIZE;
-	}
+	Packet() = default;
 
-	~Packet()
+	virtual ~Packet()
 	{
-		delete buffer_;
-	}
-
-	void Initialize()
-	{
-		writePos_ = HEADER_SIZE;
-		readPos_ = HEADER_SIZE;
 	}
 
 	int	Capacity()
@@ -74,10 +63,10 @@ public:
 		return writePos_ - readPos_;
 	}
 
-	//char* GetBufferPtr()
-	//{
-	//	return buffer_;
-	//}
+	char* GetBufferPtr()
+	{
+		return buffer_;
+	}
 
 	char* GetHeaderPtr()
 	{
@@ -271,5 +260,40 @@ public:
 		writePos_ += size;
 
 		return size;
+	}
+};
+
+class SPacket : public Packet
+{
+public:
+	SPacket()
+	{
+		buffer_ = new char[capacity_];
+	}
+
+	~SPacket()
+	{
+		delete buffer_;
+	}
+
+	void Initialize()
+	{
+		writePos_ = HEADER_SIZE;
+		readPos_ = HEADER_SIZE;
+	}
+};
+
+class RPacket : public Packet
+{
+	std::shared_ptr<RingBuffer> refQueue_;
+
+public:
+	void Initialize(std::shared_ptr<RingBuffer> recvQueue)
+	{
+		writePos_ = 0;
+		readPos_ = 0;
+
+		refQueue_ = recvQueue;
+		buffer_ = recvQueue->GetFrontBufferPtr();
 	}
 };

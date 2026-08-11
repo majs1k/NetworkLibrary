@@ -20,7 +20,6 @@ public:
 	void OnAccept(__int64 sessionId) override;
 	void OnRelease(__int64 sessionId) override;
 	void OnRecv(__int64 sessionId, Packet* packet) override;
-	void OnRecv(__int64 sessionId, RecvPacket* packet) override;
 	void OnError(int errorCode, wchar_t* str) override;
 
 	static unsigned int __stdcall LogicThread(void* param);

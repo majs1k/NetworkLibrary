@@ -24,10 +24,10 @@
 //			break;
 //
 //		else if (c == ' ')
-//			Profiler::Instance().Save();
+//			ProfilerManager::Instance().Save();
 //
 //		else if (c == 'c')
-//			Profiler::Instance().Clear();
+//			ProfilerManager::Instance().Clear();
 //	}
 //
 //	server.Stop();

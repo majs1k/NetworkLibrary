@@ -1,44 +1,89 @@
 #include "LanServer.h"
 #include "Session.h"
 #include "../Utils/Packet.h"
-#include "../Utils/RecvPacket.h"
 #include "../Utils/Logger.h"
 #include "../Utils/Profiler.h"
 #include <Windows.h>
 
-/// ver1
+/// recvQ의 경우는 한스레드에서만 접근하는것이 보장되므로 락 사용 x
+//void LanServer::RecvPost(Session* session)
+//{
+//	ZeroMemory(&session->recvOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
+//
+//	WSABUF wsaBuf[2];
+//
+//	wsaBuf[0].buf = session->recvQueue_->GetRearBufferPtr();
+//	wsaBuf[0].len = session->recvQueue_->DirectEnqueueSize();
+//
+//	DWORD flags = 0;
+//	int retval;
+//
+//	if (session->recvQueue_->FreeSize() == session->recvQueue_->DirectEnqueueSize())
+//	{
+//		// WSARecv() 이전에 호출
+//		this->IncrementIoCount(session);
+//
+//		// buf 1개
+//		retval = WSARecv(session->socket_, wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
+//	}
+//	else
+//	{
+//		this->IncrementIoCount(session);
+//
+//		// buf 2개
+//		wsaBuf[1].buf = session->recvQueue_->GetBufferPtr();
+//		wsaBuf[1].len = session->recvQueue_->FreeSize() - session->recvQueue_->DirectEnqueueSize();
+//
+//		retval = WSARecv(session->socket_, wsaBuf, 2, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
+//	}
+//
+//	if (retval == SOCKET_ERROR)
+//	{
+//		int error = WSAGetLastError();
+//
+//		if (error == ERROR_IO_PENDING)
+//		{
+//			//printf("recv() Direct IO\n");
+//		}
+//		else if (error == WSAECONNRESET || error == WSAECONNABORTED || error == WSAENOTSOCK)
+//		{
+//			this->DecrementIoCount(session);
+//
+//			return;
+//		}
+//		else
+//		{
+//			LOG(L"WSARecv() error: %d, iocount: %d", error, session->ioCount_);
+//			__debugbreak();
+//			this->DecrementIoCount(session);
+//
+//			return;
+//		}
+//	}
+//	else
+//	{
+//		//printf("recv() Fast IO\n");
+//	}
+//}
+
 void LanServer::RecvPost(Session* session)
 {
-	//PRO(L"postRecv 1");
+	PRO(L"RecvPost()");
 
 	ZeroMemory(&session->recvOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
 
-	WSABUF wsaBuf[2];
+	WSABUF wsaBuf;
 
-	wsaBuf[0].buf = session->recvQueue_.GetRearBufferPtr();
-	wsaBuf[0].len = session->recvQueue_.DirectEnqueueSize();
+	wsaBuf.buf = session->recvQueue_->GetBufferPtr();
+	wsaBuf.len = session->recvQueue_->FreeSize();
 
 	DWORD flags = 0;
 	int retval;
 
-	if (session->recvQueue_.FreeSize() == session->recvQueue_.DirectEnqueueSize())
-	{
-		// WSARecv() 이전에 호출
-		this->IncrementIoCount(session);
+	// WSARecv() 이전에 호출
+	this->IncrementIoCount(session);
 
-		// buf 1개
-		retval = WSARecv(session->socket_, wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
-	}
-	else
-	{
-		this->IncrementIoCount(session);
-
-		// buf 2개
-		wsaBuf[1].buf = session->recvQueue_.GetBufferPtr();
-		wsaBuf[1].len = session->recvQueue_.FreeSize() - session->recvQueue_.DirectEnqueueSize();
-
-		retval = WSARecv(session->socket_, wsaBuf, 2, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
-	}
+	retval = WSARecv(session->socket_, &wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
 
 	if (retval == SOCKET_ERROR)
 	{
@@ -48,7 +93,7 @@ void LanServer::RecvPost(Session* session)
 		{
 			//printf("recv() Direct IO\n");
 		}
-		else if (error == WSAECONNRESET || error == WSAECONNABORTED || error == WSAENOTSOCK)
+		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
 		{
 			this->DecrementIoCount(session);
 
@@ -69,82 +114,17 @@ void LanServer::RecvPost(Session* session)
 	}
 }
 
-/// ver2
-//void LanServer::recvPost(Session* session)
-//{
-//	PRO(L"postRecv 2");
-//
-//	ZeroMemory(&session->recvOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
-//
-//	RecvPacket* packet = new RecvPacket();
-//	PacketBuffer* buffer = new PacketBuffer();
-//	packet->initialize(buffer);
-//
-//	if (session->recvPacket_->useSize() > 0)
-//	{
-//		packet->write(session->recvPacket_->getReadBufferPtr(), session->recvPacket_->useSize());
-//	}
-//
-//	decrementRecvPacketRefCount(session->recvPacket_);
-//
-//	session->recvPacket_ = packet;
-//
-//	WSABUF wsaBuf;
-//
-//	wsaBuf.buf = session->recvPacket_->getWriteBufferPtr();
-//	wsaBuf.len = session->recvPacket_->freeSize();
-//
-//	DWORD flags = 0;
-//	int retval;
-//
-//	// WSARecv() 이전에 호출
-//	this->incrementIoCount(session);
-//
-//	retval = WSARecv(session->socket_, &wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
-//
-//	if (retval == SOCKET_ERROR)
-//	{
-//		int error = WSAGetLastError();
-//
-//		if (error == ERROR_IO_PENDING)
-//		{
-//			//printf("recv() Direct IO\n");
-//		}
-//		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
-//		{
-//			this->decrementIoCount(session);
-//
-//			return;
-//		}
-//		else
-//		{
-//			LOG(L"WSARecv() error: %d, iocount: %d", error, session->ioCount_);
-//			__debugbreak();
-//			this->decrementIoCount(session);
-//
-//			return;
-//		}
-//	}
-//	else
-//	{
-//		//printf("recv() Fast IO\n");
-//	}
-//}
-
-/// ver1
 void LanServer::CompleteRecv(Session* session, int numOfBytes)
 {
-	//PRO(L"completeRecv 1");
+	PRO(L"CompleteRecv()");
 
-	/// recvQ의 경우는 한스레드에서만 접근하는것이 보장되므로 락 사용 x
-
-	session->recvQueue_.MoveRear(numOfBytes);
+	session->recvQueue_->MoveRear(numOfBytes);
 
 	while (1)
 	{
-		int useSize = session->recvQueue_.UseSize();
+		int useSize = session->recvQueue_->UseSize();
 
-		if (session->recvQueue_.IsFull())
+		if (session->recvQueue_->IsFull())
 		{
 			LOG_INFO(L"recvQueue full");
 
@@ -155,12 +135,13 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 			return;
 		}
 
+		///TestServer
 		if (useSize < sizeof(TEST_HEADER))
 			break;
 
 		TEST_HEADER header;
 
-		session->recvQueue_.Peek((char*)&header, sizeof(TEST_HEADER));
+		session->recvQueue_->Peek((char*)&header, sizeof(TEST_HEADER));
 
 		int messageSize = header.size_;
 
@@ -170,261 +151,176 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 		if (useSize < sizeof(TEST_HEADER) + messageSize)
 			break;
 
-		session->recvQueue_.MoveFront(sizeof(TEST_HEADER));
+		session->recvQueue_->MoveFront(sizeof(TEST_HEADER));
 
-		Packet* packet = new Packet();
 
-		session->recvQueue_.Dequeue(packet->GetBodyPtr(), messageSize);
+		RPacket* packet = new RPacket();
+
+		packet->Initialize(session->recvQueue_);
+		session->recvQueue_->MoveFront(messageSize);
 
 		packet->MoveWritePos(messageSize);
 
-		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
+
+
+
+		///FighterServer
+		//if (useSize < sizeof(FIGHTER_HEADER))
+		//	break;
+		//
+		//FIGHTER_HEADER header;
+		//
+		//session->recvQueue_->Peek((char*)&header, sizeof(FIGHTER_HEADER));
+		//
+		//int messageSize = header.size;
+		//
+		//if (messageSize < 0)
+		//	break;
+		//
+		//if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char) + messageSize)
+		//	break;
+		//
+		//session->recvQueue_->MoveFront(sizeof(FIGHTER_HEADER));
+		//
+		//RPacket* packet = new RPacket();
+		//
+		//packet->Initialize(session->recvQueue_);
+		//session->recvQueue_->MoveFront(sizeof(unsigned char) +  messageSize);
+		//
+		//packet->MoveWritePos(sizeof(unsigned char) + messageSize);
+
+
+
+
 
 		this->OnRecv(session->sessionId_, packet);
 
 		InterlockedIncrement(&recvMessageCount_);
 	}
 
+	//RingBuffer* buffer = new RingBuffer(RECV_SIZE);
+	auto buffer = std::make_shared<RingBuffer>(RECV_SIZE);
+
+	if (session->recvQueue_->UseSize() > 0)
+	{
+		buffer->Enqueue(session->recvQueue_->GetFrontBufferPtr(), session->recvQueue_->UseSize());
+	}
+
+	//delete session->recvQueue_;
+
+	session->recvQueue_ = buffer;
+
 	this->RecvPost(session);
 
 	this->DecrementIoCount(session);
 }
 
-/// ver2
-//void LanServer::completeRecv(Session* session, int numOfBytes)
+/// Send 복사 생략 이전 버전
+//void LanServer::SendPost(Session* session)
 //{
-//	PRO(L"completeRecv 2");
+//	//PRO(L"SendPost");
 //
-//	session->recvPacket_->moveWritePos(numOfBytes);
-//
-//	if (session->recvPacket_->isFull())
+//	if (InterlockedExchange(&session->sendPending_, 1) == 1)
 //	{
-//		LOG_INFO(L"recvQueue full");
-//
-//		//연결 종료 처리
-//
 //		return;
 //	}
 //
-//	while (1)
+//	ZeroMemory(&session->sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
+//
+//	WSABUF wsaBuf[2] = {};
+//
+//	int retval;
+//
+//	session->sessionLock_.lock();
+//
+//	if (session->sendQueue_.UseSize() <= session->sendQueue_.DirectDequeueSize())
 //	{
-//		int useSize = session->recvPacket_->useSize();
+//		// buf 1개
+//		wsaBuf[0].buf = session->sendQueue_.GetFrontBufferPtr();
+//		wsaBuf[0].len = session->sendQueue_.UseSize();
 //
-//		if (useSize < sizeof(HEADER))
-//			break;
+//		session->sessionLock_.unlock();
 //
-//		HEADER header;
+//		this->IncrementIoCount(session);
 //
-//		session->recvPacket_->peek((char*)&header, sizeof(HEADER));
+//		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
+//	}
+//	else
+//	{
+//		// buf 2개
+//		wsaBuf[0].buf = session->sendQueue_.GetFrontBufferPtr();
+//		wsaBuf[0].len = session->sendQueue_.DirectDequeueSize();
 //
-//		int messageSize = header.size_;
+//		wsaBuf[1].buf = session->sendQueue_.GetBufferPtr();
+//		wsaBuf[1].len = session->sendQueue_.UseSize() - session->sendQueue_.DirectDequeueSize();
 //
-//		if (messageSize < 0)
-//		{
-//			// 연결 종료 처리
+//		session->sessionLock_.unlock();
 //
-//			break;
-//		}
+//		this->IncrementIoCount(session);
 //
-//		if (useSize < sizeof(HEADER) + messageSize)
-//			break;
-//
-//		session->recvPacket_->moveReadPos(sizeof(HEADER));
-//
-//		//Packet packet;
-//		//session->recvQueue_.dequeue(packet.getBufferPtr(), messageSize);
-//		//packet.moveWritePos(messageSize);
-//
-//
-//		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
-//
-//		this->onRecv(session->sessionId_, session->recvPacket_);
-//
-//		InterlockedIncrement(&recvMessageCount_);
-//
-//		if (session->recvPacket_->useSize() < sizeof(HEADER))
-//			break;
-//
-//		RecvPacket* packet = new RecvPacket();
-//		packet->initialize();
-//		*packet = *session->recvPacket_;
-//
-//		decrementRecvPacketRefCount(session->recvPacket_);
-//		session->recvPacket_ = packet;
+//		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
 //	}
 //
-//	this->recvPost(session);
-//
-//	this->decrementIoCount(session);
-//}
-
-/// FighterServer
-//void LanServer::CompleteRecv(Session* session, int numOfBytes)
-//{
-//	session->recvQueue_.MoveRear(numOfBytes);
-//
-//	while (1)
+//	if (retval == SOCKET_ERROR)
 //	{
-//		int useSize = session->recvQueue_.UseSize();
+//		int error = WSAGetLastError();
 //
-//		if (session->recvQueue_.IsFull())
+//		if (error == ERROR_IO_PENDING)
 //		{
-//			LOG_INFO(L"recvQueue full");
-//
-//			__debugbreak();
-//
-//			//연결 종료 로직
-//
-//			return;
+//			//printf("send Direct IO\n");
 //		}
-//
-//		if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char))
-//			break;
-//
-//		FIGHTER_HEADER header;
-//
-//		session->recvQueue_.Peek((char*)&header, sizeof(FIGHTER_HEADER));
-//
-//		if (header.code != PACKET_CODE)
+//		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
 //		{
+//			if (session->ioCount_ == 1)
+//				__debugbreak();
+//
 //			this->DecrementIoCount(session);
 //
-//			LOG(L"[NETWORK] invalid packet header session=%d", session->sessionId_);
+//			return;
+//		}
+//		else
+//		{
+//			LOG(L"WSASend() error: %d, iocount: %d", error, session->ioCount_);
+//			__debugbreak();
+//
+//			this->DecrementIoCount(session);
 //
 //			return;
 //		}
-//
-//		int messageSize = header.size;
-//
-//		if (messageSize < 0)
-//			break;
-//
-//		if (useSize < sizeof(FIGHTER_HEADER) + sizeof(unsigned char) + messageSize)
-//			break;
-//
-//		session->recvQueue_.MoveFront(sizeof(FIGHTER_HEADER));
-//
-//		Packet* packet = new Packet();
-//
-//		session->recvQueue_.Dequeue(packet->GetBufferPtr(), sizeof(unsigned char) + messageSize);
-//
-//		packet->MoveWritePos(sizeof(unsigned char) + messageSize);
-//
-//		//printf("recvQueue dequeue : %lld\n", *(__int64*)packet.buffer());
-//
-//		this->OnRecv(session->sessionId_, packet);
-//
-//		InterlockedIncrement(&recvMessageCount_);
 //	}
+//	else
+//	{
+//		//printf("send Fast IO\n");
+//	}
+//}
 //
-//	this->RecvPost(session);
+//void LanServer::CompleteSend(Session* session, int numOfBytes)
+//{
+//	//PRO(L"CompleteSend");
+//
+//	session->sessionLock_.lock();
+//
+//	session->sendQueue_.MoveFront(numOfBytes);
+//
+//	InterlockedExchange(&session->sendPending_, 0);
+//
+//	int s = session->sendQueue_.UseSize();
+//
+//	session->sessionLock_.unlock();
+//
+//	if (s > 0)
+//		this->SendPost(session);
 //
 //	this->DecrementIoCount(session);
 //}
 
-void LanServer::SendPost(Session* session)
-{
-	//PRO(L"SendPost");
-
-	if (InterlockedExchange(&session->sendPending_, 1) == 1)
-	{
-		return;
-	}
-
-	ZeroMemory(&session->sendOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
-
-	WSABUF wsaBuf[2] = {};
-
-	int retval;
-
-	session->sessionLock_.lock();
-
-	if (session->sendQueue_.UseSize() <= session->sendQueue_.DirectDequeueSize())
-	{
-		// buf 1개
-		wsaBuf[0].buf = session->sendQueue_.GetFrontBufferPtr();
-		wsaBuf[0].len = session->sendQueue_.UseSize();
-
-		session->sessionLock_.unlock();
-
-		this->IncrementIoCount(session);
-
-		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-	}
-	else
-	{
-		// buf 2개
-		wsaBuf[0].buf = session->sendQueue_.GetFrontBufferPtr();
-		wsaBuf[0].len = session->sendQueue_.DirectDequeueSize();
-
-		wsaBuf[1].buf = session->sendQueue_.GetBufferPtr();
-		wsaBuf[1].len = session->sendQueue_.UseSize() - session->sendQueue_.DirectDequeueSize();
-
-		session->sessionLock_.unlock();
-
-		this->IncrementIoCount(session);
-
-		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-	}
-
-	if (retval == SOCKET_ERROR)
-	{
-		int error = WSAGetLastError();
-
-		if (error == ERROR_IO_PENDING)
-		{
-			//printf("send Direct IO\n");
-		}
-		else if (error == WSAECONNRESET || error == WSAECONNABORTED)
-		{
-			if (session->ioCount_ == 1)
-				__debugbreak();
-
-			this->DecrementIoCount(session);
-
-			return;
-		}
-		else
-		{
-			LOG(L"WSASend() error: %d, iocount: %d", error, session->ioCount_);
-			__debugbreak();
-
-			this->DecrementIoCount(session);
-
-			return;
-		}
-	}
-	else
-	{
-		//printf("send Fast IO\n");
-	}
-}
-
-void LanServer::CompleteSend(Session* session, int numOfBytes)
-{
-	//PRO(L"CompleteSend");
-
-	session->sessionLock_.lock();
-
-	session->sendQueue_.MoveFront(numOfBytes);
-
-	InterlockedExchange(&session->sendPending_, 0);
-
-	int s = session->sendQueue_.UseSize();
-
-	session->sessionLock_.unlock();
-
-	if (s > 0)
-		this->SendPost(session);
-
-	this->DecrementIoCount(session);
-}
-
 
 #define MAX_WSABUF 100
 
-void LanServer::SendPostZeroCopy(Session* session)
+void LanServer::SendPost(Session* session)
 {
+	PRO(L"SendPost()");
+
 	if (InterlockedExchange(&session->sendPending_, 1) == 1)
 		return;
 
@@ -433,7 +329,7 @@ void LanServer::SendPostZeroCopy(Session* session)
 
 	session->sessionLock_.lock();
 
-	int n = min(session->sendQueue2_.UseSize(), MAX_WSABUF);
+	int n = min(session->sendQueue_.UseSize(), MAX_WSABUF);
 
 	// WSASend() bufcount 인자 0이면 10022 에러 발생함. 예외처리
 	if (n <= 0)
@@ -449,9 +345,7 @@ void LanServer::SendPostZeroCopy(Session* session)
 
 	for (int i = 0; i < n; i++)
 	{
-		Packet* packet = nullptr;
-
-		session->sendQueue2_.Peek(packet, i);
+		Packet* packet = session->sendQueue_.At(i);
 
 		wsaBuf[i].buf = packet->GetHeaderPtr();
 		wsaBuf[i].len = packet->TotalUseSize();
@@ -504,26 +398,31 @@ void LanServer::SendPostZeroCopy(Session* session)
 	}
 }
 
-void LanServer::CompleteSendZeroCopy(Session* session, int numOfBytes)
+void LanServer::CompleteSend(Session* session, int numOfBytes)
 {
+	PRO(L"CompleteSend()");
+
 	Packet* p = nullptr;
 
-	session->sendQueue2_.Lock();
+	session->sessionLock_.lock();
 
 	// numOfBytes는 신경 쓰지말고, sendPacketCount_로 처리
 	for (int i = 0; i < session->sendPacketCount_; i++)
 	{
-		session->sendQueue2_.Dequeue(p);
+		/// 참조카운트로 수정시 p 필요없음
+		session->sendQueue_.Dequeue(p);
 
 		delete p;
 	}
 
 	InterlockedExchange(&session->sendPending_, 0);
 
-	if (session->sendQueue2_.UseSize() > 0)
-		this->SendPostZeroCopy(session);
+	int s = session->sendQueue_.UseSize();
 
-	session->sendQueue2_.Unlock();
+	session->sessionLock_.unlock();
+
+	if (s > 0)
+		this->SendPost(session);
 
 	this->DecrementIoCount(session);
 }

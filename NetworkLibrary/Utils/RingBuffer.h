@@ -12,7 +12,6 @@
 // -------------------------------------------------------------------
 #pragma once
 #include <iostream>
-#include <mutex>
 
 #define SAFETY_PERCENT		80
 
@@ -25,7 +24,6 @@ private:
 	int writePos_;
 	int readPos_;
 
-	std::recursive_mutex lock_;
 	int safeSize_;
 
 public:
@@ -221,14 +219,118 @@ public:
 		writePos_ = (writePos_ + size) % capacity_;
 		return size;
 	}
+};
 
-	void Lock()
+
+// 템플릿 클래스의 완전 특수화는 기존 템플릿을 하나도 이어받지 않음..
+// 그래서 char* 버퍼를 사용하는 기존의 RingBuffer 클래스는 유지
+template <typename T, int N>
+class TRingBuffer
+{
+public:
+	T queue_[N]{ };
+	int capacity_ = N;
+
+	int writePos_ = 0;
+	int readPos_ = 0;
+
+public:
+	void Clear()
 	{
-		lock_.lock();
+		writePos_ = 0;
+		readPos_ = 0;
 	}
 
-	void Unlock()
+	int UseSize() const
 	{
-		lock_.unlock();
+		int r = readPos_;
+		int w = writePos_;
+
+		return r <= w
+			? w - r
+			: w + capacity_ - r;
+	}
+
+	int FreeSize() const
+	{
+		return capacity_ - UseSize() - 1;
+	}
+
+	void Enqueue(T value)
+	{
+		if (FreeSize() <= 0)
+		{
+			__debugbreak();
+			return;
+		}
+
+		queue_[writePos_] = value;
+
+		writePos_ = (writePos_ + 1) % capacity_;
+	}
+
+	void Dequeue(T& value)
+	{
+		if (UseSize() <= 0)
+		{
+			__debugbreak();
+			return;
+		}
+
+		value = queue_[readPos_];
+
+		readPos_ = (readPos_ + 1) % capacity_;
+	}
+
+	void Dequeue()
+	{
+		if (UseSize() <= 0)
+		{
+			__debugbreak();
+			return;
+		}
+
+		readPos_ = (readPos_ + 1) % capacity_;
+	}
+
+	const T& At(int idx) const
+	{
+		if (UseSize() <= 0)
+		{
+			__debugbreak();
+			return nullptr;
+		}
+
+		if (UseSize() <= idx)
+		{
+			__debugbreak();
+			return nullptr;
+		}
+
+		return queue_[(readPos_ + idx) % capacity_];
+	}
+
+	int MoveFront(int size)
+	{
+		if (UseSize() < size)
+		{
+			__debugbreak();
+			return 0;
+		}
+
+		readPos_ = (readPos_ + size) % capacity_;
+		return size;
+	}
+
+	int MoveRear(int size)
+	{
+		if (FreeSize() < size)
+		{
+			__debugbreak();
+			return 0;
+		}
+
+		writePos_ = (writePos_ + size) % capacity_;
+		return size;
 	}
 };

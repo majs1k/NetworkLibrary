@@ -8,11 +8,8 @@
 //#include <Windows.h>
 
 
-
 class Session;
 class Packet;
-class RecvPacket;
-class PacketBuffer;
 
 class LanServer
 {
@@ -43,7 +40,7 @@ private:
 
 public:
 	LanServer();
-	~LanServer();
+	virtual ~LanServer();
 
 	bool Start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount);
 	void Stop();
@@ -64,7 +61,6 @@ public:
 	virtual void OnRelease(__int64 sessionId) = 0;
 
 	virtual void OnRecv(__int64 sessionId, Packet* packet) = 0;
-	virtual void OnRecv(__int64 sessionId, RecvPacket* packet) = 0;
 
 	// 컨텐츠에게 에러코드를 알려주지만 서버 끌 상황은 아닐때
 	virtual void OnError(int errorCode, wchar_t* str) = 0;
@@ -79,9 +75,6 @@ private:
 
 	void SendPost(Session* session);
 	void CompleteSend(Session* session, int numOfBytes);
-
-	void SendPostZeroCopy(Session* session);
-	void CompleteSendZeroCopy(Session* session, int numOfBytes);
 
 	void IncrementIoCount(Session* session);
 	void DecrementIoCount(Session* session);
