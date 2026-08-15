@@ -18,16 +18,18 @@ int main()
 
 	while (1)
 	{
-		int c = _getch();
+		Sleep(1000);
 
-		if (c == 'x')
+		if (GetAsyncKeyState('X') & 0x0001)
 			break;
 
-		else if (c == ' ')
+		else if (GetAsyncKeyState(VK_SPACE) & 0x0001)
 			ProfilerManager::Instance().Save();
 
-		else if (c == 'c')
+		else if (GetAsyncKeyState('C') & 0x0001)
 			ProfilerManager::Instance().Clear();
+
+		server.Monitoring();
 	}
 
 	server.Stop();

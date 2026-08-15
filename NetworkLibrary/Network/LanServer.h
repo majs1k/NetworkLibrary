@@ -4,7 +4,6 @@
 #include <mutex>
 #include <unordered_map>
 #include <WinSock2.h>
-#include <WS2tcpip.h>
 //#include <Windows.h>
 
 
@@ -22,10 +21,8 @@ private:
 	HANDLE hIOCP_;
 	std::vector<HANDLE> hWorkerThread_;
 	HANDLE hAcceptThread_;
-	HANDLE hMonitorThread_;
-	HANDLE hExitEvent;
-	int concurrentThreadCount_;
-	int workerThreadCount_;
+	int concurrentCount_;
+	int workerCount_;
 
 	// rehash 일어나면(갑자기 삽입 했을때 등..) 이터레이터 무효화 주의
 	std::unordered_map<__int64, Session*> sessionMap_;
@@ -65,10 +62,11 @@ public:
 	// 컨텐츠에게 에러코드를 알려주지만 서버 끌 상황은 아닐때
 	virtual void OnError(int errorCode, wchar_t* str) = 0;
 
+	void Monitoring();
+
 private:
 	static unsigned int __stdcall AcceptThread(void* param);
 	static unsigned int __stdcall WorkerThread(void* param);
-	static unsigned int __stdcall MornitorThread(void* param);
 
 	void RecvPost(Session* session);
 	void CompleteRecv(Session* session, int numOfBytes);
@@ -79,5 +77,5 @@ private:
 	void IncrementIoCount(Session* session);
 	void DecrementIoCount(Session* session);
 
-	void ReleaseSession(Session* session);
+	//void ReleaseSession(Session* session);
 };

@@ -31,7 +31,7 @@ public:
 
         if (!ifs.is_open())
         {
-            printf("check config filename\n");
+            printf("*** error config filename ***\n");
             return false;
         }
 

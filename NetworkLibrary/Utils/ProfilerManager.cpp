@@ -4,7 +4,7 @@
 
 ProfilerManager::ProfilerManager()
 {
-	 hThread_ = (HANDLE)_beginthreadex(nullptr, 0, this->ProfilerThread, this, 0, nullptr);
+	 //hThread_ = (HANDLE)_beginthreadex(nullptr, 0, this->ProfilerThread, this, 0, nullptr);
 }
 
 ProfilerManager::~ProfilerManager()

@@ -6,7 +6,7 @@ class Packet;
 class ServerStub
 {
 public:
-	bool packetProc(__int64 sessionId, Packet& packet, unsigned char type);
+	bool PacketProc(__int64 sessionId, Packet* packet);
 
 	virtual bool sc_create_my_character(__int64 sessionId, int id, char direction, short x, short y, char hp);
 	virtual bool sc_create_other_character(__int64 sessionId, int id, char direction, short x, short y, char hp);

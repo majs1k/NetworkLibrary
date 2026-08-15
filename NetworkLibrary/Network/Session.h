@@ -6,8 +6,9 @@
 #include "../Utils/RingBuffer.h"
 #include <Windows.h>
 
-#define SEND_SIZE				500
-#define RECV_SIZE				10000
+//#define SEND_SIZE				500
+#define SEND_SIZE				20000
+#define RECV_SIZE				20000
 
 #define SEND_CNT				2000
 
@@ -38,10 +39,18 @@ struct Session
 	std::wstring ip_;
 	int port_;
 
-	//RingBuffer sendQueue_{ SEND_SIZE };
-	TRingBuffer<Packet*, SEND_SIZE> sendQueue_;
+	//TRingBuffer<Packet*, SEND_SIZE> sendQueue_;
 
-	std::shared_ptr<RingBuffer> recvQueue_;
+	RingBuffer sendQueue_{ SEND_SIZE };
+
+
+
+	//std::shared_ptr<RingBuffer> recvQueue_;
+
+	RingBuffer recvQueue_{ RECV_SIZE };
+
+
+
 
 	OverlappedEx sendOverlapped_;
 	OverlappedEx recvOverlapped_;
@@ -63,7 +72,11 @@ struct Session
 
 		sendQueue_.Clear();
 
-		recvQueue_ = std::make_shared<RingBuffer>(RECV_SIZE);
+
+
+		//recvQueue_ = std::make_shared<RingBuffer>(RECV_SIZE);
+
+
 
 		sendOverlapped_.type = IOType::SEND;
 		recvOverlapped_.type = IOType::RECV;

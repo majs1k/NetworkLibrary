@@ -1,6 +1,8 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "winmm.lib")
 
+#include <WS2tcpip.h>
+#include <mstcpip.h>
 #include <process.h>
 #include "LanServer.h"
 #include "Session.h"
@@ -28,8 +30,8 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 	serverPort_ = port;
 	sessionMax_ = sessionMax;
 	sessionMap_.reserve(sessionMax_);
-	concurrentThreadCount_ = concurrentCount;
-	workerThreadCount_ = workerCount;
+	concurrentCount_ = concurrentCount;
+	workerCount_ = workerCount;
 
 	listenSocket_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket_ == INVALID_SOCKET)
@@ -42,9 +44,26 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 	lin.l_linger = 0;
 	setsockopt(listenSocket_, SOL_SOCKET, SO_LINGER, (char*)&lin, sizeof(lin));
 
-	// 네이글 옵션 해제
+	// 네이글 off
 	int nagleFlag = 1;
 	setsockopt(listenSocket_, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&nagleFlag), sizeof(nagleFlag));
+
+
+	//BOOL keepAlive = TRUE;
+
+	//// TCP Keep-Alive 활성화
+	//setsockopt(listenSocket_, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&keepAlive), sizeof(keepAlive));
+
+	//// Keep-Alive 설정
+	//tcp_keepalive keepAliveVals{};
+	//keepAliveVals.onoff = 1;
+	//keepAliveVals.keepalivetime = 5000;   // 5초
+	//keepAliveVals.keepaliveinterval = 1000; // 응답 없을 때 1초 간격
+
+	//DWORD bytesReturned = 0;
+
+	//WSAIoctl(listenSocket_, SIO_KEEPALIVE_VALS, &keepAliveVals, sizeof(keepAliveVals), nullptr, 0, &bytesReturned, nullptr, nullptr);
+
 
 	// L4 송신버퍼 사이즈 옵션
 	int sndBufSize = 0;
@@ -68,20 +87,15 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 	if (listen(listenSocket_, SOMAXCONN) == SOCKET_ERROR)
 		ERR(L"listen() error");
 
-	hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, concurrentThreadCount_);
+	hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, concurrentCount_);
 
-	for (int i = 0; i < workerThreadCount_; i++)
+	for (int i = 0; i < workerCount_; i++)
 	{
 		HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, WorkerThread, this, 0, nullptr);
 		hWorkerThread_.push_back(hThread);
 	}
 
 	hAcceptThread_ = (HANDLE)_beginthreadex(nullptr, 0, AcceptThread, this, 0, nullptr);
-
-	//hMonitorThread_ = (HANDLE)_beginthreadex(nullptr, 0, MornitorThread, this, 0, nullptr);
-
-	// manual reset
-	hExitEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
 	LOG_INFO(L"[NETWORK] server start");
 
@@ -96,23 +110,17 @@ void LanServer::Stop()
 	CloseHandle(hAcceptThread_);
 
 	// worker thread 종료
-	for (int i = 0; i < workerThreadCount_; i++)
+	for (int i = 0; i < workerCount_; i++)
 	{
 		PostQueuedCompletionStatus(hIOCP_, 0, 0, nullptr);
 	}
 
-	WaitForMultipleObjects(workerThreadCount_, hWorkerThread_.data(), TRUE, INFINITE);
+	WaitForMultipleObjects(workerCount_, hWorkerThread_.data(), TRUE, INFINITE);
 
-	for (int i = 0; i < workerThreadCount_; i++)
+	for (int i = 0; i < workerCount_; i++)
 	{
 		CloseHandle(hWorkerThread_[i]);
 	}
-
-	// monitor thread 종료
-	SetEvent(hExitEvent);
-	WaitForSingleObject(hMonitorThread_, INFINITE);
-	CloseHandle(hMonitorThread_);
-	CloseHandle(hExitEvent);
 
 	// 세션맵 정리
 	for (auto& session : sessionMap_)
@@ -178,31 +186,44 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 
 	Session* session = (*it).second;
 
+	sessionMapLock_.unlock();
+
+
 
 	/// TestServer
-	((TEST_HEADER*)(packet->GetHeaderPtr()))->size_ = packet->UseSize();
+	packet->GetHeaderPtr()->size_ = packet->UseSize();
 
 
 	/// FighterServer
-	//((FIGHTER_HEADER*)(packet->GetHeaderPtr()))->code = PACKET_CODE;
-	//((FIGHTER_HEADER*)(packet->GetHeaderPtr()))->size = packet->UseSize() - sizeof(unsigned char);
+	//packet->GetHeaderPtr()->code_ = PACKET_CODE;
+	//packet->GetHeaderPtr()->size_ = packet->UseSize();
 
 
 
 	session->sessionLock_.lock();
 
-	session->sendQueue_.Enqueue(packet);
+
+
+	//session->sendQueue_.Enqueue(packet);
+
+	session->sendQueue_.Enqueue(packet->GetBufferPtr(), packet->TotalUseSize());
+
+
 
 	session->sessionLock_.unlock();
 
+	delete packet;
+
 	this->SendPost(session);
 
-	sessionMapLock_.unlock();
+	///sessionMapLock_.unlock();
 
 	InterlockedIncrement(&sendMessageCount_);
 
 	return true;
 }
+
+
 
 unsigned int __stdcall LanServer::AcceptThread(void* param)
 {
@@ -314,7 +335,9 @@ unsigned int __stdcall LanServer::WorkerThread(void* param)
 				// 트래픽 줄여서 다시 테스트
 				else if (error == ERROR_SEM_TIMEOUT)
 				{
-					__debugbreak();
+					//__debugbreak();
+
+					continue;
 				}
 
 				LOG_INFO(L"GQCS() error: %d", error);
@@ -366,16 +389,8 @@ unsigned int __stdcall LanServer::WorkerThread(void* param)
 	return 0;
 }
 
-unsigned int __stdcall LanServer::MornitorThread(void* param)
+void LanServer::Monitoring()
 {
-	LanServer* server = (LanServer*)param;
-
-	// 시간차는 int형으로 선언
-	int sleepTime = 0;
-	DWORD lastTime = timeGetTime();
-
-	system("cls");
-
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	// 콘솔창 커서 숨기기
@@ -385,39 +400,17 @@ unsigned int __stdcall LanServer::MornitorThread(void* param)
 	cursorInfo.bVisible = FALSE;
 	SetConsoleCursorInfo(hConsole, &cursorInfo);
 
-	while (1)
-	{
-		DWORD dw = WaitForSingleObject(server->hExitEvent, 1000);
+	LONG acceptTps = InterlockedExchange(&acceptCount_, 0);
+	LONG recvMessageTps = InterlockedExchange(&recvMessageCount_, 0);
+	LONG sendMessageTps = InterlockedExchange(&sendMessageCount_, 0);
 
-		switch (dw)
-		{
-		case WAIT_TIMEOUT:
-		{
-			//DWORD curTime = timeGetTime();
+	system("cls");
 
-			//sleepTime = CLOCKS_PER_SEC - (curTime - lastTime);
-			//lastTime += CLOCKS_PER_SEC;
+	std::cout << "=====================" << std::endl;
+	std::cout << "     MONITORING" << std::endl;
+	std::cout << "=====================" << std::endl << std::endl;
 
-			LONG acceptTps = InterlockedExchange(&server->acceptCount_, 0);
-			LONG recvMessageTps = InterlockedExchange(&server->recvMessageCount_, 0);
-			LONG sendMessageTps = InterlockedExchange(&server->sendMessageCount_, 0);
-
-			//COORD pos = { 0, 0 };
-			//SetConsoleCursorPosition(hConsole, pos);
-
-			system("cls");
-
-			std::cout << "Acpt TPS : " << acceptTps << std::endl;
-			std::cout << "Recv TPS : " << recvMessageTps << std::endl;
-			std::cout << "Send TPS : " << sendMessageTps << std::endl;
-		}
-		break;
-
-		case WAIT_OBJECT_0:
-			LOG_INFO(L"[NETWORK] monitor thread exit");
-			return 0;
-		}
-	}
-
-	return 0;
+	std::cout << "  Acpt TPS : " << acceptTps << std::endl;
+	std::cout << "  Recv TPS : " << recvMessageTps << std::endl;
+	std::cout << "  Send TPS : " << sendMessageTps << std::endl;
 }

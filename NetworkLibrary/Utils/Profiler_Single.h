@@ -1,20 +1,8 @@
-//// -------------------------------------------------------------------
+//// ===========================
 //// 
-//// 프로파일러
+//// 싱글스레드 전용 프로파일러
 //// 
-//// QueryPerformanceCounter로 인자 전달한 후 QuadPart로 시간 추출
-//// Profile 클래스 멤버변수들은 100ns 단위 (정밀함을 위함)
-//// 파일 출력은 us단위로 진행
-//// 
-//// 1. 시간을 측정해서 로직 개선 / 자료구조 수정
-//// 2. 호출횟수를 측정해서 자주 호출되는 함수 성능 개선 (80-20 법칙)
-//// 
-//// 스페이스바 -> 파일 저장
-//// C키 -> 리셋
-////
-//// 프로그램 실행 후, 프로파일러 리셋 1회 권장
-//// 
-//// -------------------------------------------------------------------
+//// ===========================
 //#pragma once
 //#pragma comment(lib, "winmm.lib")
 //#include <iostream>
@@ -95,7 +83,7 @@
 //		// 1초의 진동주기 (현재 os에서는 천만 -> 100ns 단위 측정 가능)
 //		QueryPerformanceFrequency(&freq_);
 //
-//		//HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, this->profilerThread, this, 0, nullptr);
+//		HANDLE hThread = (HANDLE)_beginthreadex(nullptr, 0, this->ProfilerThread, this, 0, nullptr);
 //	}
 //
 //	~Profiler()

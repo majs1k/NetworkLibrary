@@ -2,8 +2,8 @@
   "IP": "0.0.0.0",
   "Port": 6000,
   "SessionMax": 200,
-  "ConcurrentCount": 8,
-  "WorkerCount": 8,
+  "ConcurrentCount": 2,
+  "WorkerCount": 2,
 
   "DBHost": "127.0.0.1",
   "DBUser": "root",

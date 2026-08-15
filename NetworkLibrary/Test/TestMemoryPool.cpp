@@ -1,62 +1,58 @@
-//#include "../Utils/MemoryPool.h"
 //#include <iostream>
+//#include <thread>
+//
+//#include "Profiler.h"
+//#include "MemoryPool.h"
+//
 //using namespace std;
 //
 //class A
 //{
 //	int a;
-//
-//public:
-//	A()
-//	{
-//		a = 1;
-//		std::cout << "ctor A!\n";
-//	}
-//	~A()
-//	{
-//		std::cout << "dtor A!\n";
-//	}
+//	int b;
+//	int c;
 //};
 //
-//// free 코드를 주석처리하면, 할당해제를 놓친 메모리를 자동 출력
+//class B
+//{
+//	char a;
+//	int b;
+//	double c;
+//};
+//
+//
 //int main()
 //{
-//	MemoryPool<A> pool(5);
-//
-//	cout << "Make MemoryPool!\n";
-//
-//	A* ptr[10];
-//
-//	// -----------------------------------------------------------------//
-//	for (int i = 0; i < 5; i++)
+//	while (1)
 //	{
-//		ptr[i] = pool.alloc();
-//		//cout << ptr[i] << " ";
-//	}
-//	cout << endl;
-//	cout << pool.size() << " " << pool.capacity() << endl;
+//		PRO_BEGIN(L"new");
 //
-//	//for (int i = 0; i < 5; i++)
-//	//{
-//	//	pool.free(ptr[i]);
-//	//}
+//		for (int i = 0; i < 100000; i++)
+//		{
+//			A* ptr = new A();
+//			B* ptr2 = new B();
 //
-//	cout << pool.size() << " " << pool.capacity() << endl;
+//			delete ptr;
+//			delete ptr2;
+//		}
 //
-//	// -----------------------------------------------------------------//
+//		TMemoryPool<A> pool1(100);
+//		TMemoryPool<B> pool2(100);
 //
-//	for (int i = 0; i < 10; i++)
-//	{
-//		ptr[i] = pool.alloc();
-//		//cout << ptr[i] << " ";
-//	}
-//	cout << endl;
-//	cout << pool.size() << " " << pool.capacity() << endl;
+//		PRO_END(L"new");
 //
-//	for (int i = 0; i < 10; i++)
-//	{
-//		pool.free(ptr[i]);
+//		PRO_BEGIN(L"pool");
+//
+//		for (int i = 0; i < 100000; i++)
+//		{
+//			A* ptr = pool1.Alloc();
+//			B* ptr2 = pool2.Alloc();
+//
+//			pool1.Free(ptr);
+//			pool2.Free(ptr2);
+//		}
+//
+//		PRO_END(L"pool");
 //	}
 //
-//	cout << pool.size() << " " << pool.capacity() << endl;
 //}

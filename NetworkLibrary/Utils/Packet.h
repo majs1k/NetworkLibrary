@@ -23,9 +23,9 @@ struct TEST_HEADER
 
 struct FIGHTER_HEADER
 {
-	unsigned char code;
-	char size;
-	//char type;
+	unsigned char code_;
+	char size_;
+	char type_;
 };
 
 // ------------------------------------------------------- //
@@ -68,9 +68,9 @@ public:
 		return buffer_;
 	}
 
-	char* GetHeaderPtr()
+	TEST_HEADER* GetHeaderPtr()
 	{
-		return buffer_;
+		return reinterpret_cast<TEST_HEADER*>(buffer_);
 	}
 
 	char* GetBodyPtr()

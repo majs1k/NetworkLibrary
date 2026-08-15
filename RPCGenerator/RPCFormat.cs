@@ -42,12 +42,13 @@ public:{0}
 @"
 void ServerProxy::{0}(__int64 sessionId{1})
 {{
-	Packet* packet = new Packet();
+	SPacket* packet = new SPacket();
+	packet->Initialize();
 
-	*packet << static_cast<unsigned char>({2});
+	packet->GetHeaderPtr()->type_ = {2};
 	*packet{3};
 
-	server_->sendPacket(sessionId, packet);
+	server_->SendPacket(sessionId, packet);
 }}
 ";
 
@@ -65,7 +66,7 @@ class Packet;
 class ServerStub
 {{
 public:
-	bool PacketProc(__int64 sessionId, Packet& packet, unsigned char type);
+	bool PacketProc(__int64 sessionId, Packet* packet);
 {0}
 }};
 ";
@@ -80,9 +81,12 @@ public:
 @"#include ""ServerStub.h""
 #include ""../Utils/Packet.h""
 
-bool ServerStub::PacketProc(__int64 sessionId, Packet& packet, unsigned char type)
+bool ServerStub::PacketProc(__int64 sessionId, Packet* packet)
 {{
-	switch (type)
+	FIGHTER_HEADER header;
+	header.type_ = packet->GetHeaderPtr()->type_;
+
+	switch (header.type_)
 	{{{0}
 	default:
 	{{
@@ -108,7 +112,7 @@ bool ServerStub::{0}(__int64 sessionId{1})
 	case {0}: 
 	{{
 {1}
-		packet{2};
+		*packet{2};
 
 		return this->{3}(sessionId{4});
 		break;

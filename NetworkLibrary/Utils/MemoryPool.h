@@ -2,14 +2,15 @@
 // 
 // 메모리풀
 // 
-// 오브젝트풀 / 프리리스트
+// 고정된 메모리 크기 할당기
+// 프리리스트
 // 특정 구조체/클래스를 초기 사이즈 할당
 // 이후 필요시 계속 노드 추가
 // 스택 방식으로 미사용 오브젝트 블록 관리
 // 
 // 모니터링 용이
 // 메모리 누수 - 프로젝트 메인 폴더에 파일로그 출력
-// 메모리 침범 - DebugBreak
+// 메모리 침범 - __debugbreak
 // 
 // 메모리 누수로 메모리 사용량 올라가는게 확인된다면,
 // 1. 일일이 플레이하면서 어떤 상황에서 발생하는지 확인
@@ -25,7 +26,6 @@
 // 
 //---------------------------------------------------------------
 #pragma once
-#define WIN32_LEAN_AND_MEAN
 #include <iostream>
 #include <fstream>
 #include <list>
@@ -39,12 +39,12 @@ private:
 	struct Node
 	{
 #ifdef DEBUG_MEMORYPOOL
-		void* underflow_;
+		void* underflow_ = nullptr;
 #endif
 		T data_;
 
 #ifdef DEBUG_MEMORYPOOL
-		void* overflow_;
+		void* overflow_ = nullptr;
 #endif
 		Node* next_;
 	};
@@ -83,11 +83,6 @@ public:
 		{
 			Node* node = (Node*)malloc(sizeof(Node));
 
-#ifdef DEBUG_MEMORYPOOL
-			node->underflow_ = nullptr;
-			node->overflow_ = nullptr;
-#endif
-
 			if (!isPlacementNew)
 			{
 				new (&(node->data_)) T();
@@ -107,7 +102,7 @@ public:
 			Node* next = cur->next_;
 
 			cur->data_.~T();
-			Free(cur);
+			free(cur);
 
 			cur = next;
 		}
@@ -147,7 +142,7 @@ public:
 
 		if (top_->underflow_ != nullptr || top_->overflow_ != nullptr)
 		{
-			DebugBreak();
+			__debugbreak();
 		}
 
 		top_->underflow_ = this;
@@ -199,13 +194,13 @@ public:
 
 		if (size_ >= capacity_)
 		{
-			DebugBreak();
+			__debugbreak();
 			return FALSE;
 		}
 
 		if (node->underflow_ != this || node->overflow_ != this)
 		{
-			DebugBreak();
+			__debugbreak();
 			return FALSE;
 		}
 

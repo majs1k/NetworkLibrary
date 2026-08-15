@@ -27,7 +27,7 @@
 //#include <timeapi.h>
 #include <Windows.h>
 
-#define PROFILER
+//#define PROFILER
 
 #ifdef PROFILER
 
