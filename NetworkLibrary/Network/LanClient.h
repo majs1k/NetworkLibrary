@@ -56,4 +56,6 @@ public:
 	void SendPost(Session* session);
 	void CompleteSend(Session* session, int numOfBytes);
 	void DecrementIoCount(Session* session);
+
+	void SocketError(const WCHAR* message);
 };

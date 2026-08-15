@@ -567,7 +567,7 @@ void LanServer::CompleteSend(Session* session, int numOfBytes)
 	session->sessionLock_.lock();
 
 	int s = session->sendQueue_.UseSize();
-	
+
 	session->sessionLock_.unlock();
 
 	if (s > 0)
@@ -631,3 +631,9 @@ void LanServer::DecrementIoCount(Session* session)
 //
 //	InterlockedDecrement(&sessionCount_);
 //}
+
+void LanServer::SocketError(const WCHAR* message)
+{
+	wprintf(L"[SOCKET ERROR] %s : %d\n", message, WSAGetLastError());
+	Sleep(INFINITE);
+}

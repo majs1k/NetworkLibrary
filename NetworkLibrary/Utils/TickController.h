@@ -15,7 +15,7 @@
 #include "Singleton.h"
 #include <Windows.h>
 
-#define TARGET_FPS      50
+#define TARGET_FPS		  50
 
 class TickController : public Singleton<TickController>
 {
@@ -24,9 +24,8 @@ class TickController : public Singleton<TickController>
 	DWORD lastSecond_;
 	int deltaTime_;
 
-	int fps_;
-	int fpsCount_;
-	int targetFps_;
+	int currentFps_;
+	int frameCount_;
 
 public:
 	TickController()
@@ -40,9 +39,8 @@ public:
 		lastSecond_ = time;
 		deltaTime_ = 0;
 
-		fpsCount_ = 0;
-		targetFps_ = TARGET_FPS;
-		fps_ = 0;
+		currentFps_ = 0;
+		frameCount_ = 0;
 	}
 
 	float DeltaTime() const
@@ -52,17 +50,7 @@ public:
 
 	int Fps() const
 	{
-		return fps_;
-	}
-
-	void SetNormalFps()
-	{
-		targetFps_ = TARGET_FPS;
-	}
-
-	void SetSlowFps()
-	{
-		targetFps_ = TARGET_FPS / 2;
+		return currentFps_;
 	}
 
 	void Update()
@@ -75,29 +63,23 @@ public:
 		int frameRunTime = runEndTime_ - frameStartTime_;
 
 		// 시간차는 int형으로 선언
-		int frameSpareTime = CLOCKS_PER_SEC / targetFps_ - frameRunTime;
+		int frameSpareTime = CLOCKS_PER_SEC / TARGET_FPS - frameRunTime;
 
 		if (frameSpareTime > 0)
 		{
 			Sleep(frameSpareTime);
 		}
 
-		frameStartTime_ += CLOCKS_PER_SEC / targetFps_;
+		frameStartTime_ += CLOCKS_PER_SEC / TARGET_FPS;
 
-		fpsCount_++;
+		frameCount_++;
 
 		if (CLOCKS_PER_SEC <= runEndTime_ - lastSecond_)
 		{
 			lastSecond_ += CLOCKS_PER_SEC;
 
-			fps_ = fpsCount_;
-			fpsCount_ = 0;
+			currentFps_ = frameCount_;
+			frameCount_ = 0;
 		}
-	}
-
-	void Print()
-	{
-		printf("[Profile] FPS  : %d\n", fps_);
-		printf("---------------------------------\n");
 	}
 };

@@ -129,14 +129,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Contents\FighterServer.cpp" />
     <ClCompile Include="Contents\Player.cpp" />
-    <ClCompile Include="Contents\RPCModule.cpp" />
     <ClCompile Include="Contents\TestServer.cpp" />
-    <ClCompile Include="FighterServerMain.cpp" />
     <ClCompile Include="Network\LanClient_2.cpp" />
     <ClCompile Include="TestServerMain.cpp" />
-    <ClCompile Include="Network\LanClient_1.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
@@ -144,7 +140,6 @@
     <ClCompile Include="Utils\ProfilerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Common.h" />
     <ClInclude Include="Contents\FighterServer.h" />
     <ClInclude Include="Contents\Player.h" />
     <ClInclude Include="Contents\TestServer.h" />
@@ -162,7 +157,6 @@
     <ClInclude Include="Utils\Packet.h" />
     <ClInclude Include="Utils\Profiler.h" />
     <ClInclude Include="Utils\ProfilerManager.h" />
-    <ClInclude Include="Utils\Profiler_Single.h" />
     <ClInclude Include="Utils\Random.h" />
     <ClInclude Include="Utils\RingBuffer.h" />
     <ClInclude Include="Utils\Singleton.h" />

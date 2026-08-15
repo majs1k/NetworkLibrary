@@ -78,4 +78,6 @@ private:
 	void DecrementIoCount(Session* session);
 
 	//void ReleaseSession(Session* session);
+
+	void SocketError(const WCHAR* message);
 };

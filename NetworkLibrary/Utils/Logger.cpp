@@ -1,5 +1,4 @@
 #include <iostream>
-#include <winsock2.h>
 #include "Logger.h"
 
 Logger::Logger()
@@ -61,10 +60,4 @@ void Logger::Log(LogLevel level, const WCHAR* fmt, ...)
 
 	//std::wcout << finalMessage;
 	fout_ << finalMessage;
-}
-
-void SocketError(const WCHAR* message)
-{
-	wprintf(L"[SOCKET ERROR] %s : %d\n", message, WSAGetLastError());
-	Sleep(INFINITE);
 }
