@@ -44,12 +44,48 @@ protected:
 	int writePos_{ 0 };
 	int readPos_{ 0 };
 
+	__int64 sessionId_;
+
 public:
-
-	Packet() = default;
-
-	virtual ~Packet()
+	Packet()
 	{
+		buffer_ = new char[capacity_];
+	}
+
+	~Packet()
+	{
+		delete buffer_;
+	}
+
+	void Initialize()
+	{
+		writePos_ = HEADER_SIZE;
+		readPos_ = HEADER_SIZE;
+	}
+
+	void SetId(__int64 sessionId)
+	{
+		sessionId_ = sessionId;
+	}
+
+	__int64 GetId()
+	{
+		return sessionId_;
+	}
+
+	TEST_HEADER* GetHeaderPtr()
+	{
+		return reinterpret_cast<TEST_HEADER*>(buffer_);
+	}
+
+	char* GetBodyPtr()
+	{
+		return buffer_ + HEADER_SIZE;
+	}
+
+	int TotalUseSize()
+	{
+		return this->UseSize() + HEADER_SIZE;
 	}
 
 	int	Capacity()
@@ -66,21 +102,6 @@ public:
 	char* GetBufferPtr()
 	{
 		return buffer_;
-	}
-
-	TEST_HEADER* GetHeaderPtr()
-	{
-		return reinterpret_cast<TEST_HEADER*>(buffer_);
-	}
-
-	char* GetBodyPtr()
-	{
-		return buffer_ + HEADER_SIZE;
-	}
-
-	int TotalUseSize()
-	{
-		return this->UseSize() + HEADER_SIZE;
 	}
 
 	int	MoveWritePos(int size)
@@ -263,37 +284,18 @@ public:
 	}
 };
 
-class SPacket : public Packet
-{
-public:
-	SPacket()
-	{
-		buffer_ = new char[capacity_];
-	}
-
-	~SPacket()
-	{
-		delete buffer_;
-	}
-
-	void Initialize()
-	{
-		writePos_ = HEADER_SIZE;
-		readPos_ = HEADER_SIZE;
-	}
-};
-
-class RPacket : public Packet
-{
-	std::shared_ptr<RingBuffer> refQueue_;
-
-public:
-	void Initialize(std::shared_ptr<RingBuffer> recvQueue)
-	{
-		writePos_ = 0;
-		readPos_ = 0;
-
-		refQueue_ = recvQueue;
-		buffer_ = recvQueue->GetFrontBufferPtr();
-	}
-};
+/// TODO: 별도의 클래스 생성
+//class RPacket : public Packet
+//{
+//	std::shared_ptr<RingBuffer> refQueue_;
+//
+//public:
+//	void Initialize(std::shared_ptr<RingBuffer> recvQueue)
+//	{
+//		writePos_ = 0;
+//		readPos_ = 0;
+//
+//		refQueue_ = recvQueue;
+//		buffer_ = recvQueue->GetFrontBufferPtr();
+//	}
+//};

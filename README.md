@@ -234,5 +234,23 @@ sendQ를 처리하는 과정에서는 session접근시 모두 세션맵락 -> �
 
 ### 26-08-05
 ```
-send시 복사 생략 로직 수정중
+send시 복사 생략 로직 수정
+
+Packet 클래스 수정
+
+프로파일러 멀티스레드용 추가
+```
+
+### 26-08-16
+```
+LanClient 작성 (단일 세션 기반)
+TestClient 추가
+
+소켓 에러 함수 LanServer로 이동
+```
+
+### 26-08-17
+```
+Packet 수정 (SPacket RPacket Message 클래스 삭제)
+Packet 클래스는 이제 기본적으로 헤더와 세션 id를 포함하고 있음
 ```

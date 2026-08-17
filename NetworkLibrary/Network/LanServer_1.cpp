@@ -16,7 +16,7 @@ LanServer::LanServer()
 	WSADATA wsa;
 
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		ERR(L"WSAStartup() error");
+		wprintf(L"WSAStartup() error");
 }
 
 LanServer::~LanServer()
@@ -35,7 +35,7 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 
 	listenSocket_ = socket(AF_INET, SOCK_STREAM, 0);
 	if (listenSocket_ == INVALID_SOCKET)
-		ERR(L"socket() error");
+		wprintf(L"socket() error");
 
 	// 링거 옵션 - closesocekt() 호출시 즉시 리턴, 연결 강제 종료
 	// 서버 클라 둘다 설정할 것
@@ -69,11 +69,6 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 	int sndBufSize = 0;
 	//setsockopt(listenSocket_, SOL_SOCKET, SO_SNDBUF, (const char*)(&sndBufSize), sizeof(sndBufSize));
 
-	int size = 0;
-	int len = sizeof(size);
-	getsockopt(listenSocket_, SOL_SOCKET, SO_SNDBUF, (char*)(&size), &len);
-
-	std::cout << "SO_SNDBUF = " << size << std::endl;
 
 	SOCKADDR_IN serverAddr;
 	ZeroMemory(&serverAddr, sizeof(serverAddr));
@@ -82,10 +77,10 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 	serverAddr.sin_port = htons(serverPort_);
 
 	if (bind(listenSocket_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
-		ERR(L"bind() error");
+		wprintf(L"bind() error");
 
 	if (listen(listenSocket_, SOMAXCONN) == SOCKET_ERROR)
-		ERR(L"listen() error");
+		wprintf(L"listen() error");
 
 	hIOCP_ = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, concurrentCount_);
 
@@ -247,7 +242,7 @@ unsigned int __stdcall LanServer::AcceptThread(void* param)
 			}
 			else
 			{
-				ERR(L"accept() error");
+				wprintf(L"accept() error");
 			}
 		}
 
@@ -406,11 +401,11 @@ void LanServer::Monitoring()
 
 	system("cls");
 
-	std::cout << "=====================" << std::endl;
-	std::cout << "     MONITORING" << std::endl;
-	std::cout << "=====================" << std::endl << std::endl;
+	printf("=====================\n");
+	printf(" SERVER  MONITORING\n");
+	printf("=====================\n\n");
 
-	std::cout << "  Acpt TPS : " << acceptTps << std::endl;
-	std::cout << "  Recv TPS : " << recvMessageTps << std::endl;
-	std::cout << "  Send TPS : " << sendMessageTps << std::endl;
+	printf("Acpt TPS : %d\n", acceptTps);
+	printf("Recv TPS : %d\n", recvMessageTps);
+	printf("Send TPS : %d\n", sendMessageTps);
 }

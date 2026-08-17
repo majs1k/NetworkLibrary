@@ -61,11 +61,6 @@ void FighterServer::OnRecv(__int64 sessionId, Packet* packet)
 	delete packet;
 }
 
-void FighterServer::OnError(int errorCode, wchar_t* str)
-{
-
-}
-
 unsigned int __stdcall FighterServer::LogicThread(void* param)
 {
 	FighterServer* server = (FighterServer*)param;

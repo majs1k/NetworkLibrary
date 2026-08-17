@@ -1,6 +1,6 @@
 #pragma once
 #include "../Network/LanServer.h"
-#include "../Utils/Message.h"
+#include "../Utils/PacketQueue.h"
 
 // ------------------------------------------------------- //
 class Packet;
@@ -11,7 +11,7 @@ class TestServer : public LanServer
 	HANDLE hLogicThread_;
 	bool shutdown_ = false;
 
-	MessageQueue messageQueue_;
+	PacketQueue packetQueue_;
 
 public:
 	TestServer();
@@ -20,7 +20,6 @@ public:
 	void OnAccept(__int64 sessionId) override;
 	void OnRelease(__int64 sessionId) override;
 	void OnRecv(__int64 sessionId, Packet* packet) override;
-	void OnError(int errorCode, wchar_t* str) override;
 
 	static unsigned int __stdcall LogicThread(void* param);
 	void PacketProc();

@@ -43,7 +43,3 @@ public:
 
 	void Log(LogLevel level, const WCHAR* fmt, ...);
 };
-
-#define ERR(message)      SocketError(message)
-
-void SocketError(const WCHAR* message);

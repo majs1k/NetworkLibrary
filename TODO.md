@@ -1,5 +1,9 @@
 ## TODO
 ```text
+Iocount 감소 로직 수정 필요
+
+클라이언트용 rpc proxy 코드 추가 필요
+
 성능측정은 더미테스트 TPS로
 더미테스트 스레드를 늘리면 왜 tps 감소? -> 서버와 더미 분리
 
@@ -21,6 +25,18 @@ warning 제거 , 캐스팅 수정
 
 ***서버 전환시 아래 교체 필요***
 SendPacket() / CompletRecv() / Packet Class Define값 / ServerMain
+
+---------------------
+더미 TPS
+
+기본
+175만
+200만
+195만
+
+remote
+48만
+---------------------
 ```
 
 ## Question

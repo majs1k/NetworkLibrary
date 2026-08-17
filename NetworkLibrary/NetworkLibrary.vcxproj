@@ -130,11 +130,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Contents\Player.cpp" />
+    <ClCompile Include="Contents\RPCModule.cpp" />
+    <ClCompile Include="Contents\TestClient.cpp" />
     <ClCompile Include="Contents\TestServer.cpp" />
-    <ClCompile Include="Network\LanClient_2.cpp" />
-    <ClCompile Include="TestServerMain.cpp" />
+    <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
+    <ClCompile Include="TestServerMain.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Profiler.cpp" />
     <ClCompile Include="Utils\ProfilerManager.cpp" />
@@ -142,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="Contents\FighterServer.h" />
     <ClInclude Include="Contents\Player.h" />
+    <ClInclude Include="Contents\TestClient.h" />
     <ClInclude Include="Contents\TestServer.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />
@@ -153,8 +156,8 @@
     <ClInclude Include="Utils\MemoryLeak.h" />
     <ClInclude Include="Utils\MemoryOverflow.h" />
     <ClInclude Include="Utils\MemoryPool.h" />
-    <ClInclude Include="Utils\Message.h" />
     <ClInclude Include="Utils\Packet.h" />
+    <ClInclude Include="Utils\PacketQueue.h" />
     <ClInclude Include="Utils\Profiler.h" />
     <ClInclude Include="Utils\ProfilerManager.h" />
     <ClInclude Include="Utils\Random.h" />

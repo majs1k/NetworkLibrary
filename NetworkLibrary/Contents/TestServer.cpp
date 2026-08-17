@@ -1,6 +1,5 @@
 #include "TestServer.h"
 #include "../Utils/Packet.h"
-#include "../Utils/Message.h"
 #include "../Utils/Logger.h"
 #include "../Utils/TickController.h"
 #include <process.h>
@@ -38,29 +37,24 @@ void TestServer::OnRelease(__int64 sessionId)
 
 void TestServer::OnRecv(__int64 sessionId, Packet* packet)
 {
-	//Message* message = new Message();
-	//message->Initialize(sessionId, packet);
-
-	//messageQueue_.push(message);
-
-	/// IO 스레드에서 로직을 처리하는 방식
+	/// IO 스레드에서 패킷 처리
 	__int64 data;
 	*packet >> data;
 
 	delete packet;
 
-	SPacket* packet2 = new SPacket();
+	Packet* packet2 = new Packet();
 	packet2->Initialize();
 
 	*packet2 << data;
 
-	// 호출부 안에서 패킷 헤더를 삽입
 	this->SendPacket(sessionId, packet2);
-}
 
-void TestServer::OnError(int errorCode, wchar_t* str)
-{
 
+	/// 로직 스레드에서 패킷 처리
+	//packet->SetId(sessionId);
+	//
+	//packetQueue_.push(packet);
 }
 
 unsigned int __stdcall TestServer::LogicThread(void* param)
@@ -83,26 +77,23 @@ void TestServer::PacketProc()
 {
 	while (1)
 	{
-		Message* message = messageQueue_.pop();
+		Packet* packet = packetQueue_.pop();
 
-		if (message == nullptr)
+		if (packet == nullptr)
 			return;
 
-		__int64 sessionId = message->sessionId_;
-		Packet* packet = message->packet_;
+		__int64 sessionId = packet->GetId();
 
 		__int64 data;
 		*packet >> data;
 
 		delete packet;
-		delete message;
 
-		SPacket* packet2 = new SPacket();
+		Packet* packet2 = new Packet();
 		packet2->Initialize();
 
 		*packet2 << data;
 
-		// 호출부 안에서 패킷 헤더를 삽입
 		this->SendPacket(sessionId, packet2);
 	}
 }

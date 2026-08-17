@@ -6,7 +6,6 @@
 #include <WinSock2.h>
 //#include <Windows.h>
 
-
 class Session;
 class Packet;
 
@@ -45,7 +44,6 @@ public:
 	int SessionCount() const;
 	int SessionMax() const;
 
-	/// false가 반환되면 뭘 해야함???
 	bool Disconnect(__int64 sessionId);
 	bool SendPacket(__int64 sessionId, Packet* packet);
 
@@ -59,8 +57,8 @@ public:
 
 	virtual void OnRecv(__int64 sessionId, Packet* packet) = 0;
 
-	// 컨텐츠에게 에러코드를 알려주지만 서버 끌 상황은 아닐때
-	virtual void OnError(int errorCode, wchar_t* str) = 0;
+	// 컨텐츠에게 에러코드를 알려주지만 서버 끌 상황은 아닐때 (미구현)
+	//virtual void OnError(int errorCode, wchar_t* str) = 0;
 
 	void Monitoring();
 
@@ -77,7 +75,5 @@ private:
 	void IncrementIoCount(Session* session);
 	void DecrementIoCount(Session* session);
 
-	//void ReleaseSession(Session* session);
-
-	void SocketError(const WCHAR* message);
+	void ReleaseSession(Session* session);
 };

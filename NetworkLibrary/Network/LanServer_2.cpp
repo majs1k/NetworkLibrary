@@ -316,11 +316,13 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 
 		//session->recvQueue_.MoveFront(sizeof(TEST_HEADER));
 
-		SPacket* packet = new SPacket();
+		Packet* packet = new Packet();
 		packet->Initialize();
 
+		// 헤더 + 바디 전부 디큐
 		session->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(TEST_HEADER));
 
+		// 메세지 사이즈만큼만 무브
 		packet->MoveWritePos(messageSize);
 
 
@@ -502,10 +504,8 @@ void LanServer::SendPost(Session* session)
 		session->sessionLock_.unlock();
 
 		this->IncrementIoCount(session);
-		//PRO_BEGIN(L"send 1");
-		//PRO_BEGIN(L"send 2");
+
 		retval = WSASend(session->socket_, wsaBuf, 1, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-		//PRO_END(L"send 1");
 	}
 	else
 	{
@@ -520,10 +520,7 @@ void LanServer::SendPost(Session* session)
 
 		this->IncrementIoCount(session);
 
-		//PRO_BEGIN(L"send 1");
-		//PRO_BEGIN(L"send 2");
 		retval = WSASend(session->socket_, wsaBuf, 2, nullptr, 0, (WSAOVERLAPPED*)&(session->sendOverlapped_), NULL);
-		//PRO_END(L"send 1");
 	}
 
 	if (retval == SOCKET_ERROR)
@@ -548,10 +545,6 @@ void LanServer::SendPost(Session* session)
 
 			return;
 		}
-	}
-	else
-	{
-		//printf("send Fast IO\n");
 	}
 }
 
@@ -583,57 +576,29 @@ void LanServer::IncrementIoCount(Session* session)
 
 void LanServer::DecrementIoCount(Session* session)
 {
-	sessionMapLock_.lock();
-
-	session->sessionLock_.lock();
-
 	if (InterlockedDecrement(&session->ioCount_) == 0)
 	{
-		sessionMap_.erase(session->sessionId_);
-
-		sessionMapLock_.unlock();
-
-		session->sessionLock_.unlock();
-
-		this->OnRelease(session->sessionId_);
-
-		delete session;
-
-		//LOG_INFO(L"[NETWORK] session delete");
-
-		InterlockedDecrement(&sessionCount_);
-	}
-	else
-	{
-		sessionMapLock_.unlock();
-
-		session->sessionLock_.unlock();
+		ReleaseSession(session);
 	}
 }
 
-//void LanServer::ReleaseSession(Session* session)
-//{
-//	sessionMapLock_.lock();
-//
-//	sessionMap_.erase(session->sessionId_);
-//
-//	session->sessionLock_.lock();
-//
-//	sessionMapLock_.unlock();
-//
-//	session->sessionLock_.unlock();
-//
-//	this->OnRelease(session->sessionId_);
-//
-//	delete session;
-//
-//	//LOG_INFO(L"[NETWORK] session delete");
-//
-//	InterlockedDecrement(&sessionCount_);
-//}
-
-void LanServer::SocketError(const WCHAR* message)
+void LanServer::ReleaseSession(Session* session)
 {
-	wprintf(L"[SOCKET ERROR] %s : %d\n", message, WSAGetLastError());
-	Sleep(INFINITE);
+	sessionMapLock_.lock();
+
+	sessionMap_.erase(session->sessionId_);
+
+	session->sessionLock_.lock();
+
+	sessionMapLock_.unlock();
+
+	session->sessionLock_.unlock();
+
+	this->OnRelease(session->sessionId_);
+
+	delete session;
+
+	//LOG_INFO(L"[NETWORK] session delete");
+
+	InterlockedDecrement(&sessionCount_);
 }

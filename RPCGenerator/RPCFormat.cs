@@ -42,7 +42,7 @@ public:{0}
 @"
 void ServerProxy::{0}(__int64 sessionId{1})
 {{
-	SPacket* packet = new SPacket();
+	Packet* packet = new Packet();
 	packet->Initialize();
 
 	packet->GetHeaderPtr()->type_ = {2};
@@ -83,10 +83,7 @@ public:
 
 bool ServerStub::PacketProc(__int64 sessionId, Packet* packet)
 {{
-	FIGHTER_HEADER header;
-	header.type_ = packet->GetHeaderPtr()->type_;
-
-	switch (header.type_)
+	switch (packet->GetHeaderPtr()->type_)
 	{{{0}
 	default:
 	{{

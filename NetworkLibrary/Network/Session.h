@@ -2,15 +2,12 @@
 #include <string>
 #include <memory>
 #include <mutex>
-//#include <WinSock2.h>
+#include <WinSock2.h>
 #include "../Utils/RingBuffer.h"
-#include <Windows.h>
 
 //#define SEND_SIZE				500
 #define SEND_SIZE				20000
 #define RECV_SIZE				20000
-
-#define SEND_CNT				2000
 
 enum class IOType
 {
@@ -39,17 +36,12 @@ struct Session
 	std::wstring ip_;
 	int port_;
 
-	//TRingBuffer<Packet*, SEND_SIZE> sendQueue_;
 
+	//TRingBuffer<Packet*, SEND_SIZE> sendQueue_;
 	RingBuffer sendQueue_{ SEND_SIZE };
 
-
-
 	//std::shared_ptr<RingBuffer> recvQueue_;
-
 	RingBuffer recvQueue_{ RECV_SIZE };
-
-
 
 
 	OverlappedEx sendOverlapped_;
@@ -73,9 +65,7 @@ struct Session
 		sendQueue_.Clear();
 
 
-
 		//recvQueue_ = std::make_shared<RingBuffer>(RECV_SIZE);
-
 
 
 		sendOverlapped_.type = IOType::SEND;
