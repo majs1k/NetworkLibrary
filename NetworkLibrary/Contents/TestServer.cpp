@@ -38,23 +38,23 @@ void TestServer::OnRelease(__int64 sessionId)
 void TestServer::OnRecv(__int64 sessionId, Packet* packet)
 {
 	/// IO 스레드에서 패킷 처리
-	__int64 data;
-	*packet >> data;
-
-	delete packet;
-
-	Packet* packet2 = new Packet();
-	packet2->Initialize();
-
-	*packet2 << data;
-
-	this->SendPacket(sessionId, packet2);
+	//__int64 data;
+	//*packet >> data;
+	//
+	//delete packet;
+	//
+	//Packet* packet2 = new Packet();
+	//packet2->Initialize();
+	//
+	//*packet2 << data;
+	//
+	//this->SendPacket(sessionId, packet2);
 
 
 	/// 로직 스레드에서 패킷 처리
-	//packet->SetId(sessionId);
-	//
-	//packetQueue_.push(packet);
+	packet->SetId(sessionId);
+	
+	packetQueue_.push(packet);
 }
 
 unsigned int __stdcall TestServer::LogicThread(void* param)

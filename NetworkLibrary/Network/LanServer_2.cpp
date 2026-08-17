@@ -234,16 +234,11 @@ void LanServer::RecvPost(Session* session)
 
 	if (session->recvQueue_.FreeSize() == session->recvQueue_.DirectEnqueueSize())
 	{
-		// WSARecv() 이전에 호출
-		this->IncrementIoCount(session);
-
 		// buf 1개
 		retval = WSARecv(session->socket_, wsaBuf, 1, nullptr, &flags, (WSAOVERLAPPED*)&session->recvOverlapped_, NULL);
 	}
 	else
 	{
-		this->IncrementIoCount(session);
-
 		// buf 2개
 		wsaBuf[1].buf = session->recvQueue_.GetBufferPtr();
 		wsaBuf[1].len = session->recvQueue_.FreeSize() - session->recvQueue_.DirectEnqueueSize();
@@ -297,21 +292,20 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 			return;
 		}
 
-
-
-		if (useSize < sizeof(TEST_HEADER))
+		///헤더 변경시 수정//////////////////////////////////////////////////////////////////////////////////////
+		if (useSize < sizeof(UNITY_HEADER))
 			break;
 
-		TEST_HEADER header;
+		UNITY_HEADER header;
 
-		session->recvQueue_.Peek((char*)&header, sizeof(TEST_HEADER));
+		session->recvQueue_.Peek((char*)&header, sizeof(UNITY_HEADER));
 
 		int messageSize = header.size_;
 
 		if (messageSize < 0)
 			break;
 
-		if (useSize < sizeof(TEST_HEADER) + messageSize)
+		if (useSize < sizeof(UNITY_HEADER) + messageSize)
 			break;
 
 		//session->recvQueue_.MoveFront(sizeof(TEST_HEADER));
@@ -320,47 +314,18 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 		packet->Initialize();
 
 		// 헤더 + 바디 전부 디큐
-		session->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(TEST_HEADER));
+		session->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(UNITY_HEADER));
 
 		// 메세지 사이즈만큼만 무브
 		packet->MoveWritePos(messageSize);
-
-
-
-
-		//if (useSize < sizeof(FIGHTER_HEADER))
-		//	break;
-
-		//FIGHTER_HEADER header;
-
-		//session->recvQueue_.Peek((char*)&header, sizeof(FIGHTER_HEADER));
-
-		//int messageSize = header.size_;
-
-		//if (messageSize < 0)
-		//	break;
-
-		//if (useSize < sizeof(FIGHTER_HEADER) + messageSize)
-		//	break;
-
-		//SPacket* packet = new SPacket();
-		//packet->Initialize();
-
-		//session->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(FIGHTER_HEADER));
-
-		//packet->MoveWritePos(messageSize) ;
-
-
-
-		//printf("recvQueue Dequeue : %lld\n", *(__int64*)packet.buffer());
-
-
-
 
 		this->OnRecv(session->sessionId_, packet);
 
 		InterlockedIncrement(&recvMessageCount_);
 	}
+
+	// WSARecv() 이전에 호출
+	this->IncrementIoCount(session);
 
 	this->RecvPost(session);
 
@@ -571,6 +536,18 @@ void LanServer::CompleteSend(Session* session, int numOfBytes)
 
 void LanServer::IncrementIoCount(Session* session)
 {
+	//InterlockedIncrement(&session->ioCount_);
+
+	session->sessionLock_.lock();
+
+	if (session->ioCount_ == 0)
+	{
+		session->sessionLock_.unlock();
+
+		return;
+	}
+	session->sessionLock_.unlock();
+
 	InterlockedIncrement(&session->ioCount_);
 }
 

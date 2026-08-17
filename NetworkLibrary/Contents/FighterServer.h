@@ -2,11 +2,11 @@
 #include <unordered_map>
 #include "../Network/LanServer.h"
 #include "../RPC/ServerProxy.h"
-#include "../RPC/ServerStub.h"
+#include "../RPC/IRpcStub.h"
 
 class Player;
 
-class FighterServer : public LanServer, public ServerStub
+class FighterServer : public LanServer, public IRpcStub
 {
 private:
 	ServerProxy proxy_;

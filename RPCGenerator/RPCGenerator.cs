@@ -99,7 +99,7 @@ class RPCGenerator
             }
 
             string stubHeader = string.Format(RPCFormat.stubHeader, stubFunc);
-            File.WriteAllText("ServerStub.h", stubHeader);
+            File.WriteAllText("IRpcStub.h", stubHeader);
         }
     }
 
@@ -145,7 +145,7 @@ class RPCGenerator
             }
 
             string stubCpp = string.Format(RPCFormat.stubCpp, stubFunc2, stubFunc1);
-            File.WriteAllText("ServerStub.cpp", stubCpp);
+            File.WriteAllText("IRpcStub.cpp", stubCpp);
         }
     }
 }

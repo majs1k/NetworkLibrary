@@ -49,4 +49,8 @@ worker 1 client 1 oversend 100 loop 0 -> zero copy 유리 (패킷 크기 약 100
 실시간 소켓 서버는 롤백
 
 스레드간 전달 방식 -> 구조체 vs 직렬화버퍼
+
+LanServer를 상속한 서버에 각종 컨텐츠 자료구조들이랑 packetProc가 들어가면, 객체지향이 전혀 아니게되는데.. 다 freind?
+
+ioCount를 Session  생성하자마자 1로 두는것과 0으로 두는것의 차이점?
 ```

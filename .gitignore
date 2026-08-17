@@ -429,4 +429,6 @@ FodyWeavers.xsd
 *.msp
 
 #Custom
+NetworkLibrary/RPC/
+NetworkLibrary/Log/
 *config.json

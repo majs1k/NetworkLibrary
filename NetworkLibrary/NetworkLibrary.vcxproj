@@ -133,10 +133,12 @@
     <ClCompile Include="Contents\RPCModule.cpp" />
     <ClCompile Include="Contents\TestClient.cpp" />
     <ClCompile Include="Contents\TestServer.cpp" />
+    <ClCompile Include="Contents\UnityClient.cpp" />
+    <ClCompile Include="Contents\UnityServer.cpp" />
     <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
-    <ClCompile Include="TestServerMain.cpp" />
+    <ClCompile Include="UnityClient.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Profiler.cpp" />
     <ClCompile Include="Utils\ProfilerManager.cpp" />
@@ -146,6 +148,8 @@
     <ClInclude Include="Contents\Player.h" />
     <ClInclude Include="Contents\TestClient.h" />
     <ClInclude Include="Contents\TestServer.h" />
+    <ClInclude Include="Contents\UnityClient.h" />
+    <ClInclude Include="Contents\UnityServer.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />
     <ClInclude Include="Network\Session.h" />
@@ -164,6 +168,9 @@
     <ClInclude Include="Utils\RingBuffer.h" />
     <ClInclude Include="Utils\Singleton.h" />
     <ClInclude Include="Utils\TickController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="unityconfig.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

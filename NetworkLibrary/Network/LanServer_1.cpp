@@ -181,21 +181,15 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 
 	Session* session = (*it).second;
 
+	session->sessionLock_.lock();
+
 	sessionMapLock_.unlock();
 
 
-
-	/// TestServer
-	packet->GetHeaderPtr()->size_ = packet->UseSize();
-
-
-	/// FighterServer
+	///헤더 변경시 수정//////////////////////////////////////////////////////////////////////////////////////
 	//packet->GetHeaderPtr()->code_ = PACKET_CODE;
-	//packet->GetHeaderPtr()->size_ = packet->UseSize();
 
-
-
-	session->sessionLock_.lock();
+	packet->GetHeaderPtr()->size_ = packet->UseSize();
 
 
 
@@ -210,8 +204,6 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 	delete packet;
 
 	this->SendPost(session);
-
-	///sessionMapLock_.unlock();
 
 	InterlockedIncrement(&sendMessageCount_);
 

@@ -71,7 +71,8 @@ struct Session
 		sendOverlapped_.type = IOType::SEND;
 		recvOverlapped_.type = IOType::RECV;
 
-		ioCount_ = 0;
+		// 초기화시 참조 카운트를 1로 시작
+		ioCount_ = 1;
 		sendPending_ = false;
 	}
 };

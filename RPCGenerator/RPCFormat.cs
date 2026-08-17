@@ -63,7 +63,7 @@ void ServerProxy::{0}(__int64 sessionId{1})
 class LanServer;
 class Packet;
 
-class ServerStub
+class IRpcStub
 {{
 public:
 	bool PacketProc(__int64 sessionId, Packet* packet);
@@ -78,10 +78,10 @@ public:
 // -------------------------------------------------------------------
 
         public static string stubCpp =
-@"#include ""ServerStub.h""
+@"#include ""IRpcStub.h""
 #include ""../Utils/Packet.h""
 
-bool ServerStub::PacketProc(__int64 sessionId, Packet* packet)
+bool IRpcStub::PacketProc(__int64 sessionId, Packet* packet)
 {{
 	switch (packet->GetHeaderPtr()->type_)
 	{{{0}
@@ -93,12 +93,11 @@ bool ServerStub::PacketProc(__int64 sessionId, Packet* packet)
 	}}
 	}}
 }}
-{1}
-";
+{1}";
 
         public static string stubCppFunc1 =
 @"
-bool ServerStub::{0}(__int64 sessionId{1})
+bool IRpcStub::{0}(__int64 sessionId{1})
 {{
 	return true;
 }}

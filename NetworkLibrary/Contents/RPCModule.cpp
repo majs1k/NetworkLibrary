@@ -26,4 +26,4 @@ inline Packet& operator>>(Packet& packet, ChatMsg* chatMsg)
 }
 
 #include "../RPC/ServerProxy.cpp"
-#include "../RPC/ServerStub.cpp"
+#include "../RPC/IRpcStub.cpp"

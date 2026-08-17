@@ -42,10 +42,16 @@
     <ClCompile Include="Contents\TestClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestServerMain.cpp">
+    <ClCompile Include="Contents\RPCModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Contents\RPCModule.cpp">
+    <ClCompile Include="Contents\UnityServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Contents\UnityClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UnityClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,5 +122,14 @@
     <ClInclude Include="Utils\PacketQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Contents\UnityServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\UnityClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="unityconfig.json" />
   </ItemGroup>
 </Project>

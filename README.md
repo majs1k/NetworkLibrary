@@ -253,4 +253,7 @@ TestClient 추가
 ```
 Packet 수정 (SPacket RPacket Message 클래스 삭제)
 Packet 클래스는 이제 기본적으로 헤더와 세션 id를 포함하고 있음
+
+IncrementIoCount() 수정 -> count 0에서는 증가하지 못하도록
+여러 스레드에서 접근시, ReleaseSession()이 여러번 호출되는 문제 발생했었음
 ```

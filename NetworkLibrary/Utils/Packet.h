@@ -30,9 +30,18 @@ struct FIGHTER_HEADER
 
 // ------------------------------------------------------- //
 
+struct UNITY_HEADER
+{
+	short size_;
+	short type_;
+};
 
-#define HEADER_SIZE		sizeof(TEST_HEADER)
+// ------------------------------------------------------- //
+
+///헤더 변경시 수정//////////////////////////////////////////////////////////////////////////////////////
+//#define HEADER_SIZE		sizeof(TEST_HEADER)
 //#define HEADER_SIZE		sizeof(FIGHTER_HEADER)
+#define HEADER_SIZE		sizeof(UNITY_HEADER)
 
 class Packet
 {
@@ -73,9 +82,10 @@ public:
 		return sessionId_;
 	}
 
-	TEST_HEADER* GetHeaderPtr()
+	///헤더 변경시 수정//////////////////////////////////////////////////////////////////////////////////////
+	UNITY_HEADER* GetHeaderPtr()
 	{
-		return reinterpret_cast<TEST_HEADER*>(buffer_);
+		return reinterpret_cast<UNITY_HEADER*>(buffer_);
 	}
 
 	char* GetBodyPtr()
