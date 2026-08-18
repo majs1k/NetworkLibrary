@@ -51,7 +51,7 @@
     <ClCompile Include="Contents\UnityClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UnityClientMain.cpp">
+    <ClCompile Include="UnityServerMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -131,5 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="unityconfig.json" />
+    <None Include="fighterconfig.json" />
+    <None Include="testconfig.json" />
   </ItemGroup>
 </Project>

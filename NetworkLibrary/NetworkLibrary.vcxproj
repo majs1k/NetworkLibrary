@@ -138,7 +138,7 @@
     <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
-    <ClCompile Include="UnityClientMain.cpp" />
+    <ClCompile Include="UnityServerMain.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Profiler.cpp" />
     <ClCompile Include="Utils\ProfilerManager.cpp" />
@@ -170,6 +170,8 @@
     <ClInclude Include="Utils\TickController.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="fighterconfig.json" />
+    <None Include="testconfig.json" />
     <None Include="unityconfig.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

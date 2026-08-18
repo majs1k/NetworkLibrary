@@ -25,5 +25,5 @@ inline Packet& operator>>(Packet& packet, ChatMsg* chatMsg)
 	packet.Read(chatMsg->message_, chatMsg->len_);
 }
 
-#include "../RPC/ServerProxy.cpp"
-#include "../RPC/IRpcStub.cpp"
+#include "../RPC/RpcServerProxy.h"
+#include "../RPC/RpcServerStub.h"

@@ -1,9 +1,9 @@
 #pragma once
 #include "../Network/LanClient.h"
-#include "../RPC/ServerProxy.h"
-#include "../RPC/IRpcStub.h"
+#include "../RPC/RpcServerProxy.h"
+#include "../RPC/RpcServerStub.h"
 
-class UnityClient : public LanClient, public IRpcStub
+class UnityClient : public LanClient, public RpcServerStub
 {
 public:
 	void OnConnect() override;
@@ -15,7 +15,7 @@ public:
 
 	// ----------------------------------------------------- //
 
-	bool cs_create_login(__int64 sessionId, int num);
+	bool LoginRequest(__int64 sessionId, int id);
 
-	bool sc_create_login(__int64 sessionId, int num);
+	bool LoginResponse(__int64 sessionId, int id);
 };

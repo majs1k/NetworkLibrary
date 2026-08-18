@@ -1,15 +1,15 @@
 #pragma once
 #include <unordered_map>
 #include "../Network/LanServer.h"
-#include "../RPC/ServerProxy.h"
-#include "../RPC/IRpcStub.h"
+#include "../RPC/RpcServerProxy.h"
+#include "../RPC/RpcServerStub.h"
 
 class Player;
 
-class FighterServer : public LanServer, public IRpcStub
+class FighterServer : public LanServer, public RpcServerStub
 {
 private:
-	ServerProxy proxy_;
+	RpcServerProxy proxy_;
 
 	HANDLE hLogicThread_;
 	bool shutdown_ = false;

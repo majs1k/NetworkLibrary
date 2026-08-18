@@ -1,22 +1,22 @@
 #pragma once
 #include "../Network/LanServer.h"
 #include "../Utils/PacketQueue.h"
-#include "../RPC/ServerProxy.h"
-#include "../RPC/IRpcStub.h"
+#include "../RPC/RpcServerProxy.h"
+#include "../RPC/RpcServerStub.h"
 
 
 class Packet;
 class Message;
 
 
-class UnityServer : public LanServer, public IRpcStub
+class UnityServer : public LanServer, public RpcServerStub
 {
 	HANDLE hLogicThread_;
 	bool shutdown_ = false;
 
 	PacketQueue packetQueue_;
 
-	ServerProxy proxy_;
+	RpcServerProxy proxy_;
 
 public:
 	UnityServer();
@@ -31,7 +31,7 @@ public:
 
 	// ----------------------------------------------------- //
 
-	bool cs_create_login(__int64 sessionId, int num);
+	bool LoginRequest(__int64 sessionId, int id);
 
-	bool sc_create_login(__int64 sessionId, int num);
+	bool LoginResponse(__int64 sessionId, int id);
 };

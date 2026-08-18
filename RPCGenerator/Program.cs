@@ -7,7 +7,7 @@
             // TODO: args로 readfile 입력하는 방식으로 변경
             var idlFile = "unityserver.idl";
 
-            RpcGenerator.Generate(idlFile);
+            RpcServerGenerator.Generate(idlFile);
         }
     }
 }
