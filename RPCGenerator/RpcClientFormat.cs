@@ -2,7 +2,7 @@
 
 namespace PacketGenerator
 {
-    class RpcServerFormat
+    class RpcClientFormat
     {
         // ============================================================
         // Proxy
@@ -11,13 +11,13 @@ namespace PacketGenerator
         public static string proxyHeader =
 @"#pragma once
 
-#include ""../Network/LanServer.h""
+#include ""../Network/LanClient.h""
 #include ""../Utils/Packet.h""
 
-class RpcServerProxy
+class RpcClientProxy
 {{
 public:
-    LanServer* server_;
+    LanClient* client_;
 
 public:{0}
 }};
@@ -26,12 +26,12 @@ public:{0}
         // Header에는 함수 선언만
         public static string proxyHeaderFunc =
 @"
-    void {0}(__int64 sessionId{1});";
+    void {0}({1});";
 
-        // CPP에 들어갈 실제 구현
+        // CPP에는 함수 구현
         public static string proxyCppFunc =
 @"
-void RpcServerProxy::{0}(__int64 sessionId{1})
+void RpcClientProxy::{0}({1})
 {{
     Packet* packet = new Packet();
     packet->Initialize();
@@ -39,12 +39,12 @@ void RpcServerProxy::{0}(__int64 sessionId{1})
     packet->GetHeaderPtr()->type_ = {2};
     *packet{3};
 
-    server_->SendPacket(sessionId, packet);
+    client_->SendPacket(packet);
 }}
 ";
 
         public static string proxyCppHeader =
-@"#include ""RpcServerProxy.h""
+@"#include ""RpcClientProxy.h""
 ";
 
         public static string funcParam =
@@ -63,10 +63,10 @@ void RpcServerProxy::{0}(__int64 sessionId{1})
 
 #include ""../Utils/Packet.h""
 
-class RpcServerStub
+class RpcClientStub
 {{
 public:
-    bool PacketProc(__int64 sessionId, Packet* packet);
+    bool PacketProc(Packet* packet);
 
 public:{0}
 }};
@@ -75,12 +75,12 @@ public:{0}
         // Header에는 함수 선언만
         public static string stubHeaderFunc =
 @"
-    virtual bool {0}(__int64 sessionId{1});";
+    virtual bool {0}({1});";
 
-        // PacketProc 구현
+        // CPP의 PacketProc 구현
         public static string stubCppPacketProc =
 @"
-bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
+bool RpcClientStub::PacketProc(Packet* packet)
 {{
     switch (packet->GetHeaderPtr()->type_)
     {{{0}
@@ -94,17 +94,17 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 }}
 ";
 
-        // 각 RPC 함수의 기본 구현
+        // CPP의 RPC 함수 구현
         public static string stubCppFunc =
 @"
-bool RpcServerStub::{0}(__int64 sessionId{1})
+bool RpcClientStub::{0}({1})
 {{
     return true;
 }}
 ";
 
         public static string stubCppHeader =
-@"#include ""RpcServerStub.h""
+@"#include ""RpcClientStub.h""
 ";
 
         public static string stubPacketProcCase =
@@ -114,7 +114,7 @@ bool RpcServerStub::{0}(__int64 sessionId{1})
 {1}
             *packet{2};
 
-            return this->{3}(sessionId{4});
+            return this->{3}({4});
         }}";
 
         public static string shiftRight =

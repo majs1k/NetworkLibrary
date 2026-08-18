@@ -254,6 +254,16 @@ TestClient 추가
 Packet 수정 (SPacket RPacket Message 클래스 삭제)
 Packet 클래스는 이제 기본적으로 헤더와 세션 id를 포함하고 있음
 
+Session 생성시 ioCount 1로 시작.
 IncrementIoCount() 수정 -> count 0에서는 증가하지 못하도록
 여러 스레드에서 접근시, ReleaseSession()이 여러번 호출되는 문제 발생했었음
+```
+
+### 26-08-18
+```
+Rpc 코드 전면 수정 및 배치파일과 idl 파일 경로 수정
+Rpc 클라이언트용 코드 추가 (sessionId를 고려하지 않기 떄문)
+string, list 타입 추가
+Rpc코드를 헤더파일로만 작동하도록 수정했다가 롤백 (RpcModule 코드를 사용할수 없게되어서 불가능함)
+Rpc 인자는 레퍼런스 적용 가능하게 수정
 ```

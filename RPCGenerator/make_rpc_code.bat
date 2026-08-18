@@ -1,10 +1,17 @@
 @echo off
 
-copy /Y  "unityserver.idl" ".\bin\Release\net8.0\unityserver.idl"
+copy /Y  "unity_idl.txt" ".\bin\Release\net8.0\unity_idl.txt"
 
 start /wait "" ".\bin\Release\net8.0\RpcGenerator.exe"
 
 move /Y "RpcServerProxy.h" "..\NetworkLibrary\Rpc\"
+move /Y "RpcServerProxy.cpp" "..\NetworkLibrary\Rpc\"
 move /Y "RpcServerStub.h" "..\NetworkLibrary\Rpc\"
+move /Y "RpcServerStub.cpp" "..\NetworkLibrary\Rpc\"
+
+move /Y "RpcClientProxy.h" "..\NetworkLibrary\Rpc\"
+move /Y "RpcClientProxy.cpp" "..\NetworkLibrary\Rpc\"
+move /Y "RpcClientStub.h" "..\NetworkLibrary\Rpc\"
+move /Y "RpcClientStub.cpp" "..\NetworkLibrary\Rpc\"
 
 exit

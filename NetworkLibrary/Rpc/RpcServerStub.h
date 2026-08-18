@@ -5,43 +5,13 @@
 class RpcServerStub
 {
 public:
-	bool PacketProc(__int64 sessionId, Packet* packet)
-	{
-		switch (packet->GetHeaderPtr()->type_)
-		{
-		case 0: 
-		{
-			int id;
+    bool PacketProc(__int64 sessionId, Packet* packet);
 
-			*packet >> id;
-
-			return this->LoginRequest(sessionId, id);
-			break;
-		}
-		case 1: 
-		{
-			int id;
-
-			*packet >> id;
-
-			return this->LoginResponse(sessionId, id);
-			break;
-		}
-		default:
-		{
-			// 로그 추가
-
-			return false;
-		}
-		}
-	}
-
-	virtual bool LoginRequest(__int64 sessionId, int id)
-	{
-		return true;
-	}
-	virtual bool LoginResponse(__int64 sessionId, int id)
-	{
-		return true;
-	}
+public:
+    virtual bool LoginRequest(__int64 sessionId, int userId);
+    virtual bool LoginResponse(__int64 sessionId, int userId);
+    virtual bool ChatRequest(__int64 sessionId, std::string& chat);
+    virtual bool ChatResponse(__int64 sessionId, std::string& chat);
+    virtual bool ItemRequest(__int64 sessionId, std::list<int>& lst);
+    virtual bool ItemResponse(__int64 sessionId, std::list<int>& lst);
 };

@@ -1,13 +1,11 @@
 #pragma once
+#include <list>
+
 #include "../Network/LanServer.h"
 #include "../Utils/PacketQueue.h"
+
 #include "../RPC/RpcServerProxy.h"
 #include "../RPC/RpcServerStub.h"
-
-
-class Packet;
-class Message;
-
 
 class UnityServer : public LanServer, public RpcServerStub
 {
@@ -16,7 +14,7 @@ class UnityServer : public LanServer, public RpcServerStub
 
 	PacketQueue packetQueue_;
 
-	RpcServerProxy proxy_;
+	RpcServerProxy rpc_;
 
 public:
 	UnityServer();
@@ -31,7 +29,15 @@ public:
 
 	// ----------------------------------------------------- //
 
-	bool LoginRequest(__int64 sessionId, int id);
+	bool LoginRequest(__int64 sessionId, int id) override;
 
-	bool LoginResponse(__int64 sessionId, int id);
+	bool LoginResponse(__int64 sessionId, int id) override;
+
+	bool ChatRequest(__int64 sessionId, std::string& chat) override;
+
+	bool ChatResponse(__int64 sessionId, std::string& chat) override;
+
+	bool ItemRequest(__int64 sessionId, std::list<int>& lst) override;
+
+	bool ItemResponse(__int64 sessionId, std::list<int>& lst) override;
 };

@@ -1,19 +1,19 @@
 ﻿using PacketGenerator;
 
-class RpcServerGenerator
+class RpcClientGenerator
 {
     public static void Generate(string readFile)
     {
-        GenerateRpcServerProxy(readFile);
-        GenerateRpcServerStub(readFile);
+        GenerateRpcClientProxy(readFile);
+        GenerateRpcClientStub(readFile);
     }
 
 
     // ================================================================
-    // RpcServerProxy
+    // RpcClientProxy
     // ================================================================
 
-    public static void GenerateRpcServerProxy(string readFile)
+    public static void GenerateRpcClientProxy(string readFile)
     {
         using (var reader = new StreamReader(readFile))
         {
@@ -42,9 +42,11 @@ class RpcServerGenerator
                     // std::list<int>& lt
                     // ------------------------------------------------
 
-                    funcParam += ", ";
+                    if (funcParam.Length > 0)
+                        funcParam += ", ";
+
                     funcParam += string.Format(
-                        RpcServerFormat.funcParam,
+                        RpcClientFormat.funcParam,
                         p.type,
                         p.name);
 
@@ -54,27 +56,27 @@ class RpcServerGenerator
                     // ------------------------------------------------
 
                     shiftParam += string.Format(
-                        RpcServerFormat.shiftLeft,
+                        RpcClientFormat.shiftLeft,
                         p.name);
                 }
 
 
                 // ====================================================
-                // .h
+                // Header
                 // ====================================================
 
                 proxyHeaderFunc += string.Format(
-                    RpcServerFormat.proxyHeaderFunc,
+                    RpcClientFormat.proxyHeaderFunc,
                     parsed.Name,
                     funcParam);
 
 
                 // ====================================================
-                // .cpp
+                // CPP
                 // ====================================================
 
                 proxyCppFunc += string.Format(
-                    RpcServerFormat.proxyCppFunc,
+                    RpcClientFormat.proxyCppFunc,
                     parsed.Name,
                     funcParam,
                     parsed.PacketType,
@@ -83,39 +85,39 @@ class RpcServerGenerator
 
 
             // ========================================================
-            // RpcServerProxy.h
+            // RpcClientProxy.h
             // ========================================================
 
             string proxyHeader = string.Format(
-                RpcServerFormat.proxyHeader,
+                RpcClientFormat.proxyHeader,
                 proxyHeaderFunc);
 
             File.WriteAllText(
-                "RpcServerProxy.h",
+                "RpcClientProxy.h",
                 proxyHeader);
 
 
             // ========================================================
-            // RpcServerProxy.cpp
+            // RpcClientProxy.cpp
             // ========================================================
 
             string proxyCpp =
-                RpcServerFormat.proxyCppHeader +
+                RpcClientFormat.proxyCppHeader +
                 Environment.NewLine +
                 proxyCppFunc;
 
             File.WriteAllText(
-                "RpcServerProxy.cpp",
+                "RpcClientProxy.cpp",
                 proxyCpp);
         }
     }
 
 
     // ================================================================
-    // RpcServerStub
+    // RpcClientStub
     // ================================================================
 
-    public static void GenerateRpcServerStub(string readFile)
+    public static void GenerateRpcClientStub(string readFile)
     {
         using (var reader = new StreamReader(readFile))
         {
@@ -146,12 +148,16 @@ class RpcServerGenerator
                     // std::string& s
                     //
                     // 결과:
-                    // virtual bool Func(..., std::string& s);
+                    // virtual bool Func(std::string& s);
+                    //
+                    // &는 유지한다.
                     // =================================================
 
-                    funcParam += ", ";
+                    if (funcParam.Length > 0)
+                        funcParam += ", ";
+
                     funcParam += string.Format(
-                        RpcServerFormat.funcParam,
+                        RpcClientFormat.funcParam,
                         p.type,
                         p.name);
 
@@ -160,20 +166,27 @@ class RpcServerGenerator
                     // 함수 호출용
                     //
                     // 결과:
-                    // this->Func(..., s);
+                    // this->Func(s);
+                    //
+                    // 타입은 필요 없다.
                     // =================================================
 
-                    funcParam1 += ", ";
+                    if (funcParam1.Length > 0)
+                        funcParam1 += ", ";
+
                     funcParam1 += p.name;
 
 
                     // =================================================
                     // Packet 역직렬화용 지역 변수 선언
                     //
-                    // 핵심:
+                    // IDL:
+                    // std::string& s
+                    // std::list<int>& lt
                     //
-                    // std::string&  -> std::string
-                    // std::list<int>& -> std::list<int>
+                    // 결과:
+                    // std::string s;
+                    // std::list<int> lt;
                     //
                     // 여기서만 &를 제거한다.
                     // =================================================
@@ -185,7 +198,7 @@ class RpcServerGenerator
                     funcParam2 += "\t\t\t";
 
                     funcParam2 += string.Format(
-                        RpcServerFormat.funcParam,
+                        RpcClientFormat.funcParam,
                         localType,
                         p.name);
 
@@ -198,17 +211,17 @@ class RpcServerGenerator
                     // =================================================
 
                     shiftParam += string.Format(
-                        RpcServerFormat.shiftRight,
+                        RpcClientFormat.shiftRight,
                         p.name);
                 }
 
 
                 // ====================================================
-                // .h
+                // Header
                 // ====================================================
 
                 stubHeaderFunc += string.Format(
-                    RpcServerFormat.stubHeaderFunc,
+                    RpcClientFormat.stubHeaderFunc,
                     parsed.Name,
                     funcParam);
 
@@ -218,7 +231,7 @@ class RpcServerGenerator
                 // ====================================================
 
                 stubPacketProc += string.Format(
-                    RpcServerFormat.stubPacketProcCase,
+                    RpcClientFormat.stubPacketProcCase,
                     parsed.PacketType,
                     funcParam2,
                     shiftParam,
@@ -227,44 +240,44 @@ class RpcServerGenerator
 
 
                 // ====================================================
-                // .cpp의 RPC 함수 기본 구현
+                // CPP의 RPC 함수 구현
                 // ====================================================
 
                 stubCppFunc += string.Format(
-                    RpcServerFormat.stubCppFunc,
+                    RpcClientFormat.stubCppFunc,
                     parsed.Name,
                     funcParam);
             }
 
 
             // ========================================================
-            // RpcServerStub.h
+            // RpcClientStub.h
             // ========================================================
 
             string stubHeader = string.Format(
-                RpcServerFormat.stubHeader,
+                RpcClientFormat.stubHeader,
                 stubHeaderFunc);
 
             File.WriteAllText(
-                "RpcServerStub.h",
+                "RpcClientStub.h",
                 stubHeader);
 
 
             // ========================================================
-            // RpcServerStub.cpp
+            // RpcClientStub.cpp
             // ========================================================
 
             string stubCpp =
-                RpcServerFormat.stubCppHeader +
+                RpcClientFormat.stubCppHeader +
                 Environment.NewLine +
                 string.Format(
-                    RpcServerFormat.stubCppPacketProc,
+                    RpcClientFormat.stubCppPacketProc,
                     stubPacketProc) +
                 Environment.NewLine +
                 stubCppFunc;
 
             File.WriteAllText(
-                "RpcServerStub.cpp",
+                "RpcClientStub.cpp",
                 stubCpp);
         }
     }

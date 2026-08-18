@@ -5,12 +5,12 @@
 #include <process.h>
 #include <Windows.h>
 
+
 UnityServer::UnityServer()
 {
 	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, LogicThread, this, 0, nullptr);
 
-	proxy_.server_ = this;
-
+	rpc_.server_ = this;
 }
 
 bool UnityServer::OnConnectionRequest(const std::wstring& ip, int port)
@@ -72,7 +72,7 @@ void UnityServer::Update()
 
 bool UnityServer::LoginRequest(__int64 sessionId, int id)
 {
-	proxy_.LoginResponse(sessionId, id);
+	rpc_.LoginResponse(sessionId, id);
 
 
 	return true;
@@ -80,8 +80,32 @@ bool UnityServer::LoginRequest(__int64 sessionId, int id)
 
 bool UnityServer::LoginResponse(__int64 sessionId, int id)
 {
-	///echo
-	std::cout << id << std::endl;
+
+	return true;
+}
+
+bool UnityServer::ChatRequest(__int64 sessionId, std::string& chat)
+{
+	rpc_.ChatResponse(sessionId, chat);
+
+	return true;
+}
+
+bool UnityServer::ChatResponse(__int64 sessionId, std::string& chat)
+{
+
+	return true;
+}
+
+bool UnityServer::ItemRequest(__int64 sessionId, std::list<int>& lst)
+{
+	rpc_.ItemResponse(sessionId, lst);
+
+	return true;
+}
+
+bool UnityServer::ItemResponse(__int64 sessionId, std::list<int>& lst)
+{
 
 	return true;
 }

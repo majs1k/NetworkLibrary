@@ -1,0 +1,8 @@
+LoginRequest(int userId)				0
+LoginResponse(int userId)				1
+
+ChatRequest(std::string& chat)			10
+ChatResponse(std::string& chat)			11
+
+ItemRequest(std::list<int>& lst)			30
+ItemResponse(std::list<int>& lst)			31

@@ -42,7 +42,7 @@
     <ClCompile Include="Contents\TestClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Contents\RPCModule.cpp">
+    <ClCompile Include="Contents\RpcModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Contents\UnityServer.cpp">
@@ -126,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Contents\UnityClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\Item.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

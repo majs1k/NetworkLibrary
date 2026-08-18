@@ -1,11 +1,19 @@
 #pragma once
+#include <list>
 #include "../Network/LanClient.h"
-#include "../RPC/RpcServerProxy.h"
-#include "../RPC/RpcServerStub.h"
 
-class UnityClient : public LanClient, public RpcServerStub
+#include "../RPC/RpcClientProxy.h"
+#include "../RPC/RpcClientStub.h"
+
+
+class UnityClient : public LanClient, public RpcClientStub
 {
+private:
+	RpcClientProxy rpc_;
+
 public:
+	UnityClient();
+
 	void OnConnect() override;
 	void OnRelease() override;
 	void OnRecv(Packet* packet) override;
@@ -15,7 +23,15 @@ public:
 
 	// ----------------------------------------------------- //
 
-	bool LoginRequest(__int64 sessionId, int id);
+	bool LoginRequest(int id) override;
 
-	bool LoginResponse(__int64 sessionId, int id);
+	bool LoginResponse(int id) override;
+
+	bool ChatRequest(std::string& chat) override;
+
+	bool ChatResponse(std::string& chat) override;
+
+	bool ItemRequest(std::list<int>& lst) override;
+
+	bool ItemResponse(std::list<int>& lst) override;
 };

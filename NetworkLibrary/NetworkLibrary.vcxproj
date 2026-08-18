@@ -130,7 +130,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Contents\Player.cpp" />
-    <ClCompile Include="Contents\RPCModule.cpp" />
+    <ClCompile Include="Contents\RpcModule.cpp" />
     <ClCompile Include="Contents\TestClient.cpp" />
     <ClCompile Include="Contents\TestServer.cpp" />
     <ClCompile Include="Contents\UnityClient.cpp" />
@@ -145,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Contents\FighterServer.h" />
+    <ClInclude Include="Contents\Item.h" />
     <ClInclude Include="Contents\Player.h" />
     <ClInclude Include="Contents\TestClient.h" />
     <ClInclude Include="Contents\TestServer.h" />

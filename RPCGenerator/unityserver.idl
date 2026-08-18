@@ -1,2 +1,0 @@
-LoginRequest(int id) : 0
-LoginResponse(int id) : 1

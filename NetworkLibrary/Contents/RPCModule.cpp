@@ -1,29 +1,63 @@
 // -------------------------------------------------
 // 
-// RPC 프록시 스텁 코드는 서버 라이브러리 x
-// 컨텐츠단에서 컴파일
 // 직렬화 버퍼에 필요한 가변 인자들 전역 오버로딩 추가
 //
 // -------------------------------------------------
 #include "../Utils/Packet.h"
+#include "Item.h"
 
-struct ChatMsg
-{
-	unsigned short len_;
-	char message_[128];
-};
 
-inline Packet& operator<<(Packet& packet, ChatMsg* chatMsg)
+inline Packet& operator<<(Packet& packet, std::string& str)
 {
-	packet << chatMsg->len_;
-	packet.Write(chatMsg->message_, chatMsg->len_);
+	packet << static_cast<short>(str.size());
+
+	packet.Write(str.data(), static_cast<short>(str.size()));
+
+	return packet;
 }
 
-inline Packet& operator>>(Packet& packet, ChatMsg* chatMsg)
+inline Packet& operator>>(Packet& packet, std::string& str)
 {
-	packet >> chatMsg->len_;
-	packet.Read(chatMsg->message_, chatMsg->len_);
+	short size = 0;
+
+	packet >> size;
+	str.resize(size);
+
+	packet.Read(const_cast<char*>(str.data()), size);
+
+	return packet;
 }
 
-#include "../RPC/RpcServerProxy.h"
-#include "../RPC/RpcServerStub.h"
+
+inline Packet& operator<<(Packet& packet, std::list<int>& lst)
+{
+	packet << static_cast<short>(lst.size());
+
+	for (auto i : lst)
+		packet << i;
+
+	return packet;
+}
+
+inline Packet& operator>>(Packet& packet, std::list<int>& lst)
+{
+	short size = 0;
+
+	packet >> size;
+
+	int data;
+
+	for (int i = 0; i < size; i++)
+	{
+		packet >> data;
+		lst.push_back(data);
+	}
+
+	return packet;
+}
+
+
+#include "../RPC/RpcServerProxy.cpp"
+#include "../RPC/RpcServerStub.cpp"
+#include "../RPC/RpcClientProxy.cpp"
+#include "../RPC/RpcClientStub.cpp"

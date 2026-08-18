@@ -9,7 +9,7 @@ class Player;
 class FighterServer : public LanServer, public RpcServerStub
 {
 private:
-	RpcServerProxy proxy_;
+	RpcServerProxy rpc_;
 
 	HANDLE hLogicThread_;
 	bool shutdown_ = false;

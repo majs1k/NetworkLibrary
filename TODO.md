@@ -1,19 +1,11 @@
 ## TODO
 ```text
-Iocount 감소 로직 수정 필요
-
-클라이언트용 rpc proxy 코드 추가 필요
-
 성능측정은 더미테스트 TPS로
 더미테스트 스레드를 늘리면 왜 tps 감소? -> 서버와 더미 분리
 
 프로파일러 더미 테스트 시 재연결 금지
 
-네이글 옵션?
-
 shared_ptr과 memory pool 같이 사용
-
-패킷큐 MPSC큐 사용시 성능 향상?
 
 DB 스레드 1개 db 요청큐 응답큐 1개 -> 직렬 처리
 로직스레드에서만 월드 상태 수정 -> 동기화 문제 x
@@ -47,10 +39,7 @@ lock_guard 사용시 재귀락 없애는 방법?
 worker 1 client 1 oversend 100 loop 0 -> zero copy 유리 (패킷 크기 약 1000byte)
 
 실시간 소켓 서버는 롤백
-
 스레드간 전달 방식 -> 구조체 vs 직렬화버퍼
 
-LanServer를 상속한 서버에 각종 컨텐츠 자료구조들이랑 packetProc가 들어가면, 객체지향이 전혀 아니게되는데.. 다 freind?
-
-ioCount를 Session  생성하자마자 1로 두는것과 0으로 두는것의 차이점?
+LanServer를 상속한 서버에 각종 컨텐츠 자료구조들이랑 packetProc가 들어가면, 객체지향이 전혀 아니게되는데.. 다 friend?
 ```

@@ -3,8 +3,6 @@
 #include "../Utils/PacketQueue.h"
 
 // ------------------------------------------------------- //
-class Packet;
-class Message;
 
 class TestServer : public LanServer
 {

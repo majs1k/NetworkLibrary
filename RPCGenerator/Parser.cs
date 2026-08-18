@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace PacketGenerator
 {
-    class IDLParser
+    class Parser
     {
         public string Name { get; set; }
         public List<(string type, string name)> Parameters { get; set; } = new();
         public int PacketType { get; set; }
 
-        public static IDLParser ParseLine(string line)
+        public static Parser ParseLine(string line)
         {
             string[] words = line.Split(
-                new char[] { ' ', ',', '(', ')', ':', ';' },
+                new char[] { ' ', ',', '(', ')'},
                 StringSplitOptions.RemoveEmptyEntries);
 
-            var result = new IDLParser();
+            var result = new Parser();
 
             result.Name = words[0];
             result.PacketType = int.Parse(words[^1]);

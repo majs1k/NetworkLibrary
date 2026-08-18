@@ -188,10 +188,18 @@ public:
 		return *this;
 	}
 
-	Packet& operator << (__int64 value)
+	Packet& operator << (long long value)
 	{
-		*(__int64*)(buffer_ + writePos_) = value;
-		writePos_ += sizeof(__int64);
+		*(long long*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(long long);
+
+		return *this;
+	}
+
+	Packet& operator << (unsigned long long value)
+	{
+		*(unsigned long long*)(buffer_ + writePos_) = value;
+		writePos_ += sizeof(unsigned long long);
 
 		return *this;
 	}
@@ -284,7 +292,7 @@ public:
 		return size;
 	}
 
-	int	Write(char* src, int size)
+	int	Write(const char* src, int size)
 	{
 		/// TODO: 버퍼 초과시 리사이즈
 		memcpy(buffer_ + writePos_, src, size);
