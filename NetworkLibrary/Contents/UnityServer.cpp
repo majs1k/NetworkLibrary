@@ -72,13 +72,13 @@ void UnityServer::Update()
 
 bool UnityServer::cs_create_login(__int64 sessionId, int num)
 {
-	proxy_.cs_create_login(sessionId, num);
+	proxy_.sc_create_login(sessionId, num);
 
 
 	return true;
 }
 
-bool UnityServer::sc_create_login(__int64 sessionId, int id, int num)
+bool UnityServer::sc_create_login(__int64 sessionId, int num)
 {
 	///echo
 	std::cout << num << std::endl;

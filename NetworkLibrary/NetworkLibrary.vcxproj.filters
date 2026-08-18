@@ -51,7 +51,7 @@
     <ClCompile Include="Contents\UnityClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UnityClient.cpp">
+    <ClCompile Include="UnityClientMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

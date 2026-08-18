@@ -1,6 +1,6 @@
 ﻿using PacketGenerator;
 
-class RPCGenerator
+class RpcGenerator
 {
     public static void Generate(string readFile)
     {
@@ -29,13 +29,13 @@ class RPCGenerator
                 foreach (var p in parsed.Parameters)
                 {
                     funcParam += ", ";
-                    funcParam += string.Format(RPCFormat.funcParam, p.type, p.name);
+                    funcParam += string.Format(RpcFormat.funcParam, p.type, p.name);
                 }
 
-                proxyFunc += string.Format(RPCFormat.proxyHeaderFunc, parsed.Name, funcParam);
+                proxyFunc += string.Format(RpcFormat.proxyHeaderFunc, parsed.Name, funcParam);
             }
 
-            string proxyHeader = string.Format(RPCFormat.proxyHeader, proxyFunc);
+            string proxyHeader = string.Format(RpcFormat.proxyHeader, proxyFunc);
             File.WriteAllText("ServerProxy.h", proxyHeader);
         }
     }
@@ -60,15 +60,15 @@ class RPCGenerator
                 foreach (var p in parsed.Parameters)
                 {
                     funcParam += ", ";
-                    funcParam += string.Format(RPCFormat.funcParam, p.type, p.name);
-                    shiftParam += string.Format(RPCFormat.shiftLeft, p.name);
+                    funcParam += string.Format(RpcFormat.funcParam, p.type, p.name);
+                    shiftParam += string.Format(RpcFormat.shiftLeft, p.name);
                 }
 
-                proxyFunc += string.Format(RPCFormat.proxyCppFunc,
+                proxyFunc += string.Format(RpcFormat.proxyCppFunc,
                     parsed.Name, funcParam, parsed.PacketType, shiftParam);
             }
 
-            string proxyCpp = string.Format(RPCFormat.proxyCpp, proxyFunc);
+            string proxyCpp = string.Format(RpcFormat.proxyCpp, proxyFunc);
             File.WriteAllText("ServerProxy.cpp", proxyCpp);
         }
     }
@@ -92,13 +92,13 @@ class RPCGenerator
                 foreach (var p in parsed.Parameters)
                 {
                     funcParam += ", ";
-                    funcParam += string.Format(RPCFormat.funcParam, p.type, p.name);
+                    funcParam += string.Format(RpcFormat.funcParam, p.type, p.name);
                 }
 
-                stubFunc += string.Format(RPCFormat.stubHeaderFunc, parsed.Name, funcParam);
+                stubFunc += string.Format(RpcFormat.stubHeaderFunc, parsed.Name, funcParam);
             }
 
-            string stubHeader = string.Format(RPCFormat.stubHeader, stubFunc);
+            string stubHeader = string.Format(RpcFormat.stubHeader, stubFunc);
             File.WriteAllText("IRpcStub.h", stubHeader);
         }
     }
@@ -127,24 +127,24 @@ class RPCGenerator
                 foreach (var p in parsed.Parameters)
                 {
                     funcParam += ", ";
-                    funcParam += string.Format(RPCFormat.funcParam, p.type, p.name);
+                    funcParam += string.Format(RpcFormat.funcParam, p.type, p.name);
 
                     funcParam1 += ", ";
                     funcParam1 += p.name;
 
                     funcParam2 += "\t\t";
-                    funcParam2 += string.Format(RPCFormat.funcParam, p.type, p.name);
+                    funcParam2 += string.Format(RpcFormat.funcParam, p.type, p.name);
                     funcParam2 += ";" + Environment.NewLine;
 
-                    shiftParam += string.Format(RPCFormat.shiftRight, p.name);
+                    shiftParam += string.Format(RpcFormat.shiftRight, p.name);
                 }
 
-                stubFunc1 += string.Format(RPCFormat.stubCppFunc1, parsed.Name, funcParam);
-                stubFunc2 += string.Format(RPCFormat.stubCppFunc2,
+                stubFunc1 += string.Format(RpcFormat.stubCppFunc1, parsed.Name, funcParam);
+                stubFunc2 += string.Format(RpcFormat.stubCppFunc2,
                     parsed.PacketType, funcParam2, shiftParam, parsed.Name, funcParam1);
             }
 
-            string stubCpp = string.Format(RPCFormat.stubCpp, stubFunc2, stubFunc1);
+            string stubCpp = string.Format(RpcFormat.stubCpp, stubFunc2, stubFunc1);
             File.WriteAllText("IRpcStub.cpp", stubCpp);
         }
     }

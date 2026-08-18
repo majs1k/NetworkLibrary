@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PacketGenerator
 {
-    class RPCFormat
+    class RpcFormat
     {
 // -------------------------------------------------------------------
         public static string proxyHeader =

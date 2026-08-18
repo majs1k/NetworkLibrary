@@ -44,13 +44,13 @@ void UnityClient::SendTest()
 
 bool UnityClient::cs_create_login(__int64 sessionId, int num)
 {
-	//proxy_.cs_create_login(sessionId, num);
+	//proxy_.sc_create_login(sessionId, num);
 
 
 	return true;
 }
 
-bool UnityClient::sc_create_login(__int64 sessionId, int id, int num)
+bool UnityClient::sc_create_login(__int64 sessionId, int num)
 {
 	///echo
 	std::cout << num << std::endl;

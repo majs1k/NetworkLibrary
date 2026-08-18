@@ -13,13 +13,13 @@ void ServerProxy::cs_create_login(__int64 sessionId, int num)
 	server_->SendPacket(sessionId, packet);
 }
 
-void ServerProxy::sc_create_login(__int64 sessionId, int id, int num)
+void ServerProxy::sc_create_login(__int64 sessionId, int num)
 {
 	Packet* packet = new Packet();
 	packet->Initialize();
 
 	packet->GetHeaderPtr()->type_ = 1;
-	*packet << id << num;
+	*packet << num;
 
 	server_->SendPacket(sessionId, packet);
 }

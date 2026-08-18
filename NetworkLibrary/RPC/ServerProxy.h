@@ -9,5 +9,5 @@ public:
 
 public:
 	void cs_create_login(__int64 sessionId, int num);
-	void sc_create_login(__int64 sessionId, int id, int num);
+	void sc_create_login(__int64 sessionId, int num);
 };

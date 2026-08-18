@@ -138,7 +138,7 @@
     <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
-    <ClCompile Include="UnityClient.cpp" />
+    <ClCompile Include="UnityClientMain.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Profiler.cpp" />
     <ClCompile Include="Utils\ProfilerManager.cpp" />

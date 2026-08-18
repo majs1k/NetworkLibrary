@@ -1,0 +1,14 @@
+sc_create_my_character(__int64 sessionId, int id, char direction, short x, short y, char hp)		: 0
+sc_create_other_character(__int64 sessionId, int id, char direction, short x, short y, char hp)		: 1
+sc_character_delete(__int64 sessionId, int id)														: 2
+cs_start_move(__int64 sessionId, char direction, short x, short y)									: 10
+sc_start_move(__int64 sessionId, int id, char direction, short x, short y)							: 11
+cs_stop_move(__int64 sessionId, char action, short x, short y)										: 12
+sc_stop_move(__int64 sessionId, int id, char action, short x, short y)								: 13
+cs_attack1(__int64 sessionId, char direction, short x, short y)										: 20
+sc_attack1(__int64 sessionId, int id, char direction, short x, short y)								: 21
+cs_attack2(__int64 sessionId, char direction, short x, short y)										: 22
+sc_attack2(__int64 sessionId, int id, char direction, short x, short y)								: 23
+cs_attack3(__int64 sessionId, char direction, short x, short y)										: 24
+sc_attack3(__int64 sessionId, int id, char direction, short x, short y)								: 25
+sc_damage(__int64 sessionId, int attackID, int damageID, char damageHP)								: 30

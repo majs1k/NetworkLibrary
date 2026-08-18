@@ -17,5 +17,5 @@ public:
 
 	bool cs_create_login(__int64 sessionId, int num);
 
-	bool sc_create_login(__int64 sessionId, int id, int num);
+	bool sc_create_login(__int64 sessionId, int num);
 };
