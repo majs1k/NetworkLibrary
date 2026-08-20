@@ -1,0 +1,12 @@
+#pragma once
+
+enum class RESPONSE_CODE : short
+{
+	REGISTER_SUCCESS,
+	REGISTER_ALREADY_EXISTS,
+
+	LOGIN_SUCCESS,
+	LOGIN_FAILED,
+
+	DB_ERROR
+};

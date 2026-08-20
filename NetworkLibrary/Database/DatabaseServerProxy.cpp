@@ -1,7 +1,7 @@
-#include "RpcClientProxy.h"
+#include "DatabaseServerProxy.h"
 
 
-void RpcClientProxy::ReqRegister(std::string& loginId, std::string& password)
+void DatabaseServerProxy::DbReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -9,10 +9,10 @@ void RpcClientProxy::ReqRegister(std::string& loginId, std::string& password)
     packet->GetHeaderPtr()->type_ = 0;
     *packet << loginId << password;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }
 
-void RpcClientProxy::ResRegister(RESPONSE_CODE code)
+void DatabaseServerProxy::DbResRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -20,10 +20,10 @@ void RpcClientProxy::ResRegister(RESPONSE_CODE code)
     packet->GetHeaderPtr()->type_ = 1;
     *packet << code;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }
 
-void RpcClientProxy::ReqLogin(std::string& loginId, std::string& password)
+void DatabaseServerProxy::DbReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -31,10 +31,10 @@ void RpcClientProxy::ReqLogin(std::string& loginId, std::string& password)
     packet->GetHeaderPtr()->type_ = 2;
     *packet << loginId << password;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }
 
-void RpcClientProxy::ResLogin(RESPONSE_CODE code)
+void DatabaseServerProxy::DbResLogin(__int64 sessionId, RESPONSE_CODE code)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -42,10 +42,10 @@ void RpcClientProxy::ResLogin(RESPONSE_CODE code)
     packet->GetHeaderPtr()->type_ = 3;
     *packet << code;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }
 
-void RpcClientProxy::ReqChat(std::string& chat)
+void DatabaseServerProxy::DbReqChat(__int64 sessionId, std::string& chat)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -53,10 +53,10 @@ void RpcClientProxy::ReqChat(std::string& chat)
     packet->GetHeaderPtr()->type_ = 10;
     *packet << chat;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }
 
-void RpcClientProxy::ResChat(std::string& chat)
+void DatabaseServerProxy::DbResChat(__int64 sessionId, std::string& chat)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -64,10 +64,10 @@ void RpcClientProxy::ResChat(std::string& chat)
     packet->GetHeaderPtr()->type_ = 11;
     *packet << chat;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }
 
-void RpcClientProxy::ReqUseItem(std::list<int>& lst)
+void DatabaseServerProxy::DbReqUseItem(__int64 sessionId, std::list<int>& lst)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -75,10 +75,10 @@ void RpcClientProxy::ReqUseItem(std::list<int>& lst)
     packet->GetHeaderPtr()->type_ = 30;
     *packet << lst;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }
 
-void RpcClientProxy::ResUseItem(std::list<int>& lst)
+void DatabaseServerProxy::DbResUseItem(__int64 sessionId, std::list<int>& lst)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -86,5 +86,5 @@ void RpcClientProxy::ResUseItem(std::list<int>& lst)
     packet->GetHeaderPtr()->type_ = 31;
     *packet << lst;
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }

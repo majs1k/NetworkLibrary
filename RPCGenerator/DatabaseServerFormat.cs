@@ -2,7 +2,7 @@
 
 namespace PacketGenerator
 {
-    class RpcClientFormat
+    class DatabaseServerFormat
     {
         // ============================================================
         // Proxy
@@ -11,13 +11,13 @@ namespace PacketGenerator
         public static string proxyHeader =
 @"#pragma once
 
-#include ""../Network/LanClient.h""
+#include ""../Utils/PacketQueue.h""
 #include ""../Utils/Packet.h""
 
-class RpcClientProxy
+class DatabaseServerProxy
 {{
 public:
-    LanClient* client_;
+    PacketQueue* queue_;
 
 public:{0}
 }};
@@ -26,12 +26,12 @@ public:{0}
         // Header에는 함수 선언만
         public static string proxyHeaderFunc =
 @"
-    void {0}({1});";
+    void {0}(__int64 sessionId{1});";
 
-        // CPP에는 함수 구현
+        // CPP에 들어갈 실제 구현
         public static string proxyCppFunc =
 @"
-void RpcClientProxy::{0}({1})
+void DatabaseServerProxy::{0}(__int64 sessionId{1})
 {{
     Packet* packet = new Packet();
     packet->Initialize();
@@ -39,12 +39,12 @@ void RpcClientProxy::{0}({1})
     packet->GetHeaderPtr()->type_ = {2};
     *packet{3};
 
-    client_->SendPacket(packet);
+    queue_->Push(packet);
 }}
 ";
 
         public static string proxyCppHeader =
-@"#include ""RpcClientProxy.h""
+@"#include ""DatabaseServerProxy.h""
 ";
 
         public static string funcParam =
@@ -63,30 +63,30 @@ void RpcClientProxy::{0}({1})
 
 #include ""../Utils/Packet.h""
 
-class RpcClientHandler
+class DatabaseServerHandler
 {{
 public:{0}
 }};
 
-class RpcClientStub
+class DatabaseServerStub
 {{
 public:
-    RpcClientHandler* handler_;
+    DatabaseServerHandler* handler_;
 
 public:
-    bool PacketProc(Packet* packet);
+    bool DbPacketProc(__int64 sessionId, Packet* packet);
 }};
 ";
 
         // Header에는 함수 선언만
         public static string stubHeaderFunc =
 @"
-    virtual bool {0}({1});";
+    virtual bool {0}(__int64 sessionId{1});";
 
-        // CPP의 PacketProc 구현
+        // PacketProc 구현
         public static string stubCppPacketProc =
 @"
-bool RpcClientStub::PacketProc(Packet* packet)
+bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 {{
     switch (packet->GetHeaderPtr()->type_)
     {{{0}
@@ -100,17 +100,17 @@ bool RpcClientStub::PacketProc(Packet* packet)
 }}
 ";
 
-        // CPP의 RPC 함수 구현
+        // 각 Database 함수의 기본 구현
         public static string stubCppFunc =
 @"
-bool RpcClientHandler::{0}({1})
+bool DatabaseServerHandler::{0}(__int64 sessionId{1})
 {{
     return true;
 }}
 ";
 
         public static string stubCppHeader =
-@"#include ""RpcClientStub.h""
+@"#include ""DatabaseServerStub.h""
 ";
 
         public static string stubPacketProcCase =
@@ -120,7 +120,7 @@ bool RpcClientHandler::{0}({1})
 {1}
             *packet{2};
 
-            return handler_->{3}({4});
+            return handler_->{3}(sessionId{4});
         }}";
 
         public static string shiftRight =

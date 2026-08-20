@@ -1,8 +1,12 @@
-LoginRequest(int userId)				0
-LoginResponse(int userId)				1
 
-ChatRequest(std::string& chat)			10
-ChatResponse(std::string& chat)			11
+ReqRegister(std::string& loginId, std::string& password)				0
+ResRegister(RESPONSE_CODE code)									1
 
-ItemRequest(std::list<int>& lst)			30
-ItemResponse(std::list<int>& lst)			31
+ReqLogin(std::string& loginId, std::string& password)				2
+ResLogin(RESPONSE_CODE code)									3
+
+ReqChat(std::string& chat)			10
+ResChat(std::string& chat)			11
+
+ReqUseItem(std::list<int>& lst)			30
+ResUseItem(std::list<int>& lst)			31

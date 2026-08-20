@@ -16,6 +16,12 @@ int main()
 
 	server.Start(config.ip, config.port, config.sessionMax, config.concurrentCount, config.workerCount);
 
+	Database db;
+
+	db.Connect();
+
+	server.InitDatabase(&db);
+
 	while (1)
 	{
 		Sleep(1000);

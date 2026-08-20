@@ -7,19 +7,37 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
     {
         case 0:
         {
-			int userId;
+			std::string loginId;
+			std::string password;
 
-            *packet >> userId;
+            *packet >> loginId >> password;
 
-            return this->LoginRequest(sessionId, userId);
+            return handler_->ReqRegister(sessionId, loginId, password);
         }
         case 1:
         {
-			int userId;
+			RESPONSE_CODE code;
 
-            *packet >> userId;
+            *packet >> code;
 
-            return this->LoginResponse(sessionId, userId);
+            return handler_->ResRegister(sessionId, code);
+        }
+        case 2:
+        {
+			std::string loginId;
+			std::string password;
+
+            *packet >> loginId >> password;
+
+            return handler_->ReqLogin(sessionId, loginId, password);
+        }
+        case 3:
+        {
+			RESPONSE_CODE code;
+
+            *packet >> code;
+
+            return handler_->ResLogin(sessionId, code);
         }
         case 10:
         {
@@ -27,7 +45,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> chat;
 
-            return this->ChatRequest(sessionId, chat);
+            return handler_->ReqChat(sessionId, chat);
         }
         case 11:
         {
@@ -35,7 +53,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> chat;
 
-            return this->ChatResponse(sessionId, chat);
+            return handler_->ResChat(sessionId, chat);
         }
         case 30:
         {
@@ -43,7 +61,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> lst;
 
-            return this->ItemRequest(sessionId, lst);
+            return handler_->ReqUseItem(sessionId, lst);
         }
         case 31:
         {
@@ -51,7 +69,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> lst;
 
-            return this->ItemResponse(sessionId, lst);
+            return handler_->ResUseItem(sessionId, lst);
         }
     default:
     {
@@ -63,32 +81,42 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 }
 
 
-bool RpcServerStub::LoginRequest(__int64 sessionId, int userId)
+bool RpcServerHandler::ReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool RpcServerStub::LoginResponse(__int64 sessionId, int userId)
+bool RpcServerHandler::ResRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
 
-bool RpcServerStub::ChatRequest(__int64 sessionId, std::string& chat)
+bool RpcServerHandler::ReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool RpcServerStub::ChatResponse(__int64 sessionId, std::string& chat)
+bool RpcServerHandler::ResLogin(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
 
-bool RpcServerStub::ItemRequest(__int64 sessionId, std::list<int>& lst)
+bool RpcServerHandler::ReqChat(__int64 sessionId, std::string& chat)
 {
     return true;
 }
 
-bool RpcServerStub::ItemResponse(__int64 sessionId, std::list<int>& lst)
+bool RpcServerHandler::ResChat(__int64 sessionId, std::string& chat)
+{
+    return true;
+}
+
+bool RpcServerHandler::ReqUseItem(__int64 sessionId, std::list<int>& lst)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResUseItem(__int64 sessionId, std::list<int>& lst)
 {
     return true;
 }

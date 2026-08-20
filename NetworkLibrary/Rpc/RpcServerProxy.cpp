@@ -1,29 +1,51 @@
 #include "RpcServerProxy.h"
 
 
-void RpcServerProxy::LoginRequest(__int64 sessionId, int userId)
+void RpcServerProxy::ReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 0;
-    *packet << userId;
+    *packet << loginId << password;
 
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::LoginResponse(__int64 sessionId, int userId)
+void RpcServerProxy::ResRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 1;
-    *packet << userId;
+    *packet << code;
 
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ChatRequest(__int64 sessionId, std::string& chat)
+void RpcServerProxy::ReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 2;
+    *packet << loginId << password;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResLogin(__int64 sessionId, RESPONSE_CODE code)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 3;
+    *packet << code;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ReqChat(__int64 sessionId, std::string& chat)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -34,7 +56,7 @@ void RpcServerProxy::ChatRequest(__int64 sessionId, std::string& chat)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ChatResponse(__int64 sessionId, std::string& chat)
+void RpcServerProxy::ResChat(__int64 sessionId, std::string& chat)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -45,7 +67,7 @@ void RpcServerProxy::ChatResponse(__int64 sessionId, std::string& chat)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ItemRequest(__int64 sessionId, std::list<int>& lst)
+void RpcServerProxy::ReqUseItem(__int64 sessionId, std::list<int>& lst)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -56,7 +78,7 @@ void RpcServerProxy::ItemRequest(__int64 sessionId, std::list<int>& lst)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ItemResponse(__int64 sessionId, std::list<int>& lst)
+void RpcServerProxy::ResUseItem(__int64 sessionId, std::list<int>& lst)
 {
     Packet* packet = new Packet();
     packet->Initialize();

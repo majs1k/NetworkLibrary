@@ -63,12 +63,18 @@ void RpcServerProxy::{0}(__int64 sessionId{1})
 
 #include ""../Utils/Packet.h""
 
+class RpcServerHandler
+{{
+public:{0}
+}};
+
 class RpcServerStub
 {{
 public:
-    bool PacketProc(__int64 sessionId, Packet* packet);
+    RpcServerHandler* handler_;
 
-public:{0}
+public:
+    bool PacketProc(__int64 sessionId, Packet* packet);
 }};
 ";
 
@@ -97,7 +103,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
         // 각 RPC 함수의 기본 구현
         public static string stubCppFunc =
 @"
-bool RpcServerStub::{0}(__int64 sessionId{1})
+bool RpcServerHandler::{0}(__int64 sessionId{1})
 {{
     return true;
 }}
@@ -114,7 +120,7 @@ bool RpcServerStub::{0}(__int64 sessionId{1})
 {1}
             *packet{2};
 
-            return this->{3}(sessionId{4});
+            return handler_->{3}(sessionId{4});
         }}";
 
         public static string shiftRight =

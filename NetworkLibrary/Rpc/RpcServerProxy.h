@@ -9,10 +9,12 @@ public:
     LanServer* server_;
 
 public:
-    void LoginRequest(__int64 sessionId, int userId);
-    void LoginResponse(__int64 sessionId, int userId);
-    void ChatRequest(__int64 sessionId, std::string& chat);
-    void ChatResponse(__int64 sessionId, std::string& chat);
-    void ItemRequest(__int64 sessionId, std::list<int>& lst);
-    void ItemResponse(__int64 sessionId, std::list<int>& lst);
+    void ReqRegister(__int64 sessionId, std::string& loginId, std::string& password);
+    void ResRegister(__int64 sessionId, RESPONSE_CODE code);
+    void ReqLogin(__int64 sessionId, std::string& loginId, std::string& password);
+    void ResLogin(__int64 sessionId, RESPONSE_CODE code);
+    void ReqChat(__int64 sessionId, std::string& chat);
+    void ResChat(__int64 sessionId, std::string& chat);
+    void ReqUseItem(__int64 sessionId, std::list<int>& lst);
+    void ResUseItem(__int64 sessionId, std::list<int>& lst);
 };

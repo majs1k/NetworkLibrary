@@ -9,7 +9,7 @@ class PacketQueue
 	std::mutex lock_;
 
 public:
-	void push(Packet* packet)
+	void Push(Packet* packet)
 	{
 		lock_.lock();
 
@@ -18,7 +18,7 @@ public:
 		lock_.unlock();
 	}
 
-	Packet* pop()
+	Packet* Pop()
 	{
 		lock_.lock();
 

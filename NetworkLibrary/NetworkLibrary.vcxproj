@@ -122,19 +122,21 @@
       <Optimization>Disabled</Optimization>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>C:\Study\mysql-connector-c++-9.7.0-winx64\include\jdbc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Study\mysql-connector-c++-9.7.0-winx64\lib64\vs14;C:\Study\mysql-connector-c++-9.7.0-winx64\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>mysqlcppconn.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Contents\Player.cpp" />
     <ClCompile Include="Contents\RpcModule.cpp" />
-    <ClCompile Include="Contents\TestClient.cpp" />
-    <ClCompile Include="Contents\TestServer.cpp" />
     <ClCompile Include="Contents\UnityClient.cpp" />
     <ClCompile Include="Contents\UnityServer.cpp" />
+    <ClCompile Include="Database\Database.cpp" />
+    <ClCompile Include="DBTest.cpp" />
     <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
@@ -144,13 +146,12 @@
     <ClCompile Include="Utils\ProfilerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Contents\FighterServer.h" />
-    <ClInclude Include="Contents\Item.h" />
-    <ClInclude Include="Contents\Player.h" />
-    <ClInclude Include="Contents\TestClient.h" />
-    <ClInclude Include="Contents\TestServer.h" />
+    <ClInclude Include="Contents\Repository\PlayerRepository.h" />
+    <ClInclude Include="Contents\Repository\UserRepository.h" />
+    <ClInclude Include="Contents\ResponseCode.h" />
     <ClInclude Include="Contents\UnityClient.h" />
     <ClInclude Include="Contents\UnityServer.h" />
+    <ClInclude Include="Database\Database.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />
     <ClInclude Include="Network\Session.h" />

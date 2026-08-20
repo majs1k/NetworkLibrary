@@ -2,16 +2,24 @@
 
 #include "../Utils/Packet.h"
 
+class RpcServerHandler
+{
+public:
+    virtual bool ReqRegister(__int64 sessionId, std::string& loginId, std::string& password);
+    virtual bool ResRegister(__int64 sessionId, RESPONSE_CODE code);
+    virtual bool ReqLogin(__int64 sessionId, std::string& loginId, std::string& password);
+    virtual bool ResLogin(__int64 sessionId, RESPONSE_CODE code);
+    virtual bool ReqChat(__int64 sessionId, std::string& chat);
+    virtual bool ResChat(__int64 sessionId, std::string& chat);
+    virtual bool ReqUseItem(__int64 sessionId, std::list<int>& lst);
+    virtual bool ResUseItem(__int64 sessionId, std::list<int>& lst);
+};
+
 class RpcServerStub
 {
 public:
-    bool PacketProc(__int64 sessionId, Packet* packet);
+    RpcServerHandler* handler_;
 
 public:
-    virtual bool LoginRequest(__int64 sessionId, int userId);
-    virtual bool LoginResponse(__int64 sessionId, int userId);
-    virtual bool ChatRequest(__int64 sessionId, std::string& chat);
-    virtual bool ChatResponse(__int64 sessionId, std::string& chat);
-    virtual bool ItemRequest(__int64 sessionId, std::list<int>& lst);
-    virtual bool ItemResponse(__int64 sessionId, std::list<int>& lst);
+    bool PacketProc(__int64 sessionId, Packet* packet);
 };

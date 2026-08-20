@@ -14,4 +14,9 @@ move /Y "RpcClientProxy.cpp" "..\NetworkLibrary\Rpc\"
 move /Y "RpcClientStub.h" "..\NetworkLibrary\Rpc\"
 move /Y "RpcClientStub.cpp" "..\NetworkLibrary\Rpc\"
 
+move /Y "DatabaseServerProxy.h" "..\NetworkLibrary\Database\"
+move /Y "DatabaseServerProxy.cpp" "..\NetworkLibrary\Database\"
+move /Y "DatabaseServerStub.h" "..\NetworkLibrary\Database\"
+move /Y "DatabaseServerStub.cpp" "..\NetworkLibrary\Database\"
+
 exit

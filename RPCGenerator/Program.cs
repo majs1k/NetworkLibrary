@@ -9,6 +9,7 @@
 
             RpcServerGenerator.Generate(idlFile);
             RpcClientGenerator.Generate(idlFile);
+            DatabaseServerGenerator.Generate(idlFile);
         }
     }
 }

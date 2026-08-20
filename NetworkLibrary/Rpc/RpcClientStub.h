@@ -2,16 +2,24 @@
 
 #include "../Utils/Packet.h"
 
+class RpcClientHandler
+{
+public:
+    virtual bool ReqRegister(std::string& loginId, std::string& password);
+    virtual bool ResRegister(RESPONSE_CODE code);
+    virtual bool ReqLogin(std::string& loginId, std::string& password);
+    virtual bool ResLogin(RESPONSE_CODE code);
+    virtual bool ReqChat(std::string& chat);
+    virtual bool ResChat(std::string& chat);
+    virtual bool ReqUseItem(std::list<int>& lst);
+    virtual bool ResUseItem(std::list<int>& lst);
+};
+
 class RpcClientStub
 {
 public:
-    bool PacketProc(Packet* packet);
+    RpcClientHandler* handler_;
 
 public:
-    virtual bool LoginRequest(int userId);
-    virtual bool LoginResponse(int userId);
-    virtual bool ChatRequest(std::string& chat);
-    virtual bool ChatResponse(std::string& chat);
-    virtual bool ItemRequest(std::list<int>& lst);
-    virtual bool ItemResponse(std::list<int>& lst);
+    bool PacketProc(Packet* packet);
 };

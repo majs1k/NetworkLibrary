@@ -10,7 +10,13 @@ UnityServer::UnityServer()
 {
 	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, LogicThread, this, 0, nullptr);
 
+	hDatabaseThread_ = (HANDLE)_beginthreadex(nullptr, 0, DatabaseThread, this, 0, nullptr);
+
 	rpc_.server_ = this;
+	stub_.handler_ = this;
+
+	dbProxy_.queue_ = &DatabaseReqQueue_;
+	dbStub_.handler_ = this;
 }
 
 bool UnityServer::OnConnectionRequest(const std::wstring& ip, int port)
@@ -37,24 +43,28 @@ void UnityServer::OnRelease(__int64 sessionId)
 
 void UnityServer::OnRecv(__int64 sessionId, Packet* packet)
 {
-	// 함수의 인자 자료형 주의
-	if (!PacketProc(sessionId, packet))
-	{
-		//disconnect(sessionId);
+	//if (!stub_.PacketProc(sessionId, packet))
+	//{
+	//	//disconnect(sessionId);
 
-		return;
-	}
+	//	return;
+	//}
 
-	delete packet;
+	//delete packet;
+
+	/// 로직 스레드에서 패킷 처리
+	packet->SetId(sessionId);
+
+	packetQueue_.Push(packet);
 }
 
 unsigned int __stdcall UnityServer::LogicThread(void* param)
 {
-	UnityServer* server = (UnityServer*)param;
+	UnityServer* server = static_cast<UnityServer*>(param);
 
 	while (!server->shutdown_)
 	{
-		//PacketProc();
+		server->ProcessNetPacket();
 
 		server->Update();
 
@@ -64,48 +74,103 @@ unsigned int __stdcall UnityServer::LogicThread(void* param)
 	return 0;
 }
 
+void UnityServer::ProcessNetPacket()
+{
+	while (1)
+	{
+		Packet* packet = packetQueue_.Pop();
+
+		if (packet == nullptr)
+			return;
+
+		__int64 sessionId = packet->GetId();
+
+		// 함수의 인자 자료형 주의
+		if (!stub_.PacketProc(sessionId, packet))
+		{
+			//disconnect(sessionId);
+
+			return;
+		}
+
+		delete packet;
+	}
+}
+
 void UnityServer::Update()
 {
 
 }
 
 
-bool UnityServer::LoginRequest(__int64 sessionId, int id)
+
+bool UnityServer::ReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
-	rpc_.LoginResponse(sessionId, id);
+
+	//rpc_.ResRegister(sessionId, RESPONSE_CODE::REGISTER_SUCCESS);
+	dbProxy_.DbReqRegister(sessionId, loginId, password);
 
 
 	return true;
 }
 
-bool UnityServer::LoginResponse(__int64 sessionId, int id)
+bool UnityServer::ResRegister(__int64 sessionId, RESPONSE_CODE code)
 {
+	return true;
+}
+
+bool UnityServer::ReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
+{
+	dbProxy_.DbReqLogin(sessionId, loginId, password);
 
 	return true;
 }
 
-bool UnityServer::ChatRequest(__int64 sessionId, std::string& chat)
+bool UnityServer::ResLogin(__int64 sessionId, RESPONSE_CODE code)
 {
-	rpc_.ChatResponse(sessionId, chat);
+	return true;
+}
+
+
+unsigned int __stdcall UnityServer::DatabaseThread(void* param)
+{
+	UnityServer* server = static_cast<UnityServer*>(param);
+
+	while (!server->shutdown_)
+	{
+		Packet* packet = server->DatabaseReqQueue_.Pop();
+
+		if (packet == nullptr)
+		{
+			Sleep(10);
+
+			continue;
+		}
+
+		__int64 sessionId = packet->GetId();
+
+		server->dbStub_.DbPacketProc(sessionId, packet);
+
+		delete packet;
+	}
+
+	return 0;
+}
+
+bool UnityServer::DbReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
+{
+	RESPONSE_CODE code = userRepository.Register(loginId, password);
+
+	/// 수정요
+
+	dbProxy_.DbResLogin(sessionId, code);
 
 	return true;
 }
 
-bool UnityServer::ChatResponse(__int64 sessionId, std::string& chat)
+bool UnityServer::DbReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
 {
-
-	return true;
-}
-
-bool UnityServer::ItemRequest(__int64 sessionId, std::list<int>& lst)
-{
-	rpc_.ItemResponse(sessionId, lst);
-
-	return true;
-}
-
-bool UnityServer::ItemResponse(__int64 sessionId, std::list<int>& lst)
-{
+	userRepository.Register(loginId, password);
 
 	return true;
 }

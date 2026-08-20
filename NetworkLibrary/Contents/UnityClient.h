@@ -2,14 +2,18 @@
 #include <list>
 #include "../Network/LanClient.h"
 
+#include "ResponseCode.h"
+
 #include "../RPC/RpcClientProxy.h"
 #include "../RPC/RpcClientStub.h"
 
 
-class UnityClient : public LanClient, public RpcClientStub
+
+class UnityClient : public LanClient, public RpcClientHandler
 {
 private:
 	RpcClientProxy rpc_;
+	RpcClientStub stub_;
 
 public:
 	UnityClient();
@@ -18,20 +22,16 @@ public:
 	void OnRelease() override;
 	void OnRecv(Packet* packet) override;
 
+	// ----------------------------------------------------- //
 
-	void SendTest();
+	void TestRegister(std::string& loginId, std::string& password);
+	void TestLogin(std::string& loginId, std::string& password);
 
 	// ----------------------------------------------------- //
 
-	bool LoginRequest(int id) override;
+	bool ReqRegister(std::string& loginId, std::string& password);
+	bool ResRegister(RESPONSE_CODE code);
+	bool ReqLogin(std::string& loginId, std::string& password);
+	bool ResLogin(RESPONSE_CODE code);
 
-	bool LoginResponse(int id) override;
-
-	bool ChatRequest(std::string& chat) override;
-
-	bool ChatResponse(std::string& chat) override;
-
-	bool ItemRequest(std::list<int>& lst) override;
-
-	bool ItemResponse(std::list<int>& lst) override;
 };

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <conio.h>
 #include "./Contents/UnityClient.h"
 #include "./Utils/ConfigLoader.h"
@@ -14,11 +15,29 @@ int main()
 
 	client.Connect(SERVER_IP, SERVER_PORT);
 
+	std::string id;
+	std::string pw;
+
+	std::cout << "input id: ";
+	std::cin >> id;
+	std::cout << "input pw: ";
+	std::cin >> pw;
+
 	while (1)
 	{
-		Sleep(1000);
+		Sleep(100);
+		
+		if (GetAsyncKeyState('Z') & 0x0001)
+		{
+			client.TestRegister(id, pw);
+			std::cout << "TestRegister" << std::endl;
+		}
 
-		client.SendTest();
+		if (GetAsyncKeyState('X') & 0x0001)
+		{
+			client.TestLogin(id, pw);
+			std::cout << "TestLogin" << std::endl;
+		}
 
 		client.ProcessNetwork();
 	}
