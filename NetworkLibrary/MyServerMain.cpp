@@ -1,10 +1,10 @@
 #include <conio.h>
-#include "./Contents/UnityServer.h"
+#include "./Contents/MyServer.h"
 #include "./Utils/ConfigLoader.h"
 #include "./Utils/CrashDump.h"
 #include "./Utils/Profiler.h"
 
-#define CONFIG_FILENAME			L"unityconfig.json"
+#define CONFIG_FILENAME			L"myconfig.json"
 
 int main()
 {
@@ -12,15 +12,10 @@ int main()
 
 	ConfigLoader::Instance().Load(CONFIG_FILENAME);
 
-	UnityServer server;
+	MyServer server;
 
 	server.Start(config.ip, config.port, config.sessionMax, config.concurrentCount, config.workerCount);
 
-	Database db;
-
-	db.Connect();
-
-	server.InitDatabase(&db);
 
 	while (1)
 	{
@@ -35,7 +30,7 @@ int main()
 		else if (GetAsyncKeyState('C') & 0x0001)
 			ProfilerManager::Instance().Clear();
 
-		server.Monitoring();
+		//server.Monitoring();
 	}
 
 	server.Stop();

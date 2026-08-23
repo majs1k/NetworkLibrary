@@ -43,6 +43,8 @@ public:
 	//virtual void OnError(int errorCode, wchar_t* str) = 0;
 
 	void ProcessNetwork();
+
+private:
 	void RecvPost();
 	void CompleteRecv(int numOfBytes);
 	void SendPost();

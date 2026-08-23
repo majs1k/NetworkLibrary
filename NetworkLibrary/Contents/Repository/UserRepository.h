@@ -14,7 +14,8 @@ public:
 			"CREATE TABLE IF NOT EXISTS users("
 			"user_id INT AUTO_INCREMENT PRIMARY KEY,"
 			"login_id VARCHAR(30) UNIQUE,"
-			"password VARCHAR(30)"
+			"password VARCHAR(30),"
+			"created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
 			");");
 
 		stmt->execute();
@@ -32,14 +33,14 @@ public:
 
 			stmt->execute();
 
-			return RESPONSE_CODE::REGISTER_SUCCESS;
+			return RESPONSE_CODE::SUCCESS;
 		}
 		catch (sql::SQLException& e)
 		{
-			// login_id UNIQUE 제약조건 위반
+			// login_id UNIQUE 에러
 			if (e.getErrorCode() == 1062)
 			{
-				//return DB_RESULT::REGISTER_ALREADY_EXISTS;
+				return RESPONSE_CODE::USER_REGISTER_ALREADY_EXISTS;
 			}
 
 			// 그 외 DB 오류
@@ -51,7 +52,7 @@ public:
 		}
 	}
 
-	RESPONSE_CODE Login(const std::string& loginId, const std::string& password)
+	RESPONSE_CODE Login(const std::string& loginId, const std::string& password, int& userId)
 	{
 		try
 		{
@@ -66,18 +67,18 @@ public:
 
 			// 아이디가 없음
 			if (!result->next())
-				return RESPONSE_CODE::LOGIN_FAILED;
+				return RESPONSE_CODE::USER_LOGIN_FAILED;
 
-			int userid = result->getInt("user_id");
-			std::string id = result->getString("login_id");
+			//std::string loginId = result->getString("login_id");
 			std::string pw = result->getString("password");
 
 			// 비밀번호가 틀림
 			if (pw != password)
-				return RESPONSE_CODE::LOGIN_FAILED;
+				return RESPONSE_CODE::USER_LOGIN_FAILED;
 
+			userId = result->getInt("user_id");
 
-			return RESPONSE_CODE::LOGIN_SUCCESS;
+			return RESPONSE_CODE::SUCCESS;
 		}
 		catch (sql::SQLException& e)
 		{

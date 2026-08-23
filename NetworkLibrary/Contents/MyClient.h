@@ -4,19 +4,21 @@
 
 #include "ResponseCode.h"
 
+#include "Player.h"
+
 #include "../RPC/RpcClientProxy.h"
 #include "../RPC/RpcClientStub.h"
 
 
 
-class UnityClient : public LanClient, public RpcClientHandler
+class MyClient : public LanClient, public RpcClientHandler
 {
 private:
 	RpcClientProxy rpc_;
 	RpcClientStub stub_;
 
 public:
-	UnityClient();
+	MyClient();
 
 	void OnConnect() override;
 	void OnRelease() override;
@@ -24,14 +26,26 @@ public:
 
 	// ----------------------------------------------------- //
 
-	void TestRegister(std::string& loginId, std::string& password);
-	void TestLogin(std::string& loginId, std::string& password);
+	void TestRegister();
+	void TestLogin();
+
+	void TestCreatePlayer();
+	void TestPlayerInfo();
+
+	void TestPlayerList();
+
+	void TestChat();
+
 
 	// ----------------------------------------------------- //
 
-	bool ReqRegister(std::string& loginId, std::string& password);
 	bool ResRegister(RESPONSE_CODE code);
-	bool ReqLogin(std::string& loginId, std::string& password);
-	bool ResLogin(RESPONSE_CODE code);
+	bool ResLogin(RESPONSE_CODE code, int userId);
 
+	bool ResCreatePlayer(RESPONSE_CODE code);
+	bool ResPlayerProfile(RESPONSE_CODE code, Player player);
+
+	bool ResPlayerList(std::list<Player> playerList);
+
+	bool ResChat(int playerId, std::string& message);
 };

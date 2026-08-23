@@ -133,24 +133,24 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Contents\RpcModule.cpp" />
-    <ClCompile Include="Contents\UnityClient.cpp" />
-    <ClCompile Include="Contents\UnityServer.cpp" />
+    <ClCompile Include="Contents\MyClient.cpp" />
+    <ClCompile Include="Contents\MyServer.cpp" />
     <ClCompile Include="Database\Database.cpp" />
-    <ClCompile Include="DBTest.cpp" />
+    <ClCompile Include="MyServerMain.cpp" />
     <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
-    <ClCompile Include="UnityServerMain.cpp" />
     <ClCompile Include="Utils\Logger.cpp" />
     <ClCompile Include="Utils\Profiler.cpp" />
     <ClCompile Include="Utils\ProfilerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Contents\Player.h" />
     <ClInclude Include="Contents\Repository\PlayerRepository.h" />
     <ClInclude Include="Contents\Repository\UserRepository.h" />
     <ClInclude Include="Contents\ResponseCode.h" />
-    <ClInclude Include="Contents\UnityClient.h" />
-    <ClInclude Include="Contents\UnityServer.h" />
+    <ClInclude Include="Contents\MyClient.h" />
+    <ClInclude Include="Contents\MyServer.h" />
     <ClInclude Include="Database\Database.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />
@@ -172,9 +172,7 @@
     <ClInclude Include="Utils\TickController.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="fighterconfig.json" />
-    <None Include="testconfig.json" />
-    <None Include="unityconfig.json" />
+    <None Include="myconfig.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

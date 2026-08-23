@@ -1,0 +1,341 @@
+#include "MyServer.h"
+#include "../Utils/Packet.h"
+#include "../Utils/Logger.h"
+#include "../Utils/TickController.h"
+#include <process.h>
+#include <Windows.h>
+
+
+MyServer::MyServer()
+{
+	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, LogicThread, this, 0, nullptr);
+
+	hDatabaseThread_ = (HANDLE)_beginthreadex(nullptr, 0, DatabaseThread, this, 0, nullptr);
+
+	rpcProxy_.server_ = this;
+	rpcStub_.handler_ = this;
+
+	dbProxy_.dbQueue_ = &dbReqQueue_;
+	dbProxy_.logicQueue_ = &dbResQueue_;
+
+	dbStub_.handler_ = this;
+
+
+	db_.Connect();
+
+	userRepository_.Init(&db_);
+	playerRepository_.Init(&db_);
+
+
+}
+
+bool MyServer::OnConnectionRequest(const std::wstring& ip, int port)
+{
+	if (SessionCount() >= SessionMax())
+	{
+		LOG(L"[Network] session limit over");
+
+		return false;
+	}
+
+	return true;
+}
+
+void MyServer::OnAccept(__int64 sessionId)
+{
+
+}
+
+void MyServer::OnRelease(__int64 sessionId)
+{
+
+}
+
+void MyServer::OnRecv(__int64 sessionId, Packet* packet)
+{
+	//if (!stub_.PacketProc(sessionId, packet))
+	//{
+	//	//disconnect(sessionId);
+
+	//	return;
+	//}
+
+	//delete packet;
+
+	/// 로직 스레드에서 패킷 처리
+	packet->SetId(sessionId);
+
+	networkPacketQueue_.Push(packet);
+}
+
+unsigned int __stdcall MyServer::LogicThread(void* param)
+{
+	MyServer* server = static_cast<MyServer*>(param);
+
+	while (!server->shutdown_)
+	{
+		server->ProcessNetworkQueue();
+
+		server->ProcessDbResQueue();
+
+		server->Update();
+
+		TickController::Instance().Update();
+	}
+
+	return 0;
+}
+
+void MyServer::ProcessNetworkQueue()
+{
+	while (1)
+	{
+		Packet* packet = networkPacketQueue_.Pop();
+
+		if (packet == nullptr)
+			return;
+
+		__int64 sessionId = packet->GetId();
+
+		// 함수의 인자 자료형 주의
+		if (!rpcStub_.PacketProc(sessionId, packet))
+		{
+			//disconnect(sessionId);
+
+			return;
+		}
+
+		delete packet;
+	}
+}
+
+void MyServer::Update()
+{
+
+}
+
+
+// ----------------------------------------------------- //
+
+
+unsigned int __stdcall MyServer::DatabaseThread(void* param)
+{
+	MyServer* server = static_cast<MyServer*>(param);
+
+	while (!server->shutdown_)
+	{
+		server->ProcessDbReqQueue();
+
+		Sleep(10);
+	}
+
+	return 0;
+}
+
+void MyServer::ProcessDbReqQueue()
+{
+	while (1)
+	{
+		Packet* packet = dbReqQueue_.Pop();
+
+		if (packet == nullptr)
+		{
+			return;
+		}
+
+		__int64 sessionId = packet->GetId();
+
+		dbStub_.DbPacketProc(sessionId, packet);
+
+		delete packet;
+	}
+}
+
+void MyServer::ProcessDbResQueue()
+{
+	while (1)
+	{
+		Packet* packet = dbResQueue_.Pop();
+
+		if (packet == nullptr)
+		{
+			return;
+		}
+
+		__int64 sessionId = packet->GetId();
+
+		dbStub_.DbPacketProc(sessionId, packet);
+
+		delete packet;
+	}
+}
+
+
+// ----------------------------------------------------- //
+// RPC
+// ----------------------------------------------------- //
+
+
+bool MyServer::ReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
+{
+	dbProxy_.ReqRegisterDB(sessionId, loginId, password);
+
+	return true;
+}
+
+bool MyServer::ReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
+{
+	dbProxy_.ReqLoginDB(sessionId, loginId, password);
+
+	return true;
+}
+
+bool MyServer::ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName)
+{
+	dbProxy_.ReqCreatePlayerDB(sessionId, userId, playerName);
+
+	return true;
+}
+
+bool MyServer::ReqPlayerProfile(__int64 sessionId, int userId)
+{
+	dbProxy_.ReqPlayerProfileDB(sessionId, userId);
+
+	return true;
+}
+
+bool MyServer::ReqPlayerList(__int64 sessionId)
+{
+	std::list<Player> playerList;
+	
+	for (auto& i : playerMap_)
+	{
+		Player p;
+		p = *i.second;
+
+		playerList.push_back(p);
+	}
+
+	rpcProxy_.ResPlayerList(sessionId, playerList);
+
+	return true;
+}
+
+bool MyServer::ReqChat(__int64 sessionId, std::string& message)
+{
+	int senderId = sessionToPlayer_[sessionId];
+
+	for (auto& p : playerMap_)
+	{
+		Player* other = p.second;
+
+		rpcProxy_.ResChat(other->sessionId_, senderId, message);
+	}
+
+	return true;
+}
+
+// ----------------------------------------------------- //
+// DB
+// ----------------------------------------------------- //
+
+
+bool MyServer::ReqRegisterDB(__int64 sessionId, std::string& loginId, std::string& password)
+{
+	RESPONSE_CODE code = userRepository_.Register(loginId, password);
+
+	dbProxy_.ResRegisterDB(sessionId, code);
+
+	return true;
+}
+
+bool MyServer::ResRegisterDB(__int64 sessionId, RESPONSE_CODE code)
+{
+	rpcProxy_.ResRegister(sessionId, code);
+
+	return true;
+}
+
+bool MyServer::ReqLoginDB(__int64 sessionId, std::string& loginId, std::string& password)
+{
+	int userId = 0;
+
+	RESPONSE_CODE code = userRepository_.Login(loginId, password, userId);
+
+	dbProxy_.ResLoginDB(sessionId, code, userId);
+
+	return true;
+}
+
+bool MyServer::ResLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId)
+{
+	rpcProxy_.ResLogin(sessionId, code, userId);
+
+	return true;
+}
+
+
+
+
+bool MyServer::ReqCreatePlayerDB(__int64 sessionId, int userId, std::string& playerName)
+{
+	RESPONSE_CODE code = playerRepository_.InsertPlayer(userId, playerName);
+
+	dbProxy_.ResRegisterDB(sessionId, code);
+
+	return true;
+}
+
+bool MyServer::ResCreatePlayerDB(__int64 sessionId, RESPONSE_CODE code)
+{
+	rpcProxy_.ResCreatePlayer(sessionId, code);
+
+	return true;
+}
+
+bool MyServer::ReqPlayerProfileDB(__int64 sessionId, int userId)
+{
+	Player p;
+
+	RESPONSE_CODE code = playerRepository_.SelectPlayer(userId, p);
+
+	dbProxy_.ResPlayerProfileDB(sessionId, code, p);
+
+	return true;
+}
+
+bool MyServer::ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player player)
+{
+	if (code != RESPONSE_CODE::SUCCESS)
+	{
+		rpcProxy_.ResPlayerProfile(sessionId, code, player);
+
+		return true;
+	}
+
+	auto it = playerMap_.find(player.playerId_);
+
+	// 이미 접속 중
+	if (it != playerMap_.end())
+	{
+		RESPONSE_CODE c =  RESPONSE_CODE::PLAYER_ALREADY_CONNECTED;
+
+		rpcProxy_.ResPlayerProfile(sessionId, c, player);
+
+		return true;
+	}
+
+
+	// 성공이라면 서버의 playerMap에 저장
+	sessionToPlayer_.insert({ sessionId, player.playerId_ });
+
+	Player* newPlayer = new Player();
+	newPlayer->Initialize(sessionId, player.playerId_, player.playerName_, player.level_, player.gold_);
+
+	playerMap_.insert({ sessionId , newPlayer });
+
+
+	rpcProxy_.ResPlayerProfile(sessionId, code, player);
+
+	return true;
+}

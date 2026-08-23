@@ -9,7 +9,7 @@ namespace PacketGenerator
         // ============================================================
 
         public static string proxyHeader =
-@"#pragma once
+        @"#pragma once
 
 #include ""../Utils/PacketQueue.h""
 #include ""../Utils/Packet.h""
@@ -17,7 +17,8 @@ namespace PacketGenerator
 class DatabaseServerProxy
 {{
 public:
-    PacketQueue* queue_;
+    PacketQueue* logicQueue_;
+    PacketQueue* dbQueue_;
 
 public:{0}
 }};
@@ -30,16 +31,18 @@ public:{0}
 
         // CPP에 들어갈 실제 구현
         public static string proxyCppFunc =
-@"
+        @"
 void DatabaseServerProxy::{0}(__int64 sessionId{1})
 {{
     Packet* packet = new Packet();
     packet->Initialize();
 
+    packet->SetId(sessionId);
+
     packet->GetHeaderPtr()->type_ = {2};
     *packet{3};
 
-    queue_->Push(packet);
+    {4}->Push(packet);
 }}
 ";
 

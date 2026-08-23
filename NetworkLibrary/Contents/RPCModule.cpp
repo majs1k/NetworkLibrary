@@ -8,10 +8,12 @@
 #include <list>	
 #include <string>
 
+#include "Player.h"
+
 #include "ResponseCode.h"
 
 
-inline Packet& operator<<(Packet& packet, std::string str)
+inline Packet& operator<<(Packet& packet, std::string& str)
 {
 	packet << static_cast<short>(str.size());
 
@@ -32,8 +34,8 @@ inline Packet& operator>>(Packet& packet, std::string& str)
 	return packet;
 }
 
-
-inline Packet& operator<<(Packet& packet, std::list<int> lst)
+template<typename T>
+inline Packet& operator<<(Packet& packet, std::list<T>& lst)
 {
 	packet << static_cast<short>(lst.size());
 
@@ -43,13 +45,14 @@ inline Packet& operator<<(Packet& packet, std::list<int> lst)
 	return packet;
 }
 
-inline Packet& operator>>(Packet& packet, std::list<int>& lst)
+template<typename T>
+inline Packet& operator>>(Packet& packet, std::list<T>& lst)
 {
 	short size = 0;
 
 	packet >> size;
 
-	int data;
+	T data;
 
 	for (int i = 0; i < size; i++)
 	{
@@ -73,6 +76,28 @@ inline Packet& operator>>(Packet& packet, RESPONSE_CODE& code)
 	packet >> c;
 
 	code = static_cast<RESPONSE_CODE>(c);
+
+	return packet;
+}
+
+
+
+inline Packet& operator<<(Packet& packet, Player player)
+{
+	packet << player.playerId_;
+	packet << player.playerName_;
+	packet << player.level_;
+	packet << player.gold_;
+
+	return packet;
+}
+
+inline Packet& operator>>(Packet& packet, Player& player)
+{
+	packet >> player.playerId_;
+	packet >> player.playerName_;
+	packet >> player.level_;
+	packet >> player.gold_;
 
 	return packet;
 }

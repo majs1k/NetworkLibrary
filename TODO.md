@@ -42,4 +42,6 @@ worker 1 client 1 oversend 100 loop 0 -> zero copy 유리 (패킷 크기 약 100
 스레드간 전달 방식 -> 구조체 vs 직렬화버퍼
 
 LanServer를 상속한 서버에 각종 컨텐츠 자료구조들이랑 PacketProc가 들어가면, 객체지향이 전혀 아니게되는데.. 다 friend?
+
+로직스레드랑 db스레드는 라이브러리 영역?
 ```

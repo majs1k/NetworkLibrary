@@ -1,0 +1,42 @@
+
+ReqRegister(std::string& loginId, std::string& password)					0
+ResRegister(RESPONSE_CODE code)												1
+
+ReqLogin(std::string& loginId, std::string& password)						2
+ResLogin(RESPONSE_CODE code, int userId)									3
+
+
+
+ReqCreatePlayer(int userId, std::string& playerName)								10
+ResCreatePlayer(RESPONSE_CODE code)													11
+
+ReqPlayerProfile(int userId)														12
+ResPlayerProfile(RESPONSE_CODE code, Player player)		13
+
+
+ReqRoomList()	20
+ResRoomList()	21
+
+ReqRoomCreate(std::string& roomName)	22
+ResRoomCreate(RESPONSE_CODE code, int roomId, std::string& roomName)	23
+
+ResRoomDelete(int roomId)	24
+
+ReqEnterRoom(int roomId)	25
+ResEnterRoom(RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)		26
+
+ResEnterOtherUser()		27
+
+
+
+
+ReqPlayerList()											90
+ResPlayerList(std::list<Player> playerList)					91
+
+ReqChat(std::string& message)							100
+ResChat(int playerId, std::string& message)				101
+
+
+
+ReqUseItem(std::list<int>& lst)			200
+ResUseItem(std::list<int>& lst)			201

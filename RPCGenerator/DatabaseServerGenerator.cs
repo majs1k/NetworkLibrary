@@ -56,12 +56,33 @@ class DatabaseServerGenerator
 
 
                 // ====================================================
+                // Req / Res에 따른 Queue 결정
+                // ====================================================
+
+                string queueName;
+
+                if (parsed.Name.StartsWith("Req"))
+                {
+                    queueName = "dbQueue_";
+                }
+                else if (parsed.Name.StartsWith("Res"))
+                {
+                    queueName = "logicQueue_";
+                }
+                else
+                {
+                    throw new Exception(
+                        $"DatabaseServer 함수 이름은 Req 또는 Res로 시작해야 합니다. : {parsed.Name}");
+                }
+
+
+                // ====================================================
                 // .h
                 // ====================================================
 
                 proxyHeaderFunc += string.Format(
                     DatabaseServerFormat.proxyHeaderFunc,
-                    "Db" + parsed.Name,
+                    parsed.Name + "DB",
                     funcParam);
 
 
@@ -71,10 +92,11 @@ class DatabaseServerGenerator
 
                 proxyCppFunc += string.Format(
                     DatabaseServerFormat.proxyCppFunc,
-                    "Db" + parsed.Name,
+                    parsed.Name + "DB",
                     funcParam,
                     parsed.PacketType,
-                    shiftParam);
+                    shiftParam,
+                    queueName);
             }
 
 
@@ -189,7 +211,7 @@ class DatabaseServerGenerator
 
                 stubHeaderFunc += string.Format(
                     DatabaseServerFormat.stubHeaderFunc,
-                    "Db" + parsed.Name,
+                    parsed.Name + "DB",
                     funcParam);
 
 
@@ -202,7 +224,7 @@ class DatabaseServerGenerator
                     parsed.PacketType,
                     funcParam2,
                     shiftParam,
-                    "Db" + parsed.Name,
+                    parsed.Name + "DB",
                     funcParam1);
 
 
@@ -212,7 +234,7 @@ class DatabaseServerGenerator
 
                 stubCppFunc += string.Format(
                     DatabaseServerFormat.stubCppFunc,
-                    "Db" + parsed.Name,
+                    parsed.Name + "DB",
                     funcParam);
             }
 
