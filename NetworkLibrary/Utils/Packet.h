@@ -30,7 +30,7 @@ struct FIGHTER_HEADER
 
 // ------------------------------------------------------- //
 
-struct UNITY_HEADER
+struct MY_HEADER
 {
 	short size_;
 	short type_;
@@ -41,19 +41,19 @@ struct UNITY_HEADER
 ///헤더 변경시 수정//////////////////////////////////////////////////////////////////////////////////////
 //#define HEADER_SIZE		sizeof(TEST_HEADER)
 //#define HEADER_SIZE		sizeof(FIGHTER_HEADER)
-#define HEADER_SIZE		sizeof(UNITY_HEADER)
+#define HEADER_SIZE		sizeof(MY_HEADER)
 
 class Packet
 {
 protected:
-	char* buffer_{ nullptr };
+	char* buffer_;
 
 	int	capacity_{ 200 };
 
 	int writePos_{ 0 };
 	int readPos_{ 0 };
 
-	__int64 sessionId_;
+	__int64 sessionId_{ 0 };
 
 public:
 	Packet()
@@ -83,9 +83,9 @@ public:
 	}
 
 	///헤더 변경시 수정//////////////////////////////////////////////////////////////////////////////////////
-	UNITY_HEADER* GetHeaderPtr()
+	MY_HEADER* GetHeaderPtr()
 	{
-		return reinterpret_cast<UNITY_HEADER*>(buffer_);
+		return reinterpret_cast<MY_HEADER*>(buffer_);
 	}
 
 	char* GetBodyPtr()

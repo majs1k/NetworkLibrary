@@ -33,16 +33,16 @@
     <ClCompile Include="Network\LanClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Contents\RpcModule.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Contents\MyServer.cpp">
+    <ClCompile Include="Database\Database.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Contents\MyClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Database\Database.cpp">
+    <ClCompile Include="Contents\MyServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Contents\RpcModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MyServerMain.cpp">
@@ -104,25 +104,25 @@
     <ClInclude Include="Utils\PacketQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Contents\MyServer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Contents\MyClient.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Contents\ResponseCode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Database\Database.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Contents\Repository\UserRepository.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Contents\Repository\PlayerRepository.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Contents\Repository\UserRepository.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\MyClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\MyServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Contents\Player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\ResponseCode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

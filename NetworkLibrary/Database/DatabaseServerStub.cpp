@@ -12,7 +12,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> loginId >> password;
 
-            return handler_->ReqRegisterDB(sessionId, loginId, password);
+            return handler_->ReqUserRegisterDB(sessionId, loginId, password);
         }
         case 1:
         {
@@ -20,7 +20,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code;
 
-            return handler_->ResRegisterDB(sessionId, code);
+            return handler_->ResUserRegisterDB(sessionId, code);
         }
         case 2:
         {
@@ -29,7 +29,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> loginId >> password;
 
-            return handler_->ReqLoginDB(sessionId, loginId, password);
+            return handler_->ReqUserLoginDB(sessionId, loginId, password);
         }
         case 3:
         {
@@ -38,7 +38,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code >> userId;
 
-            return handler_->ResLoginDB(sessionId, code, userId);
+            return handler_->ResUserLoginDB(sessionId, code, userId);
         }
         case 10:
         {
@@ -79,42 +79,58 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet;
 
-            return handler_->ReqRoomListDB(sessionId);
+            return handler_->ReqPlayerListDB(sessionId);
         }
         case 21:
         {
+			std::list<Player> playerList;
 
-            *packet;
+            *packet >> playerList;
 
-            return handler_->ResRoomListDB(sessionId);
+            return handler_->ResPlayerListDB(sessionId, playerList);
         }
         case 22:
         {
-			std::string roomName;
+			Player player;
 
-            *packet >> roomName;
+            *packet >> player;
 
-            return handler_->ReqRoomCreateDB(sessionId, roomName);
+            return handler_->ResPlayerEnterDB(sessionId, player);
         }
         case 23:
         {
-			RESPONSE_CODE code;
-			int roomId;
-			std::string roomName;
+			int playerId;
 
-            *packet >> code >> roomId >> roomName;
+            *packet >> playerId;
 
-            return handler_->ResRoomCreateDB(sessionId, code, roomId, roomName);
+            return handler_->ResPlayerLeaveDB(sessionId, playerId);
         }
         case 24:
         {
-			int roomId;
+			int playerId;
 
-            *packet >> roomId;
+            *packet >> playerId;
 
-            return handler_->ResRoomDeleteDB(sessionId, roomId);
+            return handler_->ResPlayerDeleteDB(sessionId, playerId);
         }
-        case 25:
+        case 30:
+        {
+			std::string message;
+
+            *packet >> message;
+
+            return handler_->ReqChatDB(sessionId, message);
+        }
+        case 31:
+        {
+			int playerId;
+			std::string message;
+
+            *packet >> playerId >> message;
+
+            return handler_->ResChatDB(sessionId, playerId, message);
+        }
+        case 50:
         {
 			int roomId;
 
@@ -122,7 +138,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             return handler_->ReqEnterRoomDB(sessionId, roomId);
         }
-        case 26:
+        case 51:
         {
 			RESPONSE_CODE code;
 			int roomId;
@@ -132,45 +148,6 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
             *packet >> code >> roomId >> roomName >> lst;
 
             return handler_->ResEnterRoomDB(sessionId, code, roomId, roomName, lst);
-        }
-        case 27:
-        {
-
-            *packet;
-
-            return handler_->ResEnterOtherUserDB(sessionId);
-        }
-        case 90:
-        {
-
-            *packet;
-
-            return handler_->ReqPlayerListDB(sessionId);
-        }
-        case 91:
-        {
-			std::list<Player> playerList;
-
-            *packet >> playerList;
-
-            return handler_->ResPlayerListDB(sessionId, playerList);
-        }
-        case 100:
-        {
-			std::string message;
-
-            *packet >> message;
-
-            return handler_->ReqChatDB(sessionId, message);
-        }
-        case 101:
-        {
-			int playerId;
-			std::string message;
-
-            *packet >> playerId >> message;
-
-            return handler_->ResChatDB(sessionId, playerId, message);
         }
         case 200:
         {
@@ -198,22 +175,22 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 }
 
 
-bool DatabaseServerHandler::ReqRegisterDB(__int64 sessionId, std::string& loginId, std::string& password)
+bool DatabaseServerHandler::ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResRegisterDB(__int64 sessionId, RESPONSE_CODE code)
+bool DatabaseServerHandler::ResUserRegisterDB(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ReqLoginDB(__int64 sessionId, std::string& loginId, std::string& password)
+bool DatabaseServerHandler::ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId)
+bool DatabaseServerHandler::ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId)
 {
     return true;
 }
@@ -238,46 +215,6 @@ bool DatabaseServerHandler::ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE 
     return true;
 }
 
-bool DatabaseServerHandler::ReqRoomListDB(__int64 sessionId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResRoomListDB(__int64 sessionId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ReqRoomCreateDB(__int64 sessionId, std::string& roomName)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResRoomCreateDB(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResRoomDeleteDB(__int64 sessionId, int roomId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ReqEnterRoomDB(__int64 sessionId, int roomId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResEnterRoomDB(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResEnterOtherUserDB(__int64 sessionId)
-{
-    return true;
-}
-
 bool DatabaseServerHandler::ReqPlayerListDB(__int64 sessionId)
 {
     return true;
@@ -288,12 +225,37 @@ bool DatabaseServerHandler::ResPlayerListDB(__int64 sessionId, std::list<Player>
     return true;
 }
 
+bool DatabaseServerHandler::ResPlayerEnterDB(__int64 sessionId, Player player)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResPlayerLeaveDB(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResPlayerDeleteDB(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
 bool DatabaseServerHandler::ReqChatDB(__int64 sessionId, std::string& message)
 {
     return true;
 }
 
 bool DatabaseServerHandler::ResChatDB(__int64 sessionId, int playerId, std::string& message)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ReqEnterRoomDB(__int64 sessionId, int roomId)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResEnterRoomDB(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
 {
     return true;
 }

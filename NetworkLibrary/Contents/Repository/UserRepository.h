@@ -13,9 +13,9 @@ public:
 		auto stmt = database_->Prepare(
 			"CREATE TABLE IF NOT EXISTS users("
 			"user_id INT AUTO_INCREMENT PRIMARY KEY,"
-			"login_id VARCHAR(30) UNIQUE,"
-			"password VARCHAR(30),"
-			"created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+			"login_id VARCHAR(20) NOT NULL UNIQUE,"
+			"password VARCHAR(20) NOT NULL,"
+			"created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"
 			");");
 
 		stmt->execute();
@@ -40,7 +40,7 @@ public:
 			// login_id UNIQUE 에러
 			if (e.getErrorCode() == 1062)
 			{
-				return RESPONSE_CODE::USER_REGISTER_ALREADY_EXISTS;
+				return RESPONSE_CODE::REGISTER_ALREADY_EXISTS;
 			}
 
 			// 그 외 DB 오류
@@ -67,14 +67,14 @@ public:
 
 			// 아이디가 없음
 			if (!result->next())
-				return RESPONSE_CODE::USER_LOGIN_FAILED;
+				return RESPONSE_CODE::LOGIN_FAILED;
 
 			//std::string loginId = result->getString("login_id");
 			std::string pw = result->getString("password");
 
 			// 비밀번호가 틀림
 			if (pw != password)
-				return RESPONSE_CODE::USER_LOGIN_FAILED;
+				return RESPONSE_CODE::LOGIN_FAILED;
 
 			userId = result->getInt("user_id");
 

@@ -1,7 +1,7 @@
 #include "RpcServerProxy.h"
 
 
-void RpcServerProxy::ReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
+void RpcServerProxy::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -12,7 +12,7 @@ void RpcServerProxy::ReqRegister(__int64 sessionId, std::string& loginId, std::s
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResRegister(__int64 sessionId, RESPONSE_CODE code)
+void RpcServerProxy::ResUserRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -23,7 +23,7 @@ void RpcServerProxy::ResRegister(__int64 sessionId, RESPONSE_CODE code)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
+void RpcServerProxy::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -34,7 +34,7 @@ void RpcServerProxy::ReqLogin(__int64 sessionId, std::string& loginId, std::stri
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResLogin(__int64 sessionId, RESPONSE_CODE code, int userId)
+void RpcServerProxy::ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int userId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -89,7 +89,7 @@ void RpcServerProxy::ResPlayerProfile(__int64 sessionId, RESPONSE_CODE code, Pla
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ReqRoomList(__int64 sessionId)
+void RpcServerProxy::ReqPlayerList(__int64 sessionId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -100,101 +100,46 @@ void RpcServerProxy::ReqRoomList(__int64 sessionId)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResRoomList(__int64 sessionId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 21;
-    *packet;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ReqRoomCreate(__int64 sessionId, std::string& roomName)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 22;
-    *packet << roomName;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ResRoomCreate(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 23;
-    *packet << code << roomId << roomName;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ResRoomDelete(__int64 sessionId, int roomId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 24;
-    *packet << roomId;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ReqEnterRoom(__int64 sessionId, int roomId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 25;
-    *packet << roomId;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ResEnterRoom(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 26;
-    *packet << code << roomId << roomName << lst;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ResEnterOtherUser(__int64 sessionId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 27;
-    *packet;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ReqPlayerList(__int64 sessionId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 90;
-    *packet;
-
-    server_->SendPacket(sessionId, packet);
-}
-
 void RpcServerProxy::ResPlayerList(__int64 sessionId, std::list<Player> playerList)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 91;
+    packet->GetHeaderPtr()->type_ = 21;
     *packet << playerList;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResPlayerEnter(__int64 sessionId, Player player)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 22;
+    *packet << player;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResPlayerLeave(__int64 sessionId, int playerId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 23;
+    *packet << playerId;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResPlayerDelete(__int64 sessionId, int playerId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 24;
+    *packet << playerId;
 
     server_->SendPacket(sessionId, packet);
 }
@@ -204,7 +149,7 @@ void RpcServerProxy::ReqChat(__int64 sessionId, std::string& message)
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 100;
+    packet->GetHeaderPtr()->type_ = 30;
     *packet << message;
 
     server_->SendPacket(sessionId, packet);
@@ -215,8 +160,30 @@ void RpcServerProxy::ResChat(__int64 sessionId, int playerId, std::string& messa
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 101;
+    packet->GetHeaderPtr()->type_ = 31;
     *packet << playerId << message;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ReqEnterRoom(__int64 sessionId, int roomId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 50;
+    *packet << roomId;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResEnterRoom(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 51;
+    *packet << code << roomId << roomName << lst;
 
     server_->SendPacket(sessionId, packet);
 }

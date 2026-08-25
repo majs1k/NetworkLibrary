@@ -54,7 +54,7 @@ void TestServer::OnRecv(__int64 sessionId, Packet* packet)
 	/// 로직 스레드에서 패킷 처리
 	packet->SetId(sessionId);
 	
-	packetQueue_.push(packet);
+	packetQueue_.Push(packet);
 }
 
 unsigned int __stdcall TestServer::LogicThread(void* param)
@@ -77,7 +77,7 @@ void TestServer::PacketProc()
 {
 	while (1)
 	{
-		Packet* packet = packetQueue_.pop();
+		Packet* packet = packetQueue_.Pop();
 
 		if (packet == nullptr)
 			return;

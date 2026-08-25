@@ -12,7 +12,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> loginId >> password;
 
-            return handler_->ReqRegister(sessionId, loginId, password);
+            return handler_->ReqUserRegister(sessionId, loginId, password);
         }
         case 1:
         {
@@ -20,7 +20,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code;
 
-            return handler_->ResRegister(sessionId, code);
+            return handler_->ResUserRegister(sessionId, code);
         }
         case 2:
         {
@@ -29,7 +29,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> loginId >> password;
 
-            return handler_->ReqLogin(sessionId, loginId, password);
+            return handler_->ReqUserLogin(sessionId, loginId, password);
         }
         case 3:
         {
@@ -38,7 +38,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code >> userId;
 
-            return handler_->ResLogin(sessionId, code, userId);
+            return handler_->ResUserLogin(sessionId, code, userId);
         }
         case 10:
         {
@@ -79,42 +79,58 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet;
 
-            return handler_->ReqRoomList(sessionId);
+            return handler_->ReqPlayerList(sessionId);
         }
         case 21:
         {
+			std::list<Player> playerList;
 
-            *packet;
+            *packet >> playerList;
 
-            return handler_->ResRoomList(sessionId);
+            return handler_->ResPlayerList(sessionId, playerList);
         }
         case 22:
         {
-			std::string roomName;
+			Player player;
 
-            *packet >> roomName;
+            *packet >> player;
 
-            return handler_->ReqRoomCreate(sessionId, roomName);
+            return handler_->ResPlayerEnter(sessionId, player);
         }
         case 23:
         {
-			RESPONSE_CODE code;
-			int roomId;
-			std::string roomName;
+			int playerId;
 
-            *packet >> code >> roomId >> roomName;
+            *packet >> playerId;
 
-            return handler_->ResRoomCreate(sessionId, code, roomId, roomName);
+            return handler_->ResPlayerLeave(sessionId, playerId);
         }
         case 24:
         {
-			int roomId;
+			int playerId;
 
-            *packet >> roomId;
+            *packet >> playerId;
 
-            return handler_->ResRoomDelete(sessionId, roomId);
+            return handler_->ResPlayerDelete(sessionId, playerId);
         }
-        case 25:
+        case 30:
+        {
+			std::string message;
+
+            *packet >> message;
+
+            return handler_->ReqChat(sessionId, message);
+        }
+        case 31:
+        {
+			int playerId;
+			std::string message;
+
+            *packet >> playerId >> message;
+
+            return handler_->ResChat(sessionId, playerId, message);
+        }
+        case 50:
         {
 			int roomId;
 
@@ -122,7 +138,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             return handler_->ReqEnterRoom(sessionId, roomId);
         }
-        case 26:
+        case 51:
         {
 			RESPONSE_CODE code;
 			int roomId;
@@ -132,45 +148,6 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
             *packet >> code >> roomId >> roomName >> lst;
 
             return handler_->ResEnterRoom(sessionId, code, roomId, roomName, lst);
-        }
-        case 27:
-        {
-
-            *packet;
-
-            return handler_->ResEnterOtherUser(sessionId);
-        }
-        case 90:
-        {
-
-            *packet;
-
-            return handler_->ReqPlayerList(sessionId);
-        }
-        case 91:
-        {
-			std::list<Player> playerList;
-
-            *packet >> playerList;
-
-            return handler_->ResPlayerList(sessionId, playerList);
-        }
-        case 100:
-        {
-			std::string message;
-
-            *packet >> message;
-
-            return handler_->ReqChat(sessionId, message);
-        }
-        case 101:
-        {
-			int playerId;
-			std::string message;
-
-            *packet >> playerId >> message;
-
-            return handler_->ResChat(sessionId, playerId, message);
         }
         case 200:
         {
@@ -198,22 +175,22 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 }
 
 
-bool RpcServerHandler::ReqRegister(__int64 sessionId, std::string& loginId, std::string& password)
+bool RpcServerHandler::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool RpcServerHandler::ResRegister(__int64 sessionId, RESPONSE_CODE code)
+bool RpcServerHandler::ResUserRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqLogin(__int64 sessionId, std::string& loginId, std::string& password)
+bool RpcServerHandler::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool RpcServerHandler::ResLogin(__int64 sessionId, RESPONSE_CODE code, int userId)
+bool RpcServerHandler::ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int userId)
 {
     return true;
 }
@@ -238,46 +215,6 @@ bool RpcServerHandler::ResPlayerProfile(__int64 sessionId, RESPONSE_CODE code, P
     return true;
 }
 
-bool RpcServerHandler::ReqRoomList(__int64 sessionId)
-{
-    return true;
-}
-
-bool RpcServerHandler::ResRoomList(__int64 sessionId)
-{
-    return true;
-}
-
-bool RpcServerHandler::ReqRoomCreate(__int64 sessionId, std::string& roomName)
-{
-    return true;
-}
-
-bool RpcServerHandler::ResRoomCreate(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName)
-{
-    return true;
-}
-
-bool RpcServerHandler::ResRoomDelete(__int64 sessionId, int roomId)
-{
-    return true;
-}
-
-bool RpcServerHandler::ReqEnterRoom(__int64 sessionId, int roomId)
-{
-    return true;
-}
-
-bool RpcServerHandler::ResEnterRoom(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
-{
-    return true;
-}
-
-bool RpcServerHandler::ResEnterOtherUser(__int64 sessionId)
-{
-    return true;
-}
-
 bool RpcServerHandler::ReqPlayerList(__int64 sessionId)
 {
     return true;
@@ -288,12 +225,37 @@ bool RpcServerHandler::ResPlayerList(__int64 sessionId, std::list<Player> player
     return true;
 }
 
+bool RpcServerHandler::ResPlayerEnter(__int64 sessionId, Player player)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResPlayerLeave(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResPlayerDelete(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
 bool RpcServerHandler::ReqChat(__int64 sessionId, std::string& message)
 {
     return true;
 }
 
 bool RpcServerHandler::ResChat(__int64 sessionId, int playerId, std::string& message)
+{
+    return true;
+}
+
+bool RpcServerHandler::ReqEnterRoom(__int64 sessionId, int roomId)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResEnterRoom(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
 {
     return true;
 }

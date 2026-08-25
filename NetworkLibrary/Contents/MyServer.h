@@ -11,7 +11,6 @@
 #include "Player.h"
 
 
-
 #include "../RPC/RpcServerProxy.h"
 #include "../RPC/RpcServerStub.h"
 
@@ -40,9 +39,11 @@ private:
 	RpcServerStub rpcStub_;
 
 public:
+
 	MyServer();
 
 private:
+
 	bool OnConnectionRequest(const std::wstring& ip, int port) override;
 	void OnAccept(__int64 sessionId) override;
 	void OnRelease(__int64 sessionId) override;
@@ -56,6 +57,7 @@ private:
 	// ----------------------------------------------------- //
 
 private:
+
 	Database db_;
 
 	PacketQueue dbReqQueue_;
@@ -81,9 +83,9 @@ private:
 
 public:
 
-	bool ReqRegister(__int64 sessionId, std::string& loginId, std::string& password);
+	bool ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password);
 
-	bool ReqLogin(__int64 sessionId, std::string& loginId, std::string& password);
+	bool ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password);
 
 	bool ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName);
 
@@ -98,13 +100,13 @@ public:
 
 public:
 
-	bool ReqRegisterDB(__int64 sessionId, std::string& loginId, std::string& password);
+	bool ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password);
 
-	bool ResRegisterDB(__int64 sessionId, RESPONSE_CODE code);
+	bool ResUserRegisterDB(__int64 sessionId, RESPONSE_CODE code);
 
-	bool ReqLoginDB(__int64 sessionId, std::string& loginId, std::string& password);
+	bool ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::string& password);
 
-	bool ResLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId);
+	bool ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId);
 
 	bool ReqCreatePlayerDB(__int64 sessionId, int userId, std::string& playerName);
 
@@ -118,8 +120,8 @@ public:
 	// ----------------------------------------------------- //
 
 private:
-	std::unordered_map<__int64, int> sessionToPlayer_;
 
+	std::unordered_map<__int64, int> sessionToPlayer_;
 	std::unordered_map<int, Player*> playerMap_{};
 	int playerCount_ = 0;
 

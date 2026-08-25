@@ -47,14 +47,14 @@ public:
 	bool Disconnect(__int64 sessionId);
 	bool SendPacket(__int64 sessionId, Packet* packet);
 
-	// (외부/해외/공격)IP 차단 기능 + 패치 후 점검 white ip만 가능케
+	// (외부/해외/공격)IP 차단 기능 + 패치 후 점검 white ip만 가능케(운영에 필수적)
 	virtual bool OnConnectionRequest(const std::wstring& ip, int port) = 0;
 	// 인자 미정
 	// Session 포인터, socket -> 컨텐츠로 절대 전달 x
 	virtual void OnAccept(__int64 sessionId) = 0;
-	// release 후, 즉 세션 삭제 후 호출 (다른 사용자들에게 세션 종료를 알림)
+	// 연결 종료가 아닌, 세션 삭제 시 호출 (다른 사용자들에게 세션 종료를 알림)
 	virtual void OnRelease(__int64 sessionId) = 0;
-
+	// 메세지 하나 단위로 컨텐츠에서 처리 (tcp 스트림은 컨텐츠에선 몰라야함)
 	virtual void OnRecv(__int64 sessionId, Packet* packet) = 0;
 
 	// 컨텐츠에게 에러코드를 알려주지만 서버 끌 상황은 아닐때 (미구현)

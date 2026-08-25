@@ -14,10 +14,10 @@ public:
 		auto stmt = database_->Prepare(
 			"CREATE TABLE IF NOT EXISTS players("
 			"player_id INT AUTO_INCREMENT PRIMARY KEY,"
-			"user_id INT UNIQUE,"
-			"player_name VARCHAR(30) UNIQUE,"
-			"level INT DEFAULT 1,"
-			"gold INT DEFAULT 0,"
+			"user_id INT NOT NULL UNIQUE,"
+			"player_name VARCHAR(30) NOT NULL UNIQUE,"
+			"level INT NOT NULL DEFAULT 1,"
+			"gold INT NOT NULL DEFAULT 0,"
 			"FOREIGN KEY (user_id) REFERENCES users(user_id)"
 			");");
 
@@ -43,7 +43,7 @@ public:
 			// user_id, player_name UNIQUE 제약조건 위반
 			if (e.getErrorCode() == 1062)
 			{
-				return RESPONSE_CODE::PLAYER_REGISTER_ALREADY_EXISTS;
+				return RESPONSE_CODE::REGISTER_ALREADY_EXISTS;
 			}
 
 			// 그 외 DB 오류

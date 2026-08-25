@@ -144,19 +144,19 @@ void LanClient::CompleteRecv(int numOfBytes)
 			return;
 		}
 
-		if (useSize < sizeof(UNITY_HEADER))
+		if (useSize < sizeof(MY_HEADER))
 			break;
 
-		UNITY_HEADER header;
+		MY_HEADER header;
 
-		session_->recvQueue_.Peek((char*)&header, sizeof(UNITY_HEADER));
+		session_->recvQueue_.Peek((char*)&header, sizeof(MY_HEADER));
 
 		int messageSize = header.size_;
 
 		if (messageSize < 0)
 			break;
 
-		if (useSize < sizeof(UNITY_HEADER) + messageSize)
+		if (useSize < sizeof(MY_HEADER) + messageSize)
 			break;
 
 		//session->recvQueue_.MoveFront(sizeof(TEST_HEADER));
@@ -164,7 +164,7 @@ void LanClient::CompleteRecv(int numOfBytes)
 		Packet* packet = new Packet();
 		packet->Initialize();
 
-		session_->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(UNITY_HEADER));
+		session_->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(MY_HEADER));
 
 		packet->MoveWritePos(messageSize);
 

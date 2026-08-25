@@ -34,7 +34,7 @@ void MyClient::OnRecv(Packet* packet)
 }
 
 
-void MyClient::TestRegister()
+void MyClient::TestUserRegister()
 {
 	std::cout << "TestRegister" << std::endl;
 
@@ -47,15 +47,10 @@ void MyClient::TestRegister()
 	std::cin >> password;
 
 
-	rpc_.ReqRegister(loginId, password);
-
-	/// chat
-	//std::string s = "hello";
-
-	//rpc_.ReqChat(s);
+	rpc_.ReqUserRegister(loginId, password);
 }
 
-void MyClient::TestLogin()
+void MyClient::TestUserLogin()
 {
 	std::cout << "TestLogin" << std::endl;
 
@@ -67,7 +62,7 @@ void MyClient::TestLogin()
 	std::cout << "input password: ";
 	std::cin >> password;
 
-	rpc_.ReqLogin(loginId, password);
+	rpc_.ReqUserLogin(loginId, password);
 }
 
 void MyClient::TestCreatePlayer()
@@ -118,7 +113,7 @@ void MyClient::TestChat()
 
 //------------------------------------------------------------------------------------------------------//
 
-bool MyClient::ResRegister(RESPONSE_CODE code)
+bool MyClient::ResUserRegister(RESPONSE_CODE code)
 {
 	std::cout << "ResRegister" << std::endl;
 
@@ -129,7 +124,7 @@ bool MyClient::ResRegister(RESPONSE_CODE code)
 	return true;
 }
 
-bool MyClient::ResLogin(RESPONSE_CODE code, int userId)
+bool MyClient::ResUserLogin(RESPONSE_CODE code, int userId)
 {
 	std::cout << "ResRegister" << std::endl;
 

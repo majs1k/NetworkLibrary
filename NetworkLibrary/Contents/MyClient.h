@@ -26,8 +26,8 @@ public:
 
 	// ----------------------------------------------------- //
 
-	void TestRegister();
-	void TestLogin();
+	void TestUserRegister();
+	void TestUserLogin();
 
 	void TestCreatePlayer();
 	void TestPlayerInfo();
@@ -39,8 +39,8 @@ public:
 
 	// ----------------------------------------------------- //
 
-	bool ResRegister(RESPONSE_CODE code);
-	bool ResLogin(RESPONSE_CODE code, int userId);
+	bool ResUserRegister(RESPONSE_CODE code);
+	bool ResUserLogin(RESPONSE_CODE code, int userId);
 
 	bool ResCreatePlayer(RESPONSE_CODE code);
 	bool ResPlayerProfile(RESPONSE_CODE code, Player player);

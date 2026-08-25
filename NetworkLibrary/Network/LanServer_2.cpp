@@ -5,7 +5,6 @@
 #include "../Utils/Profiler.h"
 #include <Windows.h>
 
-/// recvQ의 경우는 한스레드에서만 접근하는것이 보장되므로 락 사용 x
 //void LanServer::RecvPost(Session* session)
 //{
 //	ZeroMemory(&session->recvOverlapped_.overlapped, sizeof(WSAOVERLAPPED));
@@ -293,19 +292,19 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 		}
 
 		///헤더 변경시 수정//////////////////////////////////////////////////////////////////////////////////////
-		if (useSize < sizeof(UNITY_HEADER))
+		if (useSize < sizeof(MY_HEADER))
 			break;
 
-		UNITY_HEADER header;
+		MY_HEADER header;
 
-		session->recvQueue_.Peek((char*)&header, sizeof(UNITY_HEADER));
+		session->recvQueue_.Peek((char*)&header, sizeof(MY_HEADER));
 
 		int messageSize = header.size_;
 
 		if (messageSize < 0)
 			break;
 
-		if (useSize < sizeof(UNITY_HEADER) + messageSize)
+		if (useSize < sizeof(MY_HEADER) + messageSize)
 			break;
 
 		//session->recvQueue_.MoveFront(sizeof(TEST_HEADER));
@@ -314,7 +313,7 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 		packet->Initialize();
 
 		// 헤더 + 바디 전부 디큐
-		session->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(UNITY_HEADER));
+		session->recvQueue_.Dequeue(packet->GetBufferPtr(), messageSize + sizeof(MY_HEADER));
 
 		// 메세지 사이즈만큼만 무브
 		packet->MoveWritePos(messageSize);
@@ -517,7 +516,6 @@ void LanServer::CompleteSend(Session* session, int numOfBytes)
 {
 	//PRO_END(L"send 2");
 
-	/// 락이 필요할까???
 	session->sendQueue_.MoveFront(numOfBytes);
 
 	InterlockedExchange(&session->sendPending_, 0);

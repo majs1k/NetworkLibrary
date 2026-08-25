@@ -44,13 +44,13 @@ int main()
 		{
 		case 0:
 
-			client.TestRegister();
+			client.TestUserRegister();
 
 			break;
 
 		case 1:
 
-			client.TestLogin();
+			client.TestUserLogin();
 
 			break;
 

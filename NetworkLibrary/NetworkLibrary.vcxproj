@@ -132,9 +132,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Contents\RpcModule.cpp" />
     <ClCompile Include="Contents\MyClient.cpp" />
     <ClCompile Include="Contents\MyServer.cpp" />
+    <ClCompile Include="Contents\RpcModule.cpp" />
     <ClCompile Include="Database\Database.cpp" />
     <ClCompile Include="MyServerMain.cpp" />
     <ClCompile Include="Network\LanClient.cpp" />
@@ -145,12 +145,12 @@
     <ClCompile Include="Utils\ProfilerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Contents\MyClient.h" />
+    <ClInclude Include="Contents\MyServer.h" />
     <ClInclude Include="Contents\Player.h" />
     <ClInclude Include="Contents\Repository\PlayerRepository.h" />
     <ClInclude Include="Contents\Repository\UserRepository.h" />
     <ClInclude Include="Contents\ResponseCode.h" />
-    <ClInclude Include="Contents\MyClient.h" />
-    <ClInclude Include="Contents\MyServer.h" />
     <ClInclude Include="Database\Database.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />

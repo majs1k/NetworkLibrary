@@ -199,11 +199,13 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 
 
 
-	session->sessionLock_.unlock();
+	//session->sessionLock_.unlock();
 
 	delete packet;
 
 	this->SendPost(session);
+
+	session->sessionLock_.unlock();
 
 	InterlockedIncrement(&sendMessageCount_);
 
@@ -245,6 +247,7 @@ unsigned int __stdcall LanServer::AcceptThread(void* param)
 		std::wstring ip = str;
 		int port = ntohs(clientAddr.sin_port);
 
+		// 허용되지 않은 ip와 port라면 바로 연결을 끊음
 		if (!server->OnConnectionRequest(ip, port))
 		{
 			closesocket(clientSock);
