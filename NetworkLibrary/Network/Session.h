@@ -5,11 +5,12 @@
 #include <WinSock2.h>
 #include "../Utils/RingBuffer.h"
 
+// TOOD: 버퍼 사이즈 조정
 //#define SEND_SIZE				500
 #define SEND_SIZE				20000
 #define RECV_SIZE				20000
 
-enum class IOType
+enum class IO_TYPE
 {
 	SEND = 0,
 	RECV = 1,
@@ -18,19 +19,17 @@ enum class IOType
 struct OverlappedEx
 {
 	WSAOVERLAPPED overlapped;
-	IOType type;
+	IO_TYPE type;
 };
 
 class Packet;
-class RecvPacket;
 
 /// TODO: 세션 삭제시 소켓 close
 struct Session
 {
 	SOCKET socket_;
 	// 고유값. sessionList의 인덱스로 활용 x
-	// 네트워크 연결에 대한 로직/로그에서 사용
-	// 소켓핸들처럼 컨텐츠에서 사용 (컨텐츠 코드가 간단해짐)
+	// 컨텐츠 코드에서 sessionId로만 접근 (컨텐츠 구현 용이)
 	__int64 sessionId_;
 
 	std::wstring ip_;
@@ -68,8 +67,8 @@ struct Session
 		//recvQueue_ = std::make_shared<RingBuffer>(RECV_SIZE);
 
 
-		sendOverlapped_.type = IOType::SEND;
-		recvOverlapped_.type = IOType::RECV;
+		sendOverlapped_.type = IO_TYPE::SEND;
+		recvOverlapped_.type = IO_TYPE::RECV;
 
 		// 초기화시 참조 카운트를 1로 시작
 		ioCount_ = 1;

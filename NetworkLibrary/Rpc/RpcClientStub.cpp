@@ -63,72 +63,23 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet >> userId;
 
-            return handler_->ReqPlayerProfile(userId);
+            return handler_->ReqPlayerEnterLobby(userId);
         }
         case 13:
-        {
-			RESPONSE_CODE code;
-			Player player;
-
-            *packet >> code >> player;
-
-            return handler_->ResPlayerProfile(code, player);
-        }
-        case 14:
-        {
-			int playerId;
-
-            *packet >> playerId;
-
-            return handler_->ReqCharacterList(playerId);
-        }
-        case 15:
-        {
-			RESPONSE_CODE code;
-			std::list<Character> characterList;
-
-            *packet >> code >> characterList;
-
-            return handler_->ResCharacterList(code, characterList);
-        }
-        case 20:
-        {
-
-            *packet;
-
-            return handler_->ReqPlayerList();
-        }
-        case 21:
-        {
-			std::list<Player> playerList;
-
-            *packet >> playerList;
-
-            return handler_->ResPlayerList(playerList);
-        }
-        case 22:
         {
 			Player player;
 
             *packet >> player;
 
-            return handler_->ResPlayerEnter(player);
+            return handler_->ResPlayerProfile(player);
         }
-        case 23:
+        case 14:
         {
-			int playerId;
+			std::list<Character> characterList;
 
-            *packet >> playerId;
+            *packet >> characterList;
 
-            return handler_->ResPlayerLeave(playerId);
-        }
-        case 24:
-        {
-			int playerId;
-
-            *packet >> playerId;
-
-            return handler_->ResPlayerDelete(playerId);
+            return handler_->ResPlayerCharacters(characterList);
         }
         case 30:
         {
@@ -147,40 +98,73 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             return handler_->ResChat(playerId, message);
         }
+        case 40:
+        {
+
+            *packet;
+
+            return handler_->ReqLobbyPlayers();
+        }
+        case 41:
+        {
+			std::list<Player> playerList;
+
+            *packet >> playerList;
+
+            return handler_->ResLobbyPlayers(playerList);
+        }
+        case 42:
+        {
+			Player player;
+
+            *packet >> player;
+
+            return handler_->ResPlayerEnterLobby(player);
+        }
+        case 43:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return handler_->ResPlayerLeaveLobby(playerId);
+        }
         case 50:
         {
-			int roomId;
 
-            *packet >> roomId;
+            *packet;
 
-            return handler_->ReqEnterRoom(roomId);
+            return handler_->ReqBuyCharacter();
         }
         case 51:
         {
-			RESPONSE_CODE code;
-			int roomId;
-			std::string roomName;
-			std::list<int> lst;
+			Character character;
+			int currentMoney;
 
-            *packet >> code >> roomId >> roomName >> lst;
+            *packet >> character >> currentMoney;
 
-            return handler_->ResEnterRoom(code, roomId, roomName, lst);
+            return handler_->ResBuyCharacter(character, currentMoney);
         }
-        case 200:
+        case 60:
         {
-			std::list<int> lst;
 
-            *packet >> lst;
+            *packet;
 
-            return handler_->ReqUseItem(lst);
+            return handler_->ReqEnterMatch();
         }
-        case 201:
+        case 61:
         {
-			std::list<int> lst;
 
-            *packet >> lst;
+            *packet;
 
-            return handler_->ResUseItem(lst);
+            return handler_->ResEnterMatch();
+        }
+        case 62:
+        {
+
+            *packet;
+
+            return handler_->ResStartMatch();
         }
     default:
     {
@@ -222,47 +206,17 @@ bool RpcClientHandler::ResPlayerRegister(RESPONSE_CODE code)
     return true;
 }
 
-bool RpcClientHandler::ReqPlayerProfile(int userId)
+bool RpcClientHandler::ReqPlayerEnterLobby(int userId)
 {
     return true;
 }
 
-bool RpcClientHandler::ResPlayerProfile(RESPONSE_CODE code, Player player)
+bool RpcClientHandler::ResPlayerProfile(Player player)
 {
     return true;
 }
 
-bool RpcClientHandler::ReqCharacterList(int playerId)
-{
-    return true;
-}
-
-bool RpcClientHandler::ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList)
-{
-    return true;
-}
-
-bool RpcClientHandler::ReqPlayerList()
-{
-    return true;
-}
-
-bool RpcClientHandler::ResPlayerList(std::list<Player> playerList)
-{
-    return true;
-}
-
-bool RpcClientHandler::ResPlayerEnter(Player player)
-{
-    return true;
-}
-
-bool RpcClientHandler::ResPlayerLeave(int playerId)
-{
-    return true;
-}
-
-bool RpcClientHandler::ResPlayerDelete(int playerId)
+bool RpcClientHandler::ResPlayerCharacters(std::list<Character> characterList)
 {
     return true;
 }
@@ -277,22 +231,47 @@ bool RpcClientHandler::ResChat(int playerId, std::string& message)
     return true;
 }
 
-bool RpcClientHandler::ReqEnterRoom(int roomId)
+bool RpcClientHandler::ReqLobbyPlayers()
 {
     return true;
 }
 
-bool RpcClientHandler::ResEnterRoom(RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
+bool RpcClientHandler::ResLobbyPlayers(std::list<Player> playerList)
 {
     return true;
 }
 
-bool RpcClientHandler::ReqUseItem(std::list<int>& lst)
+bool RpcClientHandler::ResPlayerEnterLobby(Player player)
 {
     return true;
 }
 
-bool RpcClientHandler::ResUseItem(std::list<int>& lst)
+bool RpcClientHandler::ResPlayerLeaveLobby(int playerId)
+{
+    return true;
+}
+
+bool RpcClientHandler::ReqBuyCharacter()
+{
+    return true;
+}
+
+bool RpcClientHandler::ResBuyCharacter(Character character, int currentMoney)
+{
+    return true;
+}
+
+bool RpcClientHandler::ReqEnterMatch()
+{
+    return true;
+}
+
+bool RpcClientHandler::ResEnterMatch()
+{
+    return true;
+}
+
+bool RpcClientHandler::ResStartMatch()
 {
     return true;
 }

@@ -67,7 +67,7 @@ void RpcClientProxy::ResPlayerRegister(RESPONSE_CODE code)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqPlayerProfile(int userId)
+void RpcClientProxy::ReqPlayerEnterLobby(int userId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -78,90 +78,24 @@ void RpcClientProxy::ReqPlayerProfile(int userId)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResPlayerProfile(RESPONSE_CODE code, Player player)
+void RpcClientProxy::ResPlayerProfile(Player player)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 13;
-    *packet << code << player;
-
-    client_->SendPacket(packet);
-}
-
-void RpcClientProxy::ReqCharacterList(int playerId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 14;
-    *packet << playerId;
-
-    client_->SendPacket(packet);
-}
-
-void RpcClientProxy::ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 15;
-    *packet << code << characterList;
-
-    client_->SendPacket(packet);
-}
-
-void RpcClientProxy::ReqPlayerList()
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 20;
-    *packet;
-
-    client_->SendPacket(packet);
-}
-
-void RpcClientProxy::ResPlayerList(std::list<Player> playerList)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 21;
-    *packet << playerList;
-
-    client_->SendPacket(packet);
-}
-
-void RpcClientProxy::ResPlayerEnter(Player player)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 22;
     *packet << player;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResPlayerLeave(int playerId)
+void RpcClientProxy::ResPlayerCharacters(std::list<Character> characterList)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 23;
-    *packet << playerId;
-
-    client_->SendPacket(packet);
-}
-
-void RpcClientProxy::ResPlayerDelete(int playerId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 24;
-    *packet << playerId;
+    packet->GetHeaderPtr()->type_ = 14;
+    *packet << characterList;
 
     client_->SendPacket(packet);
 }
@@ -188,46 +122,101 @@ void RpcClientProxy::ResChat(int playerId, std::string& message)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqEnterRoom(int roomId)
+void RpcClientProxy::ReqLobbyPlayers()
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 40;
+    *packet;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResLobbyPlayers(std::list<Player> playerList)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 41;
+    *packet << playerList;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResPlayerEnterLobby(Player player)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 42;
+    *packet << player;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResPlayerLeaveLobby(int playerId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 43;
+    *packet << playerId;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ReqBuyCharacter()
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 50;
-    *packet << roomId;
+    *packet;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResEnterRoom(RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
+void RpcClientProxy::ResBuyCharacter(Character character, int currentMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 51;
-    *packet << code << roomId << roomName << lst;
+    *packet << character << currentMoney;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqUseItem(std::list<int>& lst)
+void RpcClientProxy::ReqEnterMatch()
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 200;
-    *packet << lst;
+    packet->GetHeaderPtr()->type_ = 60;
+    *packet;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResUseItem(std::list<int>& lst)
+void RpcClientProxy::ResEnterMatch()
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 201;
-    *packet << lst;
+    packet->GetHeaderPtr()->type_ = 61;
+    *packet;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResStartMatch()
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 62;
+    *packet;
 
     client_->SendPacket(packet);
 }

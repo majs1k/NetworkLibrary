@@ -31,13 +31,13 @@ public:
 	void TestUserLogin();
 
 	void TestPlayerRegister();
-	void TestPlayerProfile();
 
-	void TestCharacterList();
-
-	void TestPlayerList();
+	void TestPlayerEnterGame();
 
 	void TestChat();
+
+	void TestLobbyPlayers();
+
 
 
 	// ----------------------------------------------------- //
@@ -46,13 +46,14 @@ public:
 	bool ResUserLogin(RESPONSE_CODE code, int userId);
 
 	bool ResPlayerRegister(RESPONSE_CODE code);
-	bool ResPlayerProfile(RESPONSE_CODE code, Player player);
-
-	bool ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList);
 
 
+	bool ResPlayerProfile(Player player);
 
-	bool ResPlayerList(std::list<Player> playerList);
+	bool ResPlayerCharacters(std::list<Character> characterList);
+
 
 	bool ResChat(int playerId, std::string& message);
+
+	bool ResLobbyPlayers(std::list<Player> playerList);
 };

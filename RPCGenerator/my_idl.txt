@@ -1,45 +1,40 @@
 
 
-ReqUserRegister(std::string& loginId, std::string& password)					0
-ResUserRegister(RESPONSE_CODE code)												1
+ReqUserRegister(std::string& loginId, std::string& password)			0
+ResUserRegister(RESPONSE_CODE code)										1
 
-ReqUserLogin(std::string& loginId, std::string& password)						2
-ResUserLogin(RESPONSE_CODE code, int userId)									3
-
-
-
-
-ReqPlayerRegister(int userId, std::string& playerName)							10
-ResPlayerRegister(RESPONSE_CODE code)											11
-
-ReqPlayerProfile(int userId)													12
-ResPlayerProfile(RESPONSE_CODE code, Player player)								13
-
-ReqCharacterList(int playerId)													14
-ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList)		15
-
-
-ReqPlayerList()												20
-ResPlayerList(std::list<Player> playerList)					21
-
-ResPlayerEnter(Player player)								22
-ResPlayerLeave(int playerId)								23
-ResPlayerDelete(int playerId)								24
+ReqUserLogin(std::string& loginId, std::string& password)				2
+ResUserLogin(RESPONSE_CODE code, int userId)							3
 
 
 
-ReqChat(std::string& message)								30
-ResChat(int playerId, std::string& message)					31
+ReqPlayerRegister(int userId, std::string& playerName)					10
+ResPlayerRegister(RESPONSE_CODE code)									11
+
+ReqPlayerEnterLobby(int userId)											12
+ResPlayerProfile(Player player)											13
+ResPlayerCharacters(std::list<Character> characterList)					14
 
 
 
+ReqChat(std::string& message)											30
+ResChat(int playerId, std::string& message)								31
 
 
-ReqEnterRoom(int roomId)																		50
-ResEnterRoom(RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)		51
+ReqLobbyPlayers()														40
+ResLobbyPlayers(std::list<Player> playerList)							41
+
+ResPlayerEnterLobby(Player player)										42
+ResPlayerLeaveLobby(int playerId)										43
 
 
 
+ReqBuyCharacter()														50
+ResBuyCharacter(Character character, int currentMoney)					51
 
-ReqUseItem(std::list<int>& lst)			200
-ResUseItem(std::list<int>& lst)			201
+
+ReqEnterMatchQueue()							60
+ResEnterMatchQueue(Player otherPlayer)			61
+
+ResEndMatch(int result, int currentMoney)		62
+

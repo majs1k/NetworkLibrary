@@ -62,7 +62,7 @@ int main()
 
 		case 3:
 
-			client.TestPlayerInfo();
+			client.TestPlayerEnterGame();
 
 			break;
 
@@ -74,15 +74,10 @@ int main()
 
 		case 5:
 
-			client.TestCharacterList();
+			client.TestLobbyPlayers();
 
 			break;
 
-		case 6:
-
-			client.TestPlayerList();
-
-			break;
 			
 		default:
 

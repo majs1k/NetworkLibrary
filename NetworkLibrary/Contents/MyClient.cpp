@@ -80,37 +80,16 @@ void MyClient::TestPlayerRegister()
 	rpc_.ReqPlayerRegister(userId, playerName);
 }
 
-void MyClient::TestPlayerProfile()
+void MyClient::TestPlayerEnterGame()
 {
-	std::cout << "TestPlayerProfile" << std::endl;
+	std::cout << "TestPlayerEnterGame" << std::endl;
 
 	int userId;
 
 	std::cout << "input userId: ";
 	std::cin >> userId;
 
-	rpc_.ReqPlayerProfile(userId);
-}
-
-void MyClient::TestCharacterList()
-{
-	std::cout << "TestCharacterList" << std::endl;
-
-	int playerId;
-
-	std::cout << "input playerId: ";
-	std::cin >> playerId;
-
-	rpc_.ReqCharacterList(playerId);
-}
-
-
-
-void MyClient::TestPlayerList()
-{
-	std::cout << "TestPlayerList" << std::endl;
-
-	rpc_.ReqPlayerList();
+	rpc_.ReqPlayerEnterLobby(userId);
 }
 
 void MyClient::TestChat()
@@ -124,6 +103,15 @@ void MyClient::TestChat()
 
 	rpc_.ReqChat(message);
 }
+
+void MyClient::TestLobbyPlayers()
+{
+	std::cout << "TestLobbyPlayers" << std::endl;
+
+	rpc_.ReqLobbyPlayers();
+}
+
+
 
 //------------------------------------------------------------------------------------------------------//
 
@@ -163,11 +151,9 @@ bool MyClient::ResPlayerRegister(RESPONSE_CODE code)
 	return true;
 }
 
-bool MyClient::ResPlayerProfile(RESPONSE_CODE code, Player player)
+bool MyClient::ResPlayerProfile(Player player)
 {
 	std::cout << "ResPlayerProfile" << std::endl;
-
-	std::cout << "code : " << (short)code << std::endl;
 
 	std::cout << "playerId : " << player.playerId_ << std::endl;
 
@@ -182,9 +168,9 @@ bool MyClient::ResPlayerProfile(RESPONSE_CODE code, Player player)
 	return true;
 }
 
-bool MyClient::ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList)
+bool MyClient::ResPlayerCharacters(std::list<Character> characterList)
 {
-	std::cout << "ResPlayerList" << std::endl;
+	std::cout << "ResPlayerCharacters" << std::endl;
 
 	for (auto& c : characterList)
 	{
@@ -206,7 +192,20 @@ bool MyClient::ResCharacterList(RESPONSE_CODE code, std::list<Character> charact
 	return true;
 }
 
-bool MyClient::ResPlayerList(std::list<Player> playerList)
+bool MyClient::ResChat(int playerId, std::string& message)
+{
+	std::cout << "ResChat" << std::endl;
+
+	std::cout << "playerId : " << playerId << std::endl;
+
+	std::cout << "message : " << message << std::endl;
+
+	std::cout << std::endl;
+
+	return true;
+}
+
+bool MyClient::ResLobbyPlayers(std::list<Player> playerList)
 {
 	std::cout << "ResPlayerList" << std::endl;
 
@@ -222,19 +221,6 @@ bool MyClient::ResPlayerList(std::list<Player> playerList)
 
 		std::cout << std::endl;
 	}
-
-	std::cout << std::endl;
-
-	return true;
-}
-
-bool MyClient::ResChat(int playerId, std::string& message)
-{
-	std::cout << "ResChat" << std::endl;
-
-	std::cout << "playerId : " << playerId << std::endl;
-
-	std::cout << "message : " << message << std::endl;
 
 	std::cout << std::endl;
 

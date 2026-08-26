@@ -125,7 +125,7 @@ public:
 		{
 			__debugbreak();
 
-			/// TODO: Resize() 1번
+			// TODO: Resize() 1회
 			return 0;
 		}
 

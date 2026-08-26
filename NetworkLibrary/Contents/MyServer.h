@@ -24,11 +24,6 @@
 #include "../Database/DatabaseServerStub.h"
 
 
-#include <string>
-#include <queue>
-#include <unordered_map>
-
-
 
 class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
 {
@@ -86,7 +81,7 @@ private:
 
 	// ----------------------------------------------------- //
 
-public:
+private:
 
 	bool ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password);
 
@@ -94,18 +89,17 @@ public:
 
 	bool ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName);
 
-	bool ReqPlayerProfile(__int64 sessionId, int userId);
+	bool ReqPlayerEnterLobby(__int64 sessionId, int userId);
 
-	bool ReqCharacterList(__int64 sessionId, int playerId);
-
-	bool ReqPlayerList(__int64 sessionId);
 
 	bool ReqChat(__int64 sessionId, std::string& message);
+	
+	bool ReqLobbyPlayers(__int64 sessionId);
 
 	// ----------------------------------------------------- //
 
 
-public:
+private:
 
 	bool ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password);
 
@@ -118,21 +112,21 @@ public:
 	bool ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName);
 
 	bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
+	
 
-	bool ReqPlayerProfileDB(__int64 sessionId, int userId);
+	bool ReqPlayerEnterLobbyDB(__int64 sessionId, int userId);
 
-	bool ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player player);
+	bool ResPlayerProfileDB(__int64 sessionId, Player player);
 
-	bool ReqCharacterListDB(__int64 sessionId, int playerId);
+	bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character> characterList);
 
-	bool ResCharacterListDB(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList);
 
 	// ----------------------------------------------------- //
 
 private:
 
+	// 클라이언트에서 보내는 playerId는 신뢰할수 없음. 서버에서 sessionId를 매핑해서 알아냄
 	std::unordered_map<__int64, int> sessionToPlayer_;
 	std::unordered_map<int, Player*> playerMap_{};
 	int playerCount_ = 0;
-
 };

@@ -303,8 +303,7 @@ bool FighterServer::cs_attack1(__int64 sessionId, char direction, short x, short
 	if (!target)
 		return true;
 
-	// TODO: ÃÖ¼Ú°ª 0
-	target->hp_ -= ATTACK1_DAMAGE;
+	target->hp_ = min(target->hp_ - ATTACK1_DAMAGE, 0);
 
 	for (auto& p : playerMap_)
 	{

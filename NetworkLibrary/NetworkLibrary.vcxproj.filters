@@ -39,10 +39,10 @@
     <ClCompile Include="Contents\MyClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Contents\MyServer.cpp">
+    <ClCompile Include="Contents\RpcModule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Contents\RpcModule.cpp">
+    <ClCompile Include="Contents\MyServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MyServerMain.cpp">
@@ -116,9 +116,6 @@
     <ClInclude Include="Contents\MyClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Contents\MyServer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Contents\Player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -129,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Contents\Character.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\MyServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

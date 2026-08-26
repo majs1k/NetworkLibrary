@@ -3,7 +3,6 @@
 // 직렬화 버퍼
 //
 // 템플릿은 기본자료형 말고도 다 받아서 적용 x
-// TODO: 디버그 모드에서 패킷 사이즈 체크 후 리사이즈?
 // 
 // -------------------------------------------------------------------
 #pragma once
@@ -116,7 +115,6 @@ public:
 
 	int	MoveWritePos(int size)
 	{
-		/// TODO: 버퍼 초과시 리사이즈, 음수 이동 제한?
 		writePos_ += size;
 		return size;
 	}
@@ -286,6 +284,9 @@ public:
 
 	int	Read(char* dest, int size)
 	{
+		if (size <= 0)
+			return 0;
+
 		memcpy(dest, buffer_ + readPos_, size);
 		readPos_ += size;
 
@@ -294,7 +295,11 @@ public:
 
 	int	Write(const char* src, int size)
 	{
-		/// TODO: 버퍼 초과시 리사이즈
+		if (size <= 0)
+			return 0;
+
+		// TODO: Resize() 1회
+
 		memcpy(buffer_ + writePos_, src, size);
 		writePos_ += size;
 
@@ -302,7 +307,7 @@ public:
 	}
 };
 
-/// TODO: 별도의 클래스 생성
+// TODO: 별도 클래스 생성
 //class RPacket : public Packet
 //{
 //	std::shared_ptr<RingBuffer> refQueue_;

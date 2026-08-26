@@ -63,72 +63,23 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> userId;
 
-            return handler_->ReqPlayerProfileDB(sessionId, userId);
+            return handler_->ReqPlayerEnterLobbyDB(sessionId, userId);
         }
         case 13:
-        {
-			RESPONSE_CODE code;
-			Player player;
-
-            *packet >> code >> player;
-
-            return handler_->ResPlayerProfileDB(sessionId, code, player);
-        }
-        case 14:
-        {
-			int playerId;
-
-            *packet >> playerId;
-
-            return handler_->ReqCharacterListDB(sessionId, playerId);
-        }
-        case 15:
-        {
-			RESPONSE_CODE code;
-			std::list<Character> characterList;
-
-            *packet >> code >> characterList;
-
-            return handler_->ResCharacterListDB(sessionId, code, characterList);
-        }
-        case 20:
-        {
-
-            *packet;
-
-            return handler_->ReqPlayerListDB(sessionId);
-        }
-        case 21:
-        {
-			std::list<Player> playerList;
-
-            *packet >> playerList;
-
-            return handler_->ResPlayerListDB(sessionId, playerList);
-        }
-        case 22:
         {
 			Player player;
 
             *packet >> player;
 
-            return handler_->ResPlayerEnterDB(sessionId, player);
+            return handler_->ResPlayerProfileDB(sessionId, player);
         }
-        case 23:
+        case 14:
         {
-			int playerId;
+			std::list<Character> characterList;
 
-            *packet >> playerId;
+            *packet >> characterList;
 
-            return handler_->ResPlayerLeaveDB(sessionId, playerId);
-        }
-        case 24:
-        {
-			int playerId;
-
-            *packet >> playerId;
-
-            return handler_->ResPlayerDeleteDB(sessionId, playerId);
+            return handler_->ResPlayerCharactersDB(sessionId, characterList);
         }
         case 30:
         {
@@ -147,40 +98,73 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             return handler_->ResChatDB(sessionId, playerId, message);
         }
+        case 40:
+        {
+
+            *packet;
+
+            return handler_->ReqLobbyPlayersDB(sessionId);
+        }
+        case 41:
+        {
+			std::list<Player> playerList;
+
+            *packet >> playerList;
+
+            return handler_->ResLobbyPlayersDB(sessionId, playerList);
+        }
+        case 42:
+        {
+			Player player;
+
+            *packet >> player;
+
+            return handler_->ResPlayerEnterLobbyDB(sessionId, player);
+        }
+        case 43:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return handler_->ResPlayerLeaveLobbyDB(sessionId, playerId);
+        }
         case 50:
         {
-			int roomId;
 
-            *packet >> roomId;
+            *packet;
 
-            return handler_->ReqEnterRoomDB(sessionId, roomId);
+            return handler_->ReqBuyCharacterDB(sessionId);
         }
         case 51:
         {
-			RESPONSE_CODE code;
-			int roomId;
-			std::string roomName;
-			std::list<int> lst;
+			Character character;
+			int currentMoney;
 
-            *packet >> code >> roomId >> roomName >> lst;
+            *packet >> character >> currentMoney;
 
-            return handler_->ResEnterRoomDB(sessionId, code, roomId, roomName, lst);
+            return handler_->ResBuyCharacterDB(sessionId, character, currentMoney);
         }
-        case 200:
+        case 60:
         {
-			std::list<int> lst;
 
-            *packet >> lst;
+            *packet;
 
-            return handler_->ReqUseItemDB(sessionId, lst);
+            return handler_->ReqEnterMatchDB(sessionId);
         }
-        case 201:
+        case 61:
         {
-			std::list<int> lst;
 
-            *packet >> lst;
+            *packet;
 
-            return handler_->ResUseItemDB(sessionId, lst);
+            return handler_->ResEnterMatchDB(sessionId);
+        }
+        case 62:
+        {
+
+            *packet;
+
+            return handler_->ResStartMatchDB(sessionId);
         }
     default:
     {
@@ -222,47 +206,17 @@ bool DatabaseServerHandler::ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE
     return true;
 }
 
-bool DatabaseServerHandler::ReqPlayerProfileDB(__int64 sessionId, int userId)
+bool DatabaseServerHandler::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player player)
+bool DatabaseServerHandler::ResPlayerProfileDB(__int64 sessionId, Player player)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ReqCharacterListDB(__int64 sessionId, int playerId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResCharacterListDB(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ReqPlayerListDB(__int64 sessionId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResPlayerListDB(__int64 sessionId, std::list<Player> playerList)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResPlayerEnterDB(__int64 sessionId, Player player)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResPlayerLeaveDB(__int64 sessionId, int playerId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResPlayerDeleteDB(__int64 sessionId, int playerId)
+bool DatabaseServerHandler::ResPlayerCharactersDB(__int64 sessionId, std::list<Character> characterList)
 {
     return true;
 }
@@ -277,22 +231,47 @@ bool DatabaseServerHandler::ResChatDB(__int64 sessionId, int playerId, std::stri
     return true;
 }
 
-bool DatabaseServerHandler::ReqEnterRoomDB(__int64 sessionId, int roomId)
+bool DatabaseServerHandler::ReqLobbyPlayersDB(__int64 sessionId)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResEnterRoomDB(__int64 sessionId, RESPONSE_CODE code, int roomId, std::string& roomName, std::list<int>& lst)
+bool DatabaseServerHandler::ResLobbyPlayersDB(__int64 sessionId, std::list<Player> playerList)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ReqUseItemDB(__int64 sessionId, std::list<int>& lst)
+bool DatabaseServerHandler::ResPlayerEnterLobbyDB(__int64 sessionId, Player player)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResUseItemDB(__int64 sessionId, std::list<int>& lst)
+bool DatabaseServerHandler::ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ReqBuyCharacterDB(__int64 sessionId)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResBuyCharacterDB(__int64 sessionId, Character character, int currentMoney)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ReqEnterMatchDB(__int64 sessionId)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResEnterMatchDB(__int64 sessionId)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResStartMatchDB(__int64 sessionId)
 {
     return true;
 }

@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <list>
+#include <unordered_map>
+#include "Character.h"
 
 enum class PLAYER_STATE : short
 {
@@ -16,7 +19,9 @@ struct Player
 	int level_;
 	int gold_;
 
-	PLAYER_STATE state;
+	PLAYER_STATE state_;
+
+	std::list<Character> characterList_;
 
 
 	void Initialize(__int64 sessionId, int playerId, std::string& playerName, int level, int gold)
@@ -28,6 +33,22 @@ struct Player
 		level_ = level;
 		gold_ = gold;
 
-		state = PLAYER_STATE::LOBBY;
+		state_ = PLAYER_STATE::LOBBY;
 	}
+};
+
+
+class PlayerManager
+{
+private:
+	std::unordered_map<int, Player*> playerMap_;
+	int playerCount_ = 0;
+
+	std::unordered_map<__int64, int> sessionToPlayer_;
+
+
+public:
+	//Player* GetPlayer(int playerId);
+	//bool AddPlayer(Player* player);
+	//void RemovePlayer(int playerId);
 };

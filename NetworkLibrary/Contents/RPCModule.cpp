@@ -40,7 +40,7 @@ inline Packet& operator<<(Packet& packet, std::list<T>& lst)
 {
 	packet << static_cast<short>(lst.size());
 
-	for (auto l : lst)
+	for (auto& l : lst)
 		packet << l;
 
 	return packet;

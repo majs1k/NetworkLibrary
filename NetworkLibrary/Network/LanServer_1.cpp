@@ -358,7 +358,7 @@ unsigned int __stdcall LanServer::WorkerThread(void* param)
 			}
 		}
 
-		if (((OverlappedEx*)overlapped)->type == IOType::RECV)
+		if (((OverlappedEx*)overlapped)->type == IO_TYPE::RECV)
 		{
 			// 상대가 closesocket()시 (rst x) 발생
 			if (numOfBytes == 0)

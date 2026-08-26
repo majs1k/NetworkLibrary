@@ -69,8 +69,6 @@ private:
 	float y_;
 	char hp_;
 
-	/// TODO: 메세지 쿨타임 추가
-
 public:
 	void Initialize(__int64 sessionId);
 
