@@ -7,7 +7,7 @@ private:
 	Database* database_;
 
 public:
-	void Init(Database* db)
+	void Initialize(Database* db)
 	{
 		database_ = db;
 
@@ -24,7 +24,7 @@ public:
 		stmt->execute();
 	}
 
-	RESPONSE_CODE InsertPlayer(int userId, const std::string& playerName)
+	RESPONSE_CODE Create(int userId, const std::string& playerName)
 	{
 		try
 		{
@@ -43,7 +43,7 @@ public:
 			// user_id, player_name UNIQUE 제약조건 위반
 			if (e.getErrorCode() == 1062)
 			{
-				return RESPONSE_CODE::REGISTER_ALREADY_EXISTS;
+				return RESPONSE_CODE::ALREADY_EXISTS;
 			}
 
 			// 그 외 DB 오류
@@ -55,12 +55,12 @@ public:
 		}
 	}
 
-	RESPONSE_CODE SelectPlayer(int userId, Player& p)
+	RESPONSE_CODE FindByUserId(int userId, Player& p)
 	{
 		try
 		{
 			auto stmt = database_->Prepare(
-				"SELECT player_id, user_id, player_name, level, gold "
+				"SELECT player_id, player_name, level, gold "
 				"FROM players "
 				"WHERE user_id = ?");
 
@@ -71,7 +71,7 @@ public:
 			// 아이디가 없음
 			if (!result->next())
 			{
-				return RESPONSE_CODE::PLAYER_NO_EXISTS;
+				return RESPONSE_CODE::NOT_FOUND;
 			}
 
 			p.playerId_ = result->getInt("player_id");

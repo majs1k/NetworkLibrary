@@ -56,7 +56,7 @@ int main()
 
 		case 2:
 
-			client.TestCreatePlayer();
+			client.TestPlayerRegister();
 
 			break;
 
@@ -68,16 +68,22 @@ int main()
 
 		case 4:
 
-			client.TestPlayerList();
+			client.TestChat();
 
 			break;
 
 		case 5:
 
-			client.TestChat();
+			client.TestCharacterList();
 
 			break;
 
+		case 6:
+
+			client.TestPlayerList();
+
+			break;
+			
 		default:
 
 			break;

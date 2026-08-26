@@ -145,9 +145,11 @@
     <ClCompile Include="Utils\ProfilerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Contents\Character.h" />
     <ClInclude Include="Contents\MyClient.h" />
     <ClInclude Include="Contents\MyServer.h" />
     <ClInclude Include="Contents\Player.h" />
+    <ClInclude Include="Contents\Repository\InventoryRepository.h" />
     <ClInclude Include="Contents\Repository\PlayerRepository.h" />
     <ClInclude Include="Contents\Repository\UserRepository.h" />
     <ClInclude Include="Contents\ResponseCode.h" />

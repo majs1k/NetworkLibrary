@@ -23,9 +23,9 @@ MyServer::MyServer()
 
 	db_.Connect();
 
-	userRepository_.Init(&db_);
-	playerRepository_.Init(&db_);
-
+	userRepository_.Initialize(&db_);
+	playerRepository_.Initialize(&db_);
+	inventoryRepository_.Initialize(&db_);
 }
 
 bool MyServer::OnConnectionRequest(const std::wstring& ip, int port)
@@ -187,7 +187,7 @@ bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::str
 {
 	if (loginId.length() > 20 || password.length() > 20)
 	{
-		RESPONSE_CODE c = RESPONSE_CODE::STRING_LENGTH_OVER;
+		RESPONSE_CODE c = RESPONSE_CODE::INPUT_LENGTH_OVER;
 		rpcProxy_.ResUserRegister(sessionId, c);
 
 		return true;
@@ -202,7 +202,7 @@ bool MyServer::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string
 {
 	if (loginId.length() > 20 || password.length() > 20)
 	{
-		RESPONSE_CODE c = RESPONSE_CODE::STRING_LENGTH_OVER;
+		RESPONSE_CODE c = RESPONSE_CODE::INPUT_LENGTH_OVER;
 		rpcProxy_.ResUserRegister(sessionId, c);
 
 		return true;
@@ -213,9 +213,9 @@ bool MyServer::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string
 	return true;
 }
 
-bool MyServer::ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName)
+bool MyServer::ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName)
 {
-	dbProxy_.ReqCreatePlayerDB(sessionId, userId, playerName);
+	dbProxy_.ReqPlayerRegisterDB(sessionId, userId, playerName);
 
 	return true;
 }
@@ -227,10 +227,29 @@ bool MyServer::ReqPlayerProfile(__int64 sessionId, int userId)
 	return true;
 }
 
+bool MyServer::ReqCharacterList(__int64 sessionId, int playerId)
+{
+	// 접속 중이 아님 or 로비 상태 아님
+	if (playerMap_.count(playerId) == 0 || playerMap_[playerId]->state != PLAYER_STATE::LOBBY)
+	{
+		std::list<Character> lst;
+
+		RESPONSE_CODE c = RESPONSE_CODE::PLAYER_NOT_CONNECTED;
+
+		rpcProxy_.ResCharacterList(sessionId, c, lst);
+
+		return true;
+	}
+
+	dbProxy_.ReqCharacterListDB(sessionId, playerId);
+
+	return true;
+}
+
 bool MyServer::ReqPlayerList(__int64 sessionId)
 {
 	std::list<Player> playerList;
-	
+
 	for (auto& i : playerMap_)
 	{
 		Player p;
@@ -273,7 +292,7 @@ bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 
 bool MyServer::ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password)
 {
-	RESPONSE_CODE code = userRepository_.Register(loginId, password);
+	RESPONSE_CODE code = userRepository_.Create(loginId, password);
 
 	dbProxy_.ResUserRegisterDB(sessionId, code);
 
@@ -291,7 +310,7 @@ bool MyServer::ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::stri
 {
 	int userId = 0;
 
-	RESPONSE_CODE code = userRepository_.Login(loginId, password, userId);
+	RESPONSE_CODE code = userRepository_.FindByLoginId(loginId, password, userId);
 
 	dbProxy_.ResUserLoginDB(sessionId, code, userId);
 
@@ -308,18 +327,18 @@ bool MyServer::ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId)
 
 
 
-bool MyServer::ReqCreatePlayerDB(__int64 sessionId, int userId, std::string& playerName)
+bool MyServer::ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName)
 {
-	RESPONSE_CODE code = playerRepository_.InsertPlayer(userId, playerName);
+	RESPONSE_CODE code = playerRepository_.Create(userId, playerName);
 
-	dbProxy_.ResCreatePlayerDB(sessionId, code);
+	dbProxy_.ResPlayerRegisterDB(sessionId, code);
 
 	return true;
 }
 
-bool MyServer::ResCreatePlayerDB(__int64 sessionId, RESPONSE_CODE code)
+bool MyServer::ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code)
 {
-	rpcProxy_.ResCreatePlayer(sessionId, code);
+	rpcProxy_.ResPlayerRegister(sessionId, code);
 
 	return true;
 }
@@ -328,7 +347,7 @@ bool MyServer::ReqPlayerProfileDB(__int64 sessionId, int userId)
 {
 	Player p;
 
-	RESPONSE_CODE code = playerRepository_.SelectPlayer(userId, p);
+	RESPONSE_CODE code = playerRepository_.FindByUserId(userId, p);
 
 	dbProxy_.ResPlayerProfileDB(sessionId, code, p);
 
@@ -349,7 +368,7 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player 
 	// 이미 접속 중
 	if (it != playerMap_.end())
 	{
-		RESPONSE_CODE c =  RESPONSE_CODE::PLAYER_ALREADY_CONNECTED;
+		RESPONSE_CODE c = RESPONSE_CODE::PLAYER_ALREADY_CONNECTED;
 
 		rpcProxy_.ResPlayerProfile(sessionId, c, player);
 
@@ -366,6 +385,38 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player 
 
 
 	rpcProxy_.ResPlayerProfile(sessionId, code, player);
+
+	return true;
+}
+
+bool MyServer::ReqCharacterListDB(__int64 sessionId, int playerId)
+{
+	std::list<Character> lst;
+
+	RESPONSE_CODE code = inventoryRepository_.SelectCharacters(playerId, lst);
+
+	dbProxy_.ResCharacterListDB(sessionId, code, lst);
+
+	return true;
+}
+
+bool MyServer::ResCharacterListDB(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList)
+{
+	if (code != RESPONSE_CODE::SUCCESS)
+	{
+		rpcProxy_.ResCharacterList(sessionId, code, characterList);
+
+		return true;
+	}
+
+	// 성공이라면 서버의 playerMap에 저장
+
+	//Player* newPlayer = new Player();
+	//newPlayer->Initialize(sessionId, player.playerId_, player.playerName_, player.level_, player.gold_);
+
+
+
+	//rpcProxy_.ResCharacterList(sessionId, code, player);
 
 	return true;
 }

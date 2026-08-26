@@ -45,7 +45,7 @@ void RpcServerProxy::ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int use
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName)
+void RpcServerProxy::ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -56,7 +56,7 @@ void RpcServerProxy::ReqCreatePlayer(__int64 sessionId, int userId, std::string&
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResCreatePlayer(__int64 sessionId, RESPONSE_CODE code)
+void RpcServerProxy::ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -85,6 +85,28 @@ void RpcServerProxy::ResPlayerProfile(__int64 sessionId, RESPONSE_CODE code, Pla
 
     packet->GetHeaderPtr()->type_ = 13;
     *packet << code << player;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ReqCharacterList(__int64 sessionId, int playerId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 14;
+    *packet << playerId;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResCharacterList(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 15;
+    *packet << code << characterList;
 
     server_->SendPacket(sessionId, packet);
 }

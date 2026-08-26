@@ -6,7 +6,7 @@ private:
 	Database* database_;
 
 public:
-	void Init(Database* db)
+	void Initialize(Database* db)
 	{
 		database_ = db;
 
@@ -21,7 +21,7 @@ public:
 		stmt->execute();
 	}
 
-	RESPONSE_CODE Register(const std::string& loginId, const std::string& password)
+	RESPONSE_CODE Create(const std::string& loginId, const std::string& password)
 	{
 		try
 		{
@@ -40,7 +40,7 @@ public:
 			// login_id UNIQUE 에러
 			if (e.getErrorCode() == 1062)
 			{
-				return RESPONSE_CODE::REGISTER_ALREADY_EXISTS;
+				return RESPONSE_CODE::ALREADY_EXISTS;
 			}
 
 			// 그 외 DB 오류
@@ -52,7 +52,7 @@ public:
 		}
 	}
 
-	RESPONSE_CODE Login(const std::string& loginId, const std::string& password, int& userId)
+	RESPONSE_CODE FindByLoginId(const std::string& loginId, const std::string& password, int& userId)
 	{
 		try
 		{

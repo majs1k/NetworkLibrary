@@ -5,6 +5,7 @@
 #include "ResponseCode.h"
 
 #include "Player.h"
+#include "Character.h"
 
 #include "../RPC/RpcClientProxy.h"
 #include "../RPC/RpcClientStub.h"
@@ -29,8 +30,10 @@ public:
 	void TestUserRegister();
 	void TestUserLogin();
 
-	void TestCreatePlayer();
-	void TestPlayerInfo();
+	void TestPlayerRegister();
+	void TestPlayerProfile();
+
+	void TestCharacterList();
 
 	void TestPlayerList();
 
@@ -42,8 +45,12 @@ public:
 	bool ResUserRegister(RESPONSE_CODE code);
 	bool ResUserLogin(RESPONSE_CODE code, int userId);
 
-	bool ResCreatePlayer(RESPONSE_CODE code);
+	bool ResPlayerRegister(RESPONSE_CODE code);
 	bool ResPlayerProfile(RESPONSE_CODE code, Player player);
+
+	bool ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList);
+
+
 
 	bool ResPlayerList(std::list<Player> playerList);
 

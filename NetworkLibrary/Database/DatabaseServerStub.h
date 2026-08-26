@@ -9,10 +9,12 @@ public:
     virtual bool ResUserRegisterDB(__int64 sessionId, RESPONSE_CODE code);
     virtual bool ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::string& password);
     virtual bool ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId);
-    virtual bool ReqCreatePlayerDB(__int64 sessionId, int userId, std::string& playerName);
-    virtual bool ResCreatePlayerDB(__int64 sessionId, RESPONSE_CODE code);
+    virtual bool ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName);
+    virtual bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
     virtual bool ReqPlayerProfileDB(__int64 sessionId, int userId);
     virtual bool ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player player);
+    virtual bool ReqCharacterListDB(__int64 sessionId, int playerId);
+    virtual bool ResCharacterListDB(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList);
     virtual bool ReqPlayerListDB(__int64 sessionId);
     virtual bool ResPlayerListDB(__int64 sessionId, std::list<Player> playerList);
     virtual bool ResPlayerEnterDB(__int64 sessionId, Player player);

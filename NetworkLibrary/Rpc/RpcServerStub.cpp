@@ -47,7 +47,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> userId >> playerName;
 
-            return handler_->ReqCreatePlayer(sessionId, userId, playerName);
+            return handler_->ReqPlayerRegister(sessionId, userId, playerName);
         }
         case 11:
         {
@@ -55,7 +55,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code;
 
-            return handler_->ResCreatePlayer(sessionId, code);
+            return handler_->ResPlayerRegister(sessionId, code);
         }
         case 12:
         {
@@ -73,6 +73,23 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
             *packet >> code >> player;
 
             return handler_->ResPlayerProfile(sessionId, code, player);
+        }
+        case 14:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return handler_->ReqCharacterList(sessionId, playerId);
+        }
+        case 15:
+        {
+			RESPONSE_CODE code;
+			std::list<Character> characterList;
+
+            *packet >> code >> characterList;
+
+            return handler_->ResCharacterList(sessionId, code, characterList);
         }
         case 20:
         {
@@ -195,12 +212,12 @@ bool RpcServerHandler::ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int u
     return true;
 }
 
-bool RpcServerHandler::ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName)
+bool RpcServerHandler::ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName)
 {
     return true;
 }
 
-bool RpcServerHandler::ResCreatePlayer(__int64 sessionId, RESPONSE_CODE code)
+bool RpcServerHandler::ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
@@ -211,6 +228,16 @@ bool RpcServerHandler::ReqPlayerProfile(__int64 sessionId, int userId)
 }
 
 bool RpcServerHandler::ResPlayerProfile(__int64 sessionId, RESPONSE_CODE code, Player player)
+{
+    return true;
+}
+
+bool RpcServerHandler::ReqCharacterList(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResCharacterList(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList)
 {
     return true;
 }

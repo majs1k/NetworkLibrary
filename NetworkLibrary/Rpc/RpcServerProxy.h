@@ -13,10 +13,12 @@ public:
     void ResUserRegister(__int64 sessionId, RESPONSE_CODE code);
     void ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password);
     void ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int userId);
-    void ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName);
-    void ResCreatePlayer(__int64 sessionId, RESPONSE_CODE code);
+    void ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName);
+    void ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code);
     void ReqPlayerProfile(__int64 sessionId, int userId);
     void ResPlayerProfile(__int64 sessionId, RESPONSE_CODE code, Player player);
+    void ReqCharacterList(__int64 sessionId, int playerId);
+    void ResCharacterList(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList);
     void ReqPlayerList(__int64 sessionId);
     void ResPlayerList(__int64 sessionId, std::list<Player> playerList);
     void ResPlayerEnter(__int64 sessionId, Player player);

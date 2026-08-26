@@ -125,6 +125,12 @@
     <ClInclude Include="Contents\ResponseCode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Contents\Repository\InventoryRepository.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\Character.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="myconfig.json" />

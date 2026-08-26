@@ -47,7 +47,7 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet >> userId >> playerName;
 
-            return handler_->ReqCreatePlayer(userId, playerName);
+            return handler_->ReqPlayerRegister(userId, playerName);
         }
         case 11:
         {
@@ -55,7 +55,7 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet >> code;
 
-            return handler_->ResCreatePlayer(code);
+            return handler_->ResPlayerRegister(code);
         }
         case 12:
         {
@@ -73,6 +73,23 @@ bool RpcClientStub::PacketProc(Packet* packet)
             *packet >> code >> player;
 
             return handler_->ResPlayerProfile(code, player);
+        }
+        case 14:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return handler_->ReqCharacterList(playerId);
+        }
+        case 15:
+        {
+			RESPONSE_CODE code;
+			std::list<Character> characterList;
+
+            *packet >> code >> characterList;
+
+            return handler_->ResCharacterList(code, characterList);
         }
         case 20:
         {
@@ -195,12 +212,12 @@ bool RpcClientHandler::ResUserLogin(RESPONSE_CODE code, int userId)
     return true;
 }
 
-bool RpcClientHandler::ReqCreatePlayer(int userId, std::string& playerName)
+bool RpcClientHandler::ReqPlayerRegister(int userId, std::string& playerName)
 {
     return true;
 }
 
-bool RpcClientHandler::ResCreatePlayer(RESPONSE_CODE code)
+bool RpcClientHandler::ResPlayerRegister(RESPONSE_CODE code)
 {
     return true;
 }
@@ -211,6 +228,16 @@ bool RpcClientHandler::ReqPlayerProfile(int userId)
 }
 
 bool RpcClientHandler::ResPlayerProfile(RESPONSE_CODE code, Player player)
+{
+    return true;
+}
+
+bool RpcClientHandler::ReqCharacterList(int playerId)
+{
+    return true;
+}
+
+bool RpcClientHandler::ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList)
 {
     return true;
 }

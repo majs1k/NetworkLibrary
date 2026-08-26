@@ -9,6 +9,12 @@
 
 
 #include "Player.h"
+#include "Character.h"
+
+#include "Repository/UserRepository.h"
+#include "Repository/PlayerRepository.h"
+#include "Repository/InventoryRepository.h"
+
 
 
 #include "../RPC/RpcServerProxy.h"
@@ -22,8 +28,6 @@
 #include <queue>
 #include <unordered_map>
 
-#include "Repository/UserRepository.h"
-#include "Repository/PlayerRepository.h"
 
 
 class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
@@ -72,6 +76,7 @@ private:
 
 	UserRepository userRepository_;
 	PlayerRepository playerRepository_;
+	InventoryRepository inventoryRepository_;
 
 
 private:
@@ -87,9 +92,11 @@ public:
 
 	bool ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password);
 
-	bool ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName);
+	bool ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName);
 
 	bool ReqPlayerProfile(__int64 sessionId, int userId);
+
+	bool ReqCharacterList(__int64 sessionId, int playerId);
 
 	bool ReqPlayerList(__int64 sessionId);
 
@@ -108,14 +115,17 @@ public:
 
 	bool ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId);
 
-	bool ReqCreatePlayerDB(__int64 sessionId, int userId, std::string& playerName);
+	bool ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName);
 
-	bool ResCreatePlayerDB(__int64 sessionId, RESPONSE_CODE code);
+	bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
 
 	bool ReqPlayerProfileDB(__int64 sessionId, int userId);
 
 	bool ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player player);
 
+	bool ReqCharacterListDB(__int64 sessionId, int playerId);
+
+	bool ResCharacterListDB(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList);
 
 	// ----------------------------------------------------- //
 
@@ -125,39 +135,4 @@ private:
 	std::unordered_map<int, Player*> playerMap_{};
 	int playerCount_ = 0;
 
-public:
-
-
-
-
-
-//private:
-//	std::unordered_map<int, User*> users_;
-//
-//public:
-//	void CreateUser(const User& user)
-//	{
-//		users_[user.userId] = new User(user);
-//	}
-//
-//	void DeleteUser(int userId)
-//	{
-//		auto iter = users_.find(userId);
-//
-//		if (iter != users_.end())
-//		{
-//			delete iter->second;
-//			users_.erase(iter);
-//		}
-//	}
-//
-//	User* FindUser(int userId)
-//	{
-//		auto iter = users_.find(userId);
-//
-//		if (iter == users_.end())
-//			return nullptr;
-//
-//		return iter->second;
-//	}
 };

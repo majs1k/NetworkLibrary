@@ -47,7 +47,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> userId >> playerName;
 
-            return handler_->ReqCreatePlayerDB(sessionId, userId, playerName);
+            return handler_->ReqPlayerRegisterDB(sessionId, userId, playerName);
         }
         case 11:
         {
@@ -55,7 +55,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code;
 
-            return handler_->ResCreatePlayerDB(sessionId, code);
+            return handler_->ResPlayerRegisterDB(sessionId, code);
         }
         case 12:
         {
@@ -73,6 +73,23 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
             *packet >> code >> player;
 
             return handler_->ResPlayerProfileDB(sessionId, code, player);
+        }
+        case 14:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return handler_->ReqCharacterListDB(sessionId, playerId);
+        }
+        case 15:
+        {
+			RESPONSE_CODE code;
+			std::list<Character> characterList;
+
+            *packet >> code >> characterList;
+
+            return handler_->ResCharacterListDB(sessionId, code, characterList);
         }
         case 20:
         {
@@ -195,12 +212,12 @@ bool DatabaseServerHandler::ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code
     return true;
 }
 
-bool DatabaseServerHandler::ReqCreatePlayerDB(__int64 sessionId, int userId, std::string& playerName)
+bool DatabaseServerHandler::ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResCreatePlayerDB(__int64 sessionId, RESPONSE_CODE code)
+bool DatabaseServerHandler::ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
@@ -211,6 +228,16 @@ bool DatabaseServerHandler::ReqPlayerProfileDB(__int64 sessionId, int userId)
 }
 
 bool DatabaseServerHandler::ResPlayerProfileDB(__int64 sessionId, RESPONSE_CODE code, Player player)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ReqCharacterListDB(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResCharacterListDB(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList)
 {
     return true;
 }

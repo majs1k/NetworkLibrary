@@ -9,11 +9,14 @@ ResUserLogin(RESPONSE_CODE code, int userId)									3
 
 
 
-ReqCreatePlayer(int userId, std::string& playerName)								10
-ResCreatePlayer(RESPONSE_CODE code)													11
+ReqPlayerRegister(int userId, std::string& playerName)							10
+ResPlayerRegister(RESPONSE_CODE code)											11
 
-ReqPlayerProfile(int userId)														12
-ResPlayerProfile(RESPONSE_CODE code, Player player)									13
+ReqPlayerProfile(int userId)													12
+ResPlayerProfile(RESPONSE_CODE code, Player player)								13
+
+ReqCharacterList(int playerId)													14
+ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList)		15
 
 
 ReqPlayerList()												20

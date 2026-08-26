@@ -9,6 +9,7 @@
 #include <string>
 
 #include "Player.h"
+#include "Character.h"
 
 #include "ResponseCode.h"
 
@@ -98,6 +99,28 @@ inline Packet& operator>>(Packet& packet, Player& player)
 	packet >> player.playerName_;
 	packet >> player.level_;
 	packet >> player.gold_;
+
+	return packet;
+}
+
+inline Packet& operator<<(Packet& packet, Character character)
+{
+	packet << character.inventoryId_;
+	packet << character.characterId_;
+	packet << character.level_;
+	packet << character.attack_;
+	packet << character.hp_;
+
+	return packet;
+}
+
+inline Packet& operator>>(Packet& packet, Character& character)
+{
+	packet >> character.inventoryId_;
+	packet >> character.characterId_;
+	packet >> character.level_;
+	packet >> character.attack_;
+	packet >> character.hp_;
 
 	return packet;
 }

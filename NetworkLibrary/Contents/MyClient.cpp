@@ -36,7 +36,7 @@ void MyClient::OnRecv(Packet* packet)
 
 void MyClient::TestUserRegister()
 {
-	std::cout << "TestRegister" << std::endl;
+	std::cout << "TestUserRegister" << std::endl;
 
 	std::string loginId;
 	std::string password;
@@ -52,7 +52,7 @@ void MyClient::TestUserRegister()
 
 void MyClient::TestUserLogin()
 {
-	std::cout << "TestLogin" << std::endl;
+	std::cout << "TestUserLogin" << std::endl;
 
 	std::string loginId;
 	std::string password;
@@ -65,9 +65,9 @@ void MyClient::TestUserLogin()
 	rpc_.ReqUserLogin(loginId, password);
 }
 
-void MyClient::TestCreatePlayer()
+void MyClient::TestPlayerRegister()
 {
-	std::cout << "TestCreatePlayer" << std::endl;
+	std::cout << "TestPlayerRegister" << std::endl;
 
 	int userId;
 	std::string playerName;
@@ -77,12 +77,12 @@ void MyClient::TestCreatePlayer()
 	std::cout << "input playerName: ";
 	std::cin >> playerName;
 
-	rpc_.ReqCreatePlayer(userId, playerName);
+	rpc_.ReqPlayerRegister(userId, playerName);
 }
 
-void MyClient::TestPlayerInfo()
+void MyClient::TestPlayerProfile()
 {
-	std::cout << "TestPlayerInfo" << std::endl;
+	std::cout << "TestPlayerProfile" << std::endl;
 
 	int userId;
 
@@ -91,6 +91,20 @@ void MyClient::TestPlayerInfo()
 
 	rpc_.ReqPlayerProfile(userId);
 }
+
+void MyClient::TestCharacterList()
+{
+	std::cout << "TestCharacterList" << std::endl;
+
+	int playerId;
+
+	std::cout << "input playerId: ";
+	std::cin >> playerId;
+
+	rpc_.ReqCharacterList(playerId);
+}
+
+
 
 void MyClient::TestPlayerList()
 {
@@ -115,7 +129,7 @@ void MyClient::TestChat()
 
 bool MyClient::ResUserRegister(RESPONSE_CODE code)
 {
-	std::cout << "ResRegister" << std::endl;
+	std::cout << "ResUserRegister" << std::endl;
 
 	std::cout << "code : " << (short)code << std::endl;
 
@@ -126,7 +140,7 @@ bool MyClient::ResUserRegister(RESPONSE_CODE code)
 
 bool MyClient::ResUserLogin(RESPONSE_CODE code, int userId)
 {
-	std::cout << "ResRegister" << std::endl;
+	std::cout << "ResUserLogin" << std::endl;
 
 	std::cout << "code : " << (short)code << std::endl;
 
@@ -138,9 +152,9 @@ bool MyClient::ResUserLogin(RESPONSE_CODE code, int userId)
 }
 
 
-bool MyClient::ResCreatePlayer(RESPONSE_CODE code)
+bool MyClient::ResPlayerRegister(RESPONSE_CODE code)
 {
-	std::cout << "ResCreatePlayer" << std::endl;
+	std::cout << "ResPlayerRegister" << std::endl;
 
 	std::cout << "code : " << (short)code << std::endl;
 
@@ -162,6 +176,30 @@ bool MyClient::ResPlayerProfile(RESPONSE_CODE code, Player player)
 	std::cout << "level : " << player.level_ << std::endl;
 
 	std::cout << "gold : " << player.gold_ << std::endl;
+
+	std::cout << std::endl;
+
+	return true;
+}
+
+bool MyClient::ResCharacterList(RESPONSE_CODE code, std::list<Character> characterList)
+{
+	std::cout << "ResPlayerList" << std::endl;
+
+	for (auto& c : characterList)
+	{
+		std::cout << "inventoryId : " << c.inventoryId_ << std::endl;
+
+		std::cout << "characterId : " << c.characterId_ << std::endl;
+
+		std::cout << "level : " << c.level_ << std::endl;
+
+		std::cout << "attack : " << c.attack_ << std::endl;
+
+		std::cout << "hp : " << c.hp_ << std::endl;
+
+		std::cout << std::endl;
+	}
 
 	std::cout << std::endl;
 

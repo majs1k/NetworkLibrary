@@ -9,10 +9,12 @@ public:
     virtual bool ResUserRegister(__int64 sessionId, RESPONSE_CODE code);
     virtual bool ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password);
     virtual bool ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int userId);
-    virtual bool ReqCreatePlayer(__int64 sessionId, int userId, std::string& playerName);
-    virtual bool ResCreatePlayer(__int64 sessionId, RESPONSE_CODE code);
+    virtual bool ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName);
+    virtual bool ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code);
     virtual bool ReqPlayerProfile(__int64 sessionId, int userId);
     virtual bool ResPlayerProfile(__int64 sessionId, RESPONSE_CODE code, Player player);
+    virtual bool ReqCharacterList(__int64 sessionId, int playerId);
+    virtual bool ResCharacterList(__int64 sessionId, RESPONSE_CODE code, std::list<Character> characterList);
     virtual bool ReqPlayerList(__int64 sessionId);
     virtual bool ResPlayerList(__int64 sessionId, std::list<Player> playerList);
     virtual bool ResPlayerEnter(__int64 sessionId, Player player);
