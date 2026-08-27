@@ -17,12 +17,13 @@
 
 
 
-#include "../RPC/RpcServerProxy.h"
+//#include "../RPC/RpcServerProxy.h"
 #include "../RPC/RpcServerStub.h"
 
 #include "../Database/DatabaseServerProxy.h"
 #include "../Database/DatabaseServerStub.h"
 
+class RpcServerProxy;
 
 
 class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
@@ -34,12 +35,13 @@ private:
 
 	PacketQueue networkPacketQueue_;
 
-	RpcServerProxy rpcProxy_;
-	RpcServerStub rpcStub_;
+	RpcServerProxy* rpcProxy_;
+	RpcServerStub* rpcStub_;
 
 public:
 
 	MyServer();
+	~MyServer();
 
 private:
 

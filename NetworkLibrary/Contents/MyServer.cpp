@@ -2,6 +2,9 @@
 #include "../Utils/Packet.h"
 #include "../Utils/Logger.h"
 #include "../Utils/TickController.h"
+
+#include "../RPC/RpcServerProxy.h"
+
 #include <process.h>
 #include <Windows.h>
 
@@ -12,8 +15,11 @@ MyServer::MyServer()
 
 	hDatabaseThread_ = (HANDLE)_beginthreadex(nullptr, 0, DatabaseThread, this, 0, nullptr);
 
-	rpcProxy_.server_ = this;
-	rpcStub_.handler_ = this;
+	rpcProxy_ = new RpcServerProxy();
+	rpcStub_ = new RpcServerStub();
+
+	rpcProxy_->server_ = this;
+	rpcStub_->handler_ = this;
 
 	dbProxy_.dbQueue_ = &dbReqQueue_;
 	dbProxy_.logicQueue_ = &dbResQueue_;
@@ -26,6 +32,12 @@ MyServer::MyServer()
 	userRepository_.Initialize(&db_);
 	playerRepository_.Initialize(&db_);
 	inventoryRepository_.Initialize(&db_);
+}
+
+MyServer::~MyServer()
+{
+	delete rpcProxy_;
+	delete rpcStub_;
 }
 
 bool MyServer::OnConnectionRequest(const std::wstring& ip, int port)
@@ -59,7 +71,7 @@ void MyServer::OnRelease(__int64 sessionId)
 	// 다른 플레이어들에게 퇴장 알림
 	for (auto& i : playerMap_)
 	{
-		rpcProxy_.ResPlayerLeaveLobby(i.second->sessionId_, playerId);
+		rpcProxy_->ResPlayerLeaveLobby(i.second->sessionId_, playerId);
 	}
 }
 
@@ -110,7 +122,7 @@ void MyServer::ProcessNetworkQueue()
 		__int64 sessionId = packet->GetId();
 
 		// 함수의 인자 자료형 주의
-		if (!rpcStub_.PacketProc(sessionId, packet))
+		if (!rpcStub_->PacketProc(sessionId, packet))
 		{
 			//disconnect(sessionId);
 
@@ -194,7 +206,7 @@ bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::str
 	if (loginId.length() > 20 || password.length() > 20)
 	{
 		RESPONSE_CODE c = RESPONSE_CODE::INPUT_LENGTH_OVER;
-		rpcProxy_.ResUserRegister(sessionId, c);
+		rpcProxy_->ResUserRegister(sessionId, c);
 
 		return true;
 	}
@@ -209,7 +221,7 @@ bool MyServer::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string
 	if (loginId.length() > 20 || password.length() > 20)
 	{
 		RESPONSE_CODE c = RESPONSE_CODE::INPUT_LENGTH_OVER;
-		rpcProxy_.ResUserRegister(sessionId, c);
+		rpcProxy_->ResUserRegister(sessionId, c);
 
 		return true;
 	}
@@ -246,7 +258,7 @@ bool MyServer::ReqLobbyPlayers(__int64 sessionId)
 		playerList.push_back(p);
 	}
 
-	rpcProxy_.ResLobbyPlayers(sessionId, playerList);
+	rpcProxy_->ResLobbyPlayers(sessionId, playerList);
 
 	return true;
 }
@@ -267,7 +279,7 @@ bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 	{
 		Player* other = p.second;
 
-		rpcProxy_.ResChat(other->sessionId_, senderId, message);
+		rpcProxy_->ResChat(other->sessionId_, senderId, message);
 	}
 
 	return true;
@@ -289,7 +301,7 @@ bool MyServer::ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::s
 
 bool MyServer::ResUserRegisterDB(__int64 sessionId, RESPONSE_CODE code)
 {
-	rpcProxy_.ResUserRegister(sessionId, code);
+	rpcProxy_->ResUserRegister(sessionId, code);
 
 	return true;
 }
@@ -307,7 +319,7 @@ bool MyServer::ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::stri
 
 bool MyServer::ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId)
 {
-	rpcProxy_.ResUserLogin(sessionId, code, userId);
+	rpcProxy_->ResUserLogin(sessionId, code, userId);
 
 	return true;
 }
@@ -324,7 +336,7 @@ bool MyServer::ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& p
 
 bool MyServer::ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code)
 {
-	rpcProxy_.ResPlayerRegister(sessionId, code);
+	rpcProxy_->ResPlayerRegister(sessionId, code);
 
 	return true;
 }
@@ -340,7 +352,7 @@ bool MyServer::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
 	// 잘못된 요청
 	if (p.playerId_ == 0)
 	{
-		rpcProxy_.ResPlayerProfile(sessionId, p);
+		rpcProxy_->ResPlayerProfile(sessionId, p);
 
 		return true;
 	}
@@ -365,7 +377,7 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player player)
 	{
 		player.playerId_ = 0;
 
-		rpcProxy_.ResPlayerProfile(sessionId, player);
+		rpcProxy_->ResPlayerProfile(sessionId, player);
 
 		return true;
 	}
@@ -379,12 +391,12 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player player)
 	playerMap_.insert({ player.playerId_ , newPlayer });
 
 
-	rpcProxy_.ResPlayerProfile(sessionId, player);
+	rpcProxy_->ResPlayerProfile(sessionId, player);
 
 	// 다른 플레이어들에게 입장 알림
 	for (auto& i : playerMap_)
 	{
-		rpcProxy_.ResPlayerEnterLobby(i.second->sessionId_, player);
+		rpcProxy_->ResPlayerEnterLobby(i.second->sessionId_, player);
 	}
 
 	return true;
@@ -402,7 +414,7 @@ bool MyServer::ResPlayerCharactersDB(__int64 sessionId, std::list<Character> cha
 		p->characterList_.push_back(c);
 	}
 
-	rpcProxy_.ResPlayerCharacters(sessionId, characterList);
+	rpcProxy_->ResPlayerCharacters(sessionId, characterList);
 
 	return true;
 }

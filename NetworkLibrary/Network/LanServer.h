@@ -12,6 +12,7 @@ class Packet;
 class LanServer
 {
 private:
+
 	SOCKET listenSocket_;
 
 	std::wstring serverIp_;
@@ -30,11 +31,9 @@ private:
 	std::recursive_mutex sessionMapLock_;
 	__int64 idSeed_ = 0;
 
-	LONG acceptCount_;
-	LONG recvMessageCount_;
-	LONG sendMessageCount_;
 
 public:
+
 	LanServer();
 	virtual ~LanServer();
 
@@ -60,7 +59,15 @@ public:
 	// 컨텐츠에게 에러코드를 알려주지만 서버 끌 상황은 아닐때 (미구현)
 	//virtual void OnError(int errorCode, wchar_t* str) = 0;
 
+
+protected:
+	LONG acceptCount_;
+	LONG recvMessageCount_;
+	LONG sendMessageCount_;
+
+public:
 	void Monitoring();
+
 
 private:
 	static unsigned int __stdcall AcceptThread(void* param);
