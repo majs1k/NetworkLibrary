@@ -22,9 +22,9 @@ public:
     virtual bool ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     virtual bool ReqBuyCharacterDB(__int64 sessionId);
     virtual bool ResBuyCharacterDB(__int64 sessionId, Character character, int currentMoney);
-    virtual bool ReqEnterMatchDB(__int64 sessionId);
-    virtual bool ResEnterMatchDB(__int64 sessionId);
-    virtual bool ResStartMatchDB(__int64 sessionId);
+    virtual bool ReqEnterMatchQueueDB(__int64 sessionId);
+    virtual bool ResEnterMatchQueueDB(__int64 sessionId, Player otherPlayer);
+    virtual bool ResEndMatchDB(__int64 sessionId, int result, int currentMoney);
 };
 
 class DatabaseServerStub

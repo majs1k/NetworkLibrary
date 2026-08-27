@@ -26,7 +26,7 @@ public:
     void ResPlayerLeaveLobby(int playerId);
     void ReqBuyCharacter();
     void ResBuyCharacter(Character character, int currentMoney);
-    void ReqEnterMatch();
-    void ResEnterMatch();
-    void ResStartMatch();
+    void ReqEnterMatchQueue();
+    void ResEnterMatchQueue(Player otherPlayer);
+    void ResEndMatch(int result, int currentMoney);
 };

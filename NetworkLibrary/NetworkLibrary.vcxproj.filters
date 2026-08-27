@@ -131,6 +131,12 @@
     <ClInclude Include="Contents\MyServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Contents\MatchMaker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\GameRoom.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="myconfig.json" />

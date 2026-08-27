@@ -94,7 +94,7 @@ public:
 
 	int TotalUseSize()
 	{
-		return this->UseSize() + HEADER_SIZE;
+		return UseSize() + HEADER_SIZE;
 	}
 
 	int	Capacity()
@@ -102,7 +102,7 @@ public:
 		return capacity_;
 	}
 
-	// 헤더 크기 제외
+	// 헤더 제외
 	int	UseSize()
 	{
 		return writePos_ - readPos_;

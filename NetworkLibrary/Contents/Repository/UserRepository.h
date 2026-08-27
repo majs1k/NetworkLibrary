@@ -21,7 +21,7 @@ public:
 		stmt->execute();
 	}
 
-	RESPONSE_CODE Create(const std::string& loginId, const std::string& password)
+	RESPONSE_CODE CreateUser(const std::string& loginId, const std::string& password)
 	{
 		try
 		{

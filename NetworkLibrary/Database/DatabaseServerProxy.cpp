@@ -222,7 +222,7 @@ void DatabaseServerProxy::ResBuyCharacterDB(__int64 sessionId, Character charact
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ReqEnterMatchDB(__int64 sessionId)
+void DatabaseServerProxy::ReqEnterMatchQueueDB(__int64 sessionId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -235,7 +235,7 @@ void DatabaseServerProxy::ReqEnterMatchDB(__int64 sessionId)
     dbQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResEnterMatchDB(__int64 sessionId)
+void DatabaseServerProxy::ResEnterMatchQueueDB(__int64 sessionId, Player otherPlayer)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -243,12 +243,12 @@ void DatabaseServerProxy::ResEnterMatchDB(__int64 sessionId)
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 61;
-    *packet;
+    *packet << otherPlayer;
 
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResStartMatchDB(__int64 sessionId)
+void DatabaseServerProxy::ResEndMatchDB(__int64 sessionId, int result, int currentMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -256,7 +256,7 @@ void DatabaseServerProxy::ResStartMatchDB(__int64 sessionId)
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 62;
-    *packet;
+    *packet << result << currentMoney;
 
     logicQueue_->Push(packet);
 }

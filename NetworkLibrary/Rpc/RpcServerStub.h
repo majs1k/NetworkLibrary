@@ -22,9 +22,9 @@ public:
     virtual bool ResPlayerLeaveLobby(__int64 sessionId, int playerId);
     virtual bool ReqBuyCharacter(__int64 sessionId);
     virtual bool ResBuyCharacter(__int64 sessionId, Character character, int currentMoney);
-    virtual bool ReqEnterMatch(__int64 sessionId);
-    virtual bool ResEnterMatch(__int64 sessionId);
-    virtual bool ResStartMatch(__int64 sessionId);
+    virtual bool ReqEnterMatchQueue(__int64 sessionId);
+    virtual bool ResEnterMatchQueue(__int64 sessionId, Player otherPlayer);
+    virtual bool ResEndMatch(__int64 sessionId, int result, int currentMoney);
 };
 
 class RpcServerStub

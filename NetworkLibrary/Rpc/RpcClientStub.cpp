@@ -150,21 +150,24 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet;
 
-            return handler_->ReqEnterMatch();
+            return handler_->ReqEnterMatchQueue();
         }
         case 61:
         {
+			Player otherPlayer;
 
-            *packet;
+            *packet >> otherPlayer;
 
-            return handler_->ResEnterMatch();
+            return handler_->ResEnterMatchQueue(otherPlayer);
         }
         case 62:
         {
+			int result;
+			int currentMoney;
 
-            *packet;
+            *packet >> result >> currentMoney;
 
-            return handler_->ResStartMatch();
+            return handler_->ResEndMatch(result, currentMoney);
         }
     default:
     {
@@ -261,17 +264,17 @@ bool RpcClientHandler::ResBuyCharacter(Character character, int currentMoney)
     return true;
 }
 
-bool RpcClientHandler::ReqEnterMatch()
+bool RpcClientHandler::ReqEnterMatchQueue()
 {
     return true;
 }
 
-bool RpcClientHandler::ResEnterMatch()
+bool RpcClientHandler::ResEnterMatchQueue(Player otherPlayer)
 {
     return true;
 }
 
-bool RpcClientHandler::ResStartMatch()
+bool RpcClientHandler::ResEndMatch(int result, int currentMoney)
 {
     return true;
 }

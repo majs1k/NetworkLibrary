@@ -47,14 +47,19 @@ void MyServer::OnAccept(__int64 sessionId)
 
 void MyServer::OnRelease(__int64 sessionId)
 {
-	auto it1 = sessionToPlayer_.find(sessionId);
+	if (sessionToPlayer_.count(sessionId) == 0)
+		return;
 
-	// 현재 플레이어 리스트에 등록되어 있다면 삭제
-	if (it1 != sessionToPlayer_.end())
+	int playerId = sessionToPlayer_[sessionId];
+
+	playerMap_.erase(playerId);
+
+	sessionToPlayer_.erase(sessionId);
+
+	// 다른 플레이어들에게 퇴장 알림
+	for (auto& i : playerMap_)
 	{
-		playerMap_.erase(sessionToPlayer_[sessionId]);
-
-		sessionToPlayer_.erase(sessionId);
+		rpcProxy_.ResPlayerLeaveLobby(i.second->sessionId_, playerId);
 	}
 }
 
@@ -185,6 +190,7 @@ void MyServer::ProcessDbResQueue()
 
 bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
+	// 길이 제한
 	if (loginId.length() > 20 || password.length() > 20)
 	{
 		RESPONSE_CODE c = RESPONSE_CODE::INPUT_LENGTH_OVER;
@@ -274,7 +280,7 @@ bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 
 bool MyServer::ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password)
 {
-	RESPONSE_CODE code = userRepository_.Create(loginId, password);
+	RESPONSE_CODE code = userRepository_.CreateUser(loginId, password);
 
 	dbProxy_.ResUserRegisterDB(sessionId, code);
 
@@ -309,7 +315,7 @@ bool MyServer::ResUserLoginDB(__int64 sessionId, RESPONSE_CODE code, int userId)
 
 bool MyServer::ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName)
 {
-	RESPONSE_CODE code = playerRepository_.Create(userId, playerName);
+	RESPONSE_CODE code = playerRepository_.CreatePlayer(userId, playerName);
 
 	dbProxy_.ResPlayerRegisterDB(sessionId, code);
 
@@ -329,10 +335,10 @@ bool MyServer::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
 	//TODO: 클라이언트 측에선 playerId 0으로 수신시 오류메세지 띄우기
 	p.playerId_ = 0;
 
-	RESPONSE_CODE code = playerRepository_.FindByUserId(userId, p);
+	playerRepository_.FindPlayerByUserId(userId, p);
 
-	// 잘못된 요청 (playerId 오류)
-	if (code != RESPONSE_CODE::SUCCESS)
+	// 잘못된 요청
+	if (p.playerId_ == 0)
 	{
 		rpcProxy_.ResPlayerProfile(sessionId, p);
 
@@ -344,7 +350,7 @@ bool MyServer::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
 
 	std::list<Character> lst;
 
-	inventoryRepository_.SelectCharacters(p.playerId_, lst);
+	inventoryRepository_.FindCharacterByPlayerId(p.playerId_, lst);
 
 	dbProxy_.ResPlayerCharactersDB(sessionId, lst);
 
@@ -354,17 +360,6 @@ bool MyServer::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
 
 bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player player)
 {
-	//auto it = playerMap_.find(player.playerId_);
-
-	//// 이미 접속 중
-	//if (it != playerMap_.end())
-	//{
-	//	rpcProxy_.ResPlayerProfile(sessionId, c, player);
-
-	//	return true;
-	//}
-
-
 	// 잘못된 요청 (플레이어 이미 접속)
 	if (playerMap_.count(player.playerId_) != 0)
 	{
@@ -385,6 +380,12 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player player)
 
 
 	rpcProxy_.ResPlayerProfile(sessionId, player);
+
+	// 다른 플레이어들에게 입장 알림
+	for (auto& i : playerMap_)
+	{
+		rpcProxy_.ResPlayerEnterLobby(i.second->sessionId_, player);
+	}
 
 	return true;
 }

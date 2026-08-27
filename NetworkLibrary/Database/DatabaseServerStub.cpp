@@ -150,21 +150,24 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet;
 
-            return handler_->ReqEnterMatchDB(sessionId);
+            return handler_->ReqEnterMatchQueueDB(sessionId);
         }
         case 61:
         {
+			Player otherPlayer;
 
-            *packet;
+            *packet >> otherPlayer;
 
-            return handler_->ResEnterMatchDB(sessionId);
+            return handler_->ResEnterMatchQueueDB(sessionId, otherPlayer);
         }
         case 62:
         {
+			int result;
+			int currentMoney;
 
-            *packet;
+            *packet >> result >> currentMoney;
 
-            return handler_->ResStartMatchDB(sessionId);
+            return handler_->ResEndMatchDB(sessionId, result, currentMoney);
         }
     default:
     {
@@ -261,17 +264,17 @@ bool DatabaseServerHandler::ResBuyCharacterDB(__int64 sessionId, Character chara
     return true;
 }
 
-bool DatabaseServerHandler::ReqEnterMatchDB(__int64 sessionId)
+bool DatabaseServerHandler::ReqEnterMatchQueueDB(__int64 sessionId)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResEnterMatchDB(__int64 sessionId)
+bool DatabaseServerHandler::ResEnterMatchQueueDB(__int64 sessionId, Player otherPlayer)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResStartMatchDB(__int64 sessionId)
+bool DatabaseServerHandler::ResEndMatchDB(__int64 sessionId, int result, int currentMoney)
 {
     return true;
 }

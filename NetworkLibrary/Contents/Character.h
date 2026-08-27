@@ -11,7 +11,6 @@ struct Character
 {
 	int inventoryId_;
 	int characterId_;
-	//int playerId_;
 	
 	int level_;
 	int attack_;

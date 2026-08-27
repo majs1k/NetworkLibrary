@@ -56,4 +56,8 @@ public:
 	bool ResChat(int playerId, std::string& message);
 
 	bool ResLobbyPlayers(std::list<Player> playerList);
+
+
+	bool ResPlayerEnterLobby(Player player);
+	bool ResPlayerLeaveLobby(int playerId);
 };

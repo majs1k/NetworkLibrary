@@ -22,9 +22,9 @@ public:
     virtual bool ResPlayerLeaveLobby(int playerId);
     virtual bool ReqBuyCharacter();
     virtual bool ResBuyCharacter(Character character, int currentMoney);
-    virtual bool ReqEnterMatch();
-    virtual bool ResEnterMatch();
-    virtual bool ResStartMatch();
+    virtual bool ReqEnterMatchQueue();
+    virtual bool ResEnterMatchQueue(Player otherPlayer);
+    virtual bool ResEndMatch(int result, int currentMoney);
 };
 
 class RpcClientStub

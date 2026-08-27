@@ -158,6 +158,7 @@ bool LanServer::Disconnect(__int64 sessionId)
 
 	sessionMapLock_.unlock();
 
+	// HACK: 이후 수정 필요
 	closesocket(session->socket_);
 
 	return true;
@@ -203,11 +204,11 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 
 	delete packet;
 
+	InterlockedIncrement(&sendMessageCount_);
+
 	this->SendPost(session);
 
 	session->sessionLock_.unlock();
-
-	InterlockedIncrement(&sendMessageCount_);
 
 	return true;
 }

@@ -318,9 +318,9 @@ void LanServer::CompleteRecv(Session* session, int numOfBytes)
 		// 메세지 사이즈만큼만 무브
 		packet->MoveWritePos(messageSize);
 
-		this->OnRecv(session->sessionId_, packet);
-
 		InterlockedIncrement(&recvMessageCount_);
+
+		this->OnRecv(session->sessionId_, packet);
 	}
 
 	// WSARecv() 이전에 호출

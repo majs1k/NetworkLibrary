@@ -226,3 +226,13 @@ bool MyClient::ResLobbyPlayers(std::list<Player> playerList)
 
 	return true;
 }
+
+bool MyClient::ResPlayerEnterLobby(Player player)
+{
+
+}
+
+bool MyClient::ResPlayerLeaveLobby(int playerId)
+{
+
+}

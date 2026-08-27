@@ -37,4 +37,3 @@ ReqEnterMatchQueue()							60
 ResEnterMatchQueue(Player otherPlayer)			61
 
 ResEndMatch(int result, int currentMoney)		62
-

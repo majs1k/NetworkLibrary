@@ -27,7 +27,7 @@ public:
     void ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     void ReqBuyCharacterDB(__int64 sessionId);
     void ResBuyCharacterDB(__int64 sessionId, Character character, int currentMoney);
-    void ReqEnterMatchDB(__int64 sessionId);
-    void ResEnterMatchDB(__int64 sessionId);
-    void ResStartMatchDB(__int64 sessionId);
+    void ReqEnterMatchQueueDB(__int64 sessionId);
+    void ResEnterMatchQueueDB(__int64 sessionId, Player otherPlayer);
+    void ResEndMatchDB(__int64 sessionId, int result, int currentMoney);
 };

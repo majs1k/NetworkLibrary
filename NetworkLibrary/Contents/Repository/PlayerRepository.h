@@ -24,7 +24,7 @@ public:
 		stmt->execute();
 	}
 
-	RESPONSE_CODE Create(int userId, const std::string& playerName)
+	RESPONSE_CODE CreatePlayer(int userId, const std::string& playerName)
 	{
 		try
 		{
@@ -55,7 +55,7 @@ public:
 		}
 	}
 
-	RESPONSE_CODE FindByUserId(int userId, Player& p)
+	void FindPlayerByUserId(int userId, Player& p)
 	{
 		try
 		{
@@ -68,26 +68,44 @@ public:
 
 			std::unique_ptr<sql::ResultSet> result(stmt->executeQuery());
 
-			// 아이디가 없음
+			// 플레이어 생성되지 않았음
 			if (!result->next())
 			{
-				return RESPONSE_CODE::NOT_FOUND;
+				return;
 			}
 
 			p.playerId_ = result->getInt("player_id");
 			p.playerName_ = result->getString("player_name");
 			p.level_ = result->getInt("level");
 			p.gold_ = result->getInt("gold");
-
-			return RESPONSE_CODE::SUCCESS;
 		}
 		catch (sql::SQLException& e)
 		{
 			std::cout << "DB Error: " << e.what() << std::endl;
 			std::cout << "Error Code: " << e.getErrorCode() << std::endl;
 			std::cout << "SQL State: " << e.getSQLState() << std::endl;
+		}
+	}
 
-			return RESPONSE_CODE::DB_ERROR;
+	void UpdateGold(int playerId, int gold)
+	{
+		try
+		{
+			auto stmt = database_->Prepare(
+				"UPDATE players "
+				"SET gold = ? "
+				"WHERE player_id = ?");
+
+			stmt->setInt(1, gold);
+			stmt->setInt(2, playerId);
+
+			stmt->execute();
+		}
+		catch (sql::SQLException& e)
+		{
+			std::cout << "DB Error: " << e.what() << std::endl;
+			std::cout << "Error Code: " << e.getErrorCode() << std::endl;
+			std::cout << "SQL State: " << e.getSQLState() << std::endl;
 		}
 	}
 };

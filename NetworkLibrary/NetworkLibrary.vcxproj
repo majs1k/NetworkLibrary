@@ -146,6 +146,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Contents\Character.h" />
+    <ClInclude Include="Contents\GameRoom.h" />
+    <ClInclude Include="Contents\MatchMaker.h" />
     <ClInclude Include="Contents\MyClient.h" />
     <ClInclude Include="Contents\MyServer.h" />
     <ClInclude Include="Contents\Player.h" />

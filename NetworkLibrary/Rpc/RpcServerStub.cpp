@@ -150,21 +150,24 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet;
 
-            return handler_->ReqEnterMatch(sessionId);
+            return handler_->ReqEnterMatchQueue(sessionId);
         }
         case 61:
         {
+			Player otherPlayer;
 
-            *packet;
+            *packet >> otherPlayer;
 
-            return handler_->ResEnterMatch(sessionId);
+            return handler_->ResEnterMatchQueue(sessionId, otherPlayer);
         }
         case 62:
         {
+			int result;
+			int currentMoney;
 
-            *packet;
+            *packet >> result >> currentMoney;
 
-            return handler_->ResStartMatch(sessionId);
+            return handler_->ResEndMatch(sessionId, result, currentMoney);
         }
     default:
     {
@@ -261,17 +264,17 @@ bool RpcServerHandler::ResBuyCharacter(__int64 sessionId, Character character, i
     return true;
 }
 
-bool RpcServerHandler::ReqEnterMatch(__int64 sessionId)
+bool RpcServerHandler::ReqEnterMatchQueue(__int64 sessionId)
 {
     return true;
 }
 
-bool RpcServerHandler::ResEnterMatch(__int64 sessionId)
+bool RpcServerHandler::ResEnterMatchQueue(__int64 sessionId, Player otherPlayer)
 {
     return true;
 }
 
-bool RpcServerHandler::ResStartMatch(__int64 sessionId)
+bool RpcServerHandler::ResEndMatch(__int64 sessionId, int result, int currentMoney)
 {
     return true;
 }

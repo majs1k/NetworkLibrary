@@ -188,7 +188,7 @@ void RpcClientProxy::ResBuyCharacter(Character character, int currentMoney)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqEnterMatch()
+void RpcClientProxy::ReqEnterMatchQueue()
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -199,24 +199,24 @@ void RpcClientProxy::ReqEnterMatch()
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResEnterMatch()
+void RpcClientProxy::ResEnterMatchQueue(Player otherPlayer)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 61;
-    *packet;
+    *packet << otherPlayer;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResStartMatch()
+void RpcClientProxy::ResEndMatch(int result, int currentMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 62;
-    *packet;
+    *packet << result << currentMoney;
 
     client_->SendPacket(packet);
 }

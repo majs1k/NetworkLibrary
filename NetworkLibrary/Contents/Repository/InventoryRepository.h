@@ -4,7 +4,7 @@ class InventoryRepository
 {
 private:
 	Database* database_ = nullptr;
-	int newInventoryId_;
+	int newInventoryId_ = 1;
 
 public:
 	void Initialize(Database* db)
@@ -45,12 +45,12 @@ public:
 		return newInventoryId_++;
 	}
 
-	void Create(int playerId, int characterId)
+	void CreateCharacter(int playerId, int characterId)
 	{
 		try
 		{
 			auto stmt = database_->Prepare(
-				"INSERT INTO inventories(inventory_id, player_id, character_type_id) "
+				"INSERT INTO inventories(inventory_id, player_id, character_id) "
 				"VALUES(?, ?, ?)");
 
 			stmt->setInt(1, GenerateInventoryId());
@@ -67,7 +67,7 @@ public:
 		}
 	}
 
-	RESPONSE_CODE SelectCharacters(int playerId, std::list<Character>& lst)
+	void FindCharacterByPlayerId(int playerId, std::list<Character>& lst)
 	{
 		try
 		{
@@ -96,22 +96,36 @@ public:
 				lst.push_back(character);
 			}
 
-			if(lst.empty())
-				return RESPONSE_CODE::NOT_FOUND;
-
-			return RESPONSE_CODE::SUCCESS;
 		}
 		catch (sql::SQLException& e)
 		{
 			std::cout << "SQL Error: " << e.what() << std::endl;
 			std::cout << "Error Code: " << e.getErrorCode() << std::endl;
 			std::cout << "SQL State: " << e.getSQLState() << std::endl;
-
-			return RESPONSE_CODE::DB_ERROR;
 		}
 	}
 
-	void UpdateLevel(int inventoryId, int level)
+	void DeleteCharacter(int inventoryId)
+	{
+		try
+		{
+			auto stmt = database_->Prepare(
+				"DELETE FROM inventories "
+				"WHERE inventory_id = ?");
+
+			stmt->setInt(1, inventoryId);
+
+			stmt->execute();
+		}
+		catch (sql::SQLException& e)
+		{
+			std::cout << "SQL Error: " << e.what() << std::endl;
+			std::cout << "Error Code: " << e.getErrorCode() << std::endl;
+			std::cout << "SQL State: " << e.getSQLState() << std::endl;
+		}
+	}
+
+	void UpdateCharacterLevel(int inventoryId, int level)
 	{
 		try
 		{
