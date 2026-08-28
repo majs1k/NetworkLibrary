@@ -1,31 +1,676 @@
-## Description
+# TCPGameServer
 
-Project Name : TCPFighterServer
+C++ 기반의 TCP 게임 서버 프로젝트입니다.
 
-Language : C++14
+IOCP를 기반으로 네트워크 라이브러리를 직접 구현하고, 커스텀 바이너리 패킷 프로토콜과 IDL 기반 RPC 코드 자동화를 적용했습니다.
 
-Platform : Windows11 x86
+클라이언트와 서버를 하나의 솔루션에서 개발하며, 네트워크 계층과 컨텐츠 계층을 분리하여 게임 로직이 TCP 스트림 및 소켓을 직접 다루지 않도록 구성했습니다.
 
-IDE : Visual Studio 2022
+## Project Information
 
-Update Date : 2026-06-07
+| 항목       | 내용                            |
+| -------- | ----------------------------- |
+| Project  | TCPFighterServer              |
+| Language | C++14                         |
+| Platform | Windows 11 x86                |
+| IDE      | Visual Studio 2022            |
+| Client   | C++, ImGui, DirectX 11, Win32 |
+| Database | MySQL                         |
+| Network  | TCP / IOCP                    |
+
+## Architecture
+
+전체 서버는 네트워크 처리, 게임 로직, 데이터베이스 처리를 분리하는 구조로 구성했습니다.
 
 ```text
-Network
- ├─ Session
- ├─ SessionManager
- ├─ Packet
- ├─ RingBuffer
- ├─ MemoryPool
- └─ RPC
-
-IOCP Network Library 개발
-커스텀 패킷 직렬화
-RPC + 자동화
-클라이언트는 먼저 액션(이동, 공격 ...)을 하고 패킷을 서버로 보냄
-클라이언트로 공격쿨 전에 메세지가 들어오면 이펙트 스킵 / 체력만 감소
-충돌 처리 및 데미지에 대한 정보는 서버에서 처리 후 통보
+                    Client
+                      │
+                      │ TCP
+                      ▼
+              ┌───────────────┐
+              │   LanServer   │
+              │     IOCP      │
+              └───────┬───────┘
+                      │
+              Packet 단위 전달
+                      │
+                      ▼
+              ┌───────────────┐
+              │ Network Queue │
+              └───────┬───────┘
+                      │
+                      ▼
+              ┌───────────────┐
+              │  Logic Thread │
+              │   MyServer    │
+              └───────┬───────┘
+                      │
+             DB Request Queue
+                      │
+                      ▼
+              ┌───────────────┐
+              │   DB Thread   │
+              │     MySQL     │
+              └───────┬───────┘
+                      │
+             DB Response Queue
+                      │
+                      ▼
+                 Logic Thread
 ```
+
+### Network Layer
+
+`LanServer`는 IOCP 기반의 네트워크 라이브러리로, 컨텐츠 코드가 소켓과 `OVERLAPPED` 등의 네트워크 세부 구현을 직접 다루지 않도록 추상화했습니다.
+
+컨텐츠 서버는 `LanServer`를 상속받아 필요한 이벤트를 구현합니다.
+
+```cpp
+class MyServer : public LanServer,
+                 public RpcServerHandler,
+                 public DatabaseServerHandler
+{
+private:
+    bool OnConnectionRequest(
+        const std::wstring& ip,
+        int port) override;
+
+    void OnAccept(__int64 sessionId) override;
+    void OnRelease(__int64 sessionId) override;
+    void OnRecv(
+        __int64 sessionId,
+        Packet* packet) override;
+};
+```
+
+네트워크 계층에서는 `Session`을 관리하며, 컨텐츠 계층에는 소켓이나 `Session` 객체를 직접 노출하지 않고 `sessionId`를 통해 세션을 식별하도록 구성했습니다.
+
+```text
+Network Layer
+    │
+    │ sessionId
+    ▼
+Content Layer
+```
+
+이를 통해 컨텐츠 코드는 TCP 연결 및 IOCP의 동작 방식에 의존하지 않고 패킷 단위의 메시지만 처리합니다.
+
+---
+
+## IOCP Network Library
+
+Windows IOCP를 기반으로 TCP 네트워크 라이브러리를 구현했습니다.
+
+### 주요 구성
+
+* IOCP 기반 비동기 TCP 서버
+* Accept Thread / Worker Thread 분리
+* `WSARecv` / `WSASend` 기반 Overlapped I/O
+* Session 관리
+* Session별 동기화
+* Send / Receive Ring Buffer
+* IO Count 기반 Session 수명 관리
+* Packet 단위 Receive 처리
+* Send Queue를 이용한 비동기 송신
+* Session ID 기반 외부 인터페이스
+
+### Receive Flow
+
+TCP는 스트림 기반이기 때문에 한 번의 `recv`가 하나의 패킷이라는 보장이 없습니다.
+
+따라서 네트워크 계층에서 수신 데이터를 Ring Buffer에 저장한 후 패킷 헤더의 크기를 기준으로 완전한 패킷을 조립합니다.
+
+```text
+TCP Stream
+    │
+    ▼
+Receive RingBuffer
+    │
+    ├── incomplete packet
+    │       └── wait for next receive
+    │
+    └── complete packet
+            │
+            ▼
+        Packet 생성
+            │
+            ▼
+        OnRecv()
+```
+
+컨텐츠 계층에서는 TCP 데이터가 여러 번 나누어져 들어왔는지 여부를 알 필요 없이 항상 완성된 `Packet` 단위로 전달받습니다.
+
+```cpp
+void MyServer::OnRecv(__int64 sessionId, Packet* packet)
+{
+    packet->SetId(sessionId);
+
+    // Logic Thread에서 처리하기 위해 Queue에 전달
+    networkPacketQueue_.Push(packet);
+}
+```
+
+IOCP Worker Thread에서 컨텐츠 로직을 직접 실행하지 않고 Logic Thread로 전달하기 때문에, 컨텐츠 코드는 단일 Logic Thread를 기준으로 동작합니다.
+
+---
+
+## Thread Model
+
+컨텐츠 로직은 하나의 Logic Thread에서 처리하도록 구성했습니다.
+
+```text
+IOCP Worker Threads
+        │
+        │ Packet
+        ▼
+Network Packet Queue
+        │
+        ▼
+   Logic Thread
+        │
+        ├───────────────┐
+        │               │
+        ▼               ▼
+   Game Logic      DB Request Queue
+                        │
+                        ▼
+                    DB Thread
+                        │
+                        ▼
+                  MySQL Database
+```
+
+### Network Layer
+
+네트워크 라이브러리에서는 여러 Worker Thread가 동일한 Session에 접근할 수 있기 때문에 Session 단위의 Lock을 사용하여 동기화합니다.
+
+### Content Layer
+
+컨텐츠 로직은 Logic Thread 하나에서만 실행됩니다.
+
+따라서 다음과 같은 컨텐츠 데이터는 별도의 Lock 없이 접근할 수 있도록 설계했습니다.
+
+```cpp
+std::unordered_map<__int64, int> sessionToPlayer_;
+std::unordered_map<int, Player*> playerMap_;
+```
+
+이를 통해 컨텐츠 코드에서는 불필요한 동기화를 최소화하고, 네트워크 계층에서 필요한 동기화와 컨텐츠 로직의 실행 순서를 분리했습니다.
+
+---
+
+# Custom Binary Packet
+
+커스텀 바이너리 패킷 프로토콜을 구현했습니다.
+
+패킷은 다음과 같은 Header와 Payload 구조를 사용합니다.
+
+```cpp
+struct MY_HEADER
+{
+    short size_;
+    short type_;
+};
+```
+
+```text
+┌──────────────┬──────────────┬──────────────────┐
+│ size (2byte) │ type (2byte) │     payload      │
+└──────────────┴──────────────┴──────────────────┘
+```
+
+`size_`를 이용해 TCP 스트림에서 하나의 패킷을 구분하고, `type_`을 이용해 패킷 종류를 구분합니다.
+
+## Serialization
+
+`Packet` 객체에 `operator<<`, `operator>>`를 구현하여 패킷 직렬화와 역직렬화를 처리합니다.
+
+```cpp
+Packet& operator<<(char value)
+{
+    *(char*)(buffer_ + writePos_) = value;
+    writePos_ += sizeof(char);
+
+    return *this;
+}
+```
+
+사용하는 쪽에서는 타입별 직렬화 구현을 직접 호출하지 않고 다음과 같이 사용할 수 있습니다.
+
+```cpp
+*packet << loginId << password;
+```
+
+역직렬화 역시 동일한 인터페이스를 사용합니다.
+
+```cpp
+*packet >> loginId >> password;
+```
+
+이를 통해 패킷 송수신 코드에서 버퍼의 위치를 직접 관리하는 코드를 줄였습니다.
+
+---
+
+# RPC
+
+IDL을 기반으로 Client / Server RPC 코드를 자동 생성하는 구조를 구현했습니다.
+
+RPC 정의는 별도의 IDL 파일에서 관리합니다.
+
+```text
+ReqUserRegister(std::string& loginId, std::string& password)    0
+ResUserRegister(RESPONSE_CODE code)                              1
+```
+
+IDL을 기반으로 다음 코드가 생성됩니다.
+
+```text
+             RPC IDL
+                │
+                ▼
+          RPC Generator
+                │
+        ┌───────┴───────┐
+        ▼               ▼
+   Client Proxy      Server Stub
+        │               │
+        ▼               ▼
+   Serialization    Deserialization
+        │               │
+        └───────┬───────┘
+                ▼
+              Packet
+```
+
+## Server Proxy
+
+서버에서 클라이언트로 패킷을 보내는 코드를 Proxy가 담당합니다.
+
+```cpp
+void RpcServerProxy::ReqUserRegister(
+    __int64 sessionId,
+    std::string& loginId,
+    std::string& password)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 0;
+    *packet << loginId << password;
+
+    server_->SendPacket(sessionId, packet);
+}
+```
+
+## Client Stub
+
+수신한 패킷은 Stub에서 `type_`을 기준으로 역직렬화한 후 Handler를 호출합니다.
+
+```cpp
+bool RpcClientStub::PacketProc(Packet* packet)
+{
+    switch (packet->GetHeaderPtr()->type_)
+    {
+        case 0:
+        {
+            std::string loginId;
+            std::string password;
+
+            *packet >> loginId >> password;
+
+            return handler_->ReqUserRegister(
+                loginId,
+                password);
+        }
+    }
+
+    return false;
+}
+```
+
+실제 컨텐츠 동작은 Handler에서 구현합니다.
+
+```cpp
+bool RpcServerHandler::ReqUserRegister(
+    __int64 sessionId,
+    std::string& loginId,
+    std::string& password)
+{
+    // Content Logic
+    return true;
+}
+```
+
+따라서 컨텐츠 개발자는 패킷 ID, 직렬화, 역직렬화 및 패킷 타입 분기 코드를 직접 작성할 필요 없이 RPC Handler를 구현하는 방식으로 메시지 처리를 추가할 수 있습니다.
+
+---
+
+# Database Processing
+
+DB 접근 역시 별도의 DB Thread에서만 수행하도록 구성했습니다.
+
+```text
+Logic Thread
+    │
+    │ DB Request
+    ▼
+DB Request Queue
+    │
+    ▼
+DB Thread
+    │
+    │ MySQL Query
+    ▼
+MySQL
+    │
+    ▼
+DB Thread
+    │
+    │ DB Response
+    ▼
+DB Response Queue
+    │
+    ▼
+Logic Thread
+```
+
+MySQL 접근은 MySQL Connector/C++를 사용하며, DB Thread 이외의 스레드에서는 직접 쿼리를 실행하지 않습니다.
+
+## DB Proxy / Stub
+
+DB 요청 및 응답 역시 RPC와 유사한 Proxy / Stub 구조로 자동화했습니다.
+
+차이점은 RPC가 네트워크를 통해 패킷을 전달한다면, DB RPC는 DB Thread와 Logic Thread 사이의 Queue를 통해 전달한다는 점입니다.
+
+```cpp
+void DatabaseServerProxy::ReqUserRegisterDB(
+    __int64 sessionId,
+    std::string& loginId,
+    std::string& password)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->SetId(sessionId);
+    packet->GetHeaderPtr()->type_ = 0;
+
+    *packet << loginId << password;
+
+    dbQueue_->Push(packet);
+}
+```
+
+DB Thread에서는 Queue에서 요청을 가져와 Stub을 통해 Handler를 호출합니다.
+
+```cpp
+bool DatabaseServerStub::DbPacketProc(
+    __int64 sessionId,
+    Packet* packet)
+{
+    switch (packet->GetHeaderPtr()->type_)
+    {
+        case 0:
+        {
+            std::string loginId;
+            std::string password;
+
+            *packet >> loginId >> password;
+
+            return handler_->ReqUserRegisterDB(
+                sessionId,
+                loginId,
+                password);
+        }
+    }
+
+    return false;
+}
+```
+
+---
+
+# Memory First Data Management
+
+게임 서버의 런타임 데이터는 가능한 경우 DB를 직접 조회하지 않고 서버 메모리를 기준으로 처리하도록 구성했습니다.
+
+예를 들어 플레이어의 골드가 변경되는 경우:
+
+```text
+Client Request
+      │
+      ▼
+Logic Thread
+      │
+      ├── Memory Update
+      │       │
+      │       ▼
+      │   Client Response
+      │
+      └── DB Update Request
+              │
+              ▼
+          DB Thread
+              │
+              ▼
+             MySQL
+```
+
+게임 플레이 중 발생하는 모든 상태 변경마다 DB를 동기적으로 조회하지 않고, 서버 메모리에 반영한 후 클라이언트에 결과를 전달합니다.
+
+DB에는 최종 상태를 비동기적으로 저장합니다.
+
+반대로 서버가 시작되거나 플레이어가 처음 로비에 진입하는 등 메모리에 데이터가 없는 경우에는 DB에서 데이터를 조회한 후 Logic Thread로 결과를 전달하여 서버 메모리에 적재합니다.
+
+```text
+First Login / Lobby Enter
+
+Logic Thread
+     │
+     ▼
+DB Request
+     │
+     ▼
+DB Thread
+     │
+     ▼
+MySQL SELECT
+     │
+     ▼
+DB Response Queue
+     │
+     ▼
+Logic Thread
+     │
+     ├── Update Server Memory
+     └── Send Player Data
+```
+
+이 구조를 통해 게임 플레이 중 DB 접근에 의존하지 않고 서버 메모리를 중심으로 게임 상태를 처리합니다.
+
+---
+
+# Session / Player Management
+
+클라이언트가 전달하는 `playerId`를 서버에서 직접 신뢰하지 않고, 서버가 관리하는 `sessionId`와 Player를 매핑하여 사용합니다.
+
+```text
+Session ID
+    │
+    ▼
+sessionToPlayer_
+    │
+    ▼
+Player ID
+    │
+    ▼
+playerMap_
+    │
+    ▼
+Player
+```
+
+```cpp
+std::unordered_map<__int64, int> sessionToPlayer_;
+std::unordered_map<int, Player*> playerMap_;
+```
+
+따라서 클라이언트가 임의의 Player ID를 패킷에 포함하여 요청하더라도 서버는 현재 연결된 Session과 매핑된 Player를 기준으로 처리합니다.
+
+---
+
+# Current Content
+
+현재 구현된 컨텐츠입니다.
+
+### Implemented
+
+* 회원가입
+* 로그인
+* 로비
+* 플레이어 정보
+
+  * 이름
+  * 레벨
+  * 골드
+* 캐릭터 보유 목록
+* 전체 채팅
+* 게임 접속 중 유저 목록
+
+### Planned
+
+* 상점
+* 게임 매치 진입
+* 게임 플레이
+* 게임 종료 및 결과 처리
+* 게임 플레이 관련 컨텐츠
+
+---
+
+# Client
+
+클라이언트는 C++ 기반으로 구현했으며 ImGui를 사용하여 게임 UI를 구성했습니다.
+
+DirectX 11 및 Win32 기반의 예제 구조를 바탕으로 클라이언트를 구현하고, 실제 서버와 TCP 통신을 수행하도록 구성했습니다.
+
+```text
+Client
+├── Win32
+├── DirectX 11
+├── ImGui
+└── TCP Client
+       │
+       │ Custom Packet
+       ▼
+    Game Server
+```
+
+클라이언트와 서버는 동일한 RPC 정의를 기반으로 통신하도록 구성하여 양쪽에서 동일한 메시지 규약을 사용합니다.
+
+---
+
+# Project Structure
+
+```text
+NetworkLibrary
+│
+├── NetworkLibrary
+│   ├── LanServer
+│   ├── Session
+│   ├── Packet
+│   ├── RingBuffer
+│   └── ...
+│
+├── RPCGenerator
+│   └── IDL → RPC Proxy / Stub
+│
+└── TCPFighterServer
+    ├── Server
+    ├── Client
+    ├── Database
+    ├── Repository
+    └── Content
+```
+
+실제 프로젝트에서는 네트워크 라이브러리와 컨텐츠 서버를 분리하여, 네트워크 계층이 특정 게임 컨텐츠에 의존하지 않도록 구성했습니다.
+
+---
+
+# Technical Summary
+
+## Network
+
+* Windows IOCP
+* Overlapped I/O
+* TCP
+* Accept Thread / Worker Thread
+* Session Management
+* Session-level Synchronization
+* Send / Receive Ring Buffer
+* Packet Framing
+
+## Packet
+
+* Custom Binary Protocol
+* Fixed Header
+* Packet Type
+* Serialization / Deserialization
+* `operator<<` / `operator>>`
+
+## RPC
+
+* Custom IDL
+* RPC Code Generator
+* Client Proxy / Stub
+* Server Proxy / Stub
+* Automatic Packet ID Management
+* Serialization / Deserialization Code Generation
+
+## Server
+
+* Logic Thread 기반 컨텐츠 처리
+* Network Queue
+* Session ↔ Player Mapping
+* Memory 중심 게임 상태 관리
+
+## Database
+
+* MySQL
+* MySQL Connector/C++
+* Dedicated DB Thread
+* DB Request / Response Queue
+* DB Proxy / Stub
+* Asynchronous Persistence
+
+## Client
+
+* C++
+* Win32
+* DirectX 11
+* ImGui
+
+---
+
+# Development Environment
+
+```text
+Language  : C++14
+Platform  : Windows 11 x86
+IDE       : Visual Studio 2022
+
+Network   : TCP / IOCP
+Database  : MySQL
+Client UI : ImGui
+Graphics  : DirectX 11
+```
+
+# Project Goal
+
+단순한 게임 기능 구현보다는 게임 서버 개발에 필요한 네트워크 계층을 직접 구현하고, 그 위에 RPC 및 DB 처리 시스템을 구성하여 서버 구조 전반을 이해하는 것을 목표로 개발하고 있습니다.
+
+현재는 네트워크 라이브러리와 RPC/DB 처리 구조를 기반으로 로비 및 플레이어 관련 컨텐츠를 구현했으며, 이후 상점 및 실제 게임 플레이 영역까지 확장할 예정입니다.
+
+
+
 
 ## DevLog
 ### 이전
@@ -39,7 +684,6 @@ accept thread 분리, accept() 블로킹 호출 why? 쓸데없이 도는 코드�
 50byte Sleep(1) 기준 wsasend 두번 호출 vs wsasend 한번에 wsabuf 2개등록
 83us / 7us
 -> 당연히 시스템콜 호출이 적은 후자가 성능 좋음
-
 ```
 
 ### 26-06-05
@@ -278,4 +922,9 @@ DB 구조 추가
 ### 26-08-24
 ```
 users, players 테이블 추가
+```
+
+### 26-08-27
+```
+클라이언트 추가
 ```
