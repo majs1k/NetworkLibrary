@@ -21,14 +21,14 @@ int main()
 	{
 		Sleep(1000);
 
-		if (GetAsyncKeyState('X') & 0x0001)
-			break;
+		//if (GetAsyncKeyState('X') & 0x0001)
+		//	break;
 
-		else if (GetAsyncKeyState(VK_SPACE) & 0x0001)
-			ProfilerManager::Instance().Save();
+		//else if (GetAsyncKeyState(VK_SPACE) & 0x0001)
+		//	ProfilerManager::Instance().Save();
 
-		else if (GetAsyncKeyState('C') & 0x0001)
-			ProfilerManager::Instance().Clear();
+		//else if (GetAsyncKeyState('C') & 0x0001)
+		//	ProfilerManager::Instance().Clear();
 
 		//server.Monitoring();
 	}

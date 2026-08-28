@@ -78,7 +78,7 @@ void RpcServerProxy::ReqPlayerEnterLobby(__int64 sessionId, int userId)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResPlayerProfile(__int64 sessionId, Player player)
+void RpcServerProxy::ResPlayerProfile(__int64 sessionId, Player& player)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -89,13 +89,46 @@ void RpcServerProxy::ResPlayerProfile(__int64 sessionId, Player player)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResPlayerCharacters(__int64 sessionId, std::list<Character> characterList)
+void RpcServerProxy::ResPlayerCharacters(__int64 sessionId, std::list<Character>& characters)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 14;
-    *packet << characterList;
+    *packet << characters;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResLobbyPlayers(__int64 sessionId, std::list<PlayerInfo>& players)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 15;
+    *packet << players;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResPlayerEnterLobby(__int64 sessionId, PlayerInfo& player)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 16;
+    *packet << player;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResPlayerLeaveLobby(__int64 sessionId, int playerId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 17;
+    *packet << playerId;
 
     server_->SendPacket(sessionId, packet);
 }
@@ -122,50 +155,6 @@ void RpcServerProxy::ResChat(__int64 sessionId, int playerId, std::string& messa
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ReqLobbyPlayers(__int64 sessionId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 40;
-    *packet;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ResLobbyPlayers(__int64 sessionId, std::list<Player> playerList)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 41;
-    *packet << playerList;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ResPlayerEnterLobby(__int64 sessionId, Player player)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 42;
-    *packet << player;
-
-    server_->SendPacket(sessionId, packet);
-}
-
-void RpcServerProxy::ResPlayerLeaveLobby(__int64 sessionId, int playerId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->GetHeaderPtr()->type_ = 43;
-    *packet << playerId;
-
-    server_->SendPacket(sessionId, packet);
-}
-
 void RpcServerProxy::ReqBuyCharacter(__int64 sessionId)
 {
     Packet* packet = new Packet();
@@ -177,7 +166,7 @@ void RpcServerProxy::ReqBuyCharacter(__int64 sessionId)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResBuyCharacter(__int64 sessionId, Character character, int currentMoney)
+void RpcServerProxy::ResBuyCharacter(__int64 sessionId, Character& character, int currentMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -199,7 +188,7 @@ void RpcServerProxy::ReqEnterMatchQueue(__int64 sessionId)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResEnterMatchQueue(__int64 sessionId, Player otherPlayer)
+void RpcServerProxy::ResEnterMatchQueue(__int64 sessionId, PlayerInfo& otherPlayer)
 {
     Packet* packet = new Packet();
     packet->Initialize();

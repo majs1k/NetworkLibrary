@@ -125,7 +125,7 @@
       <AdditionalIncludeDirectories>C:\Study\mysql-connector-c++-9.7.0-winx64\include\jdbc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>NotSet</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Study\mysql-connector-c++-9.7.0-winx64\lib64\vs14;C:\Study\mysql-connector-c++-9.7.0-winx64\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>mysqlcppconn.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -136,7 +136,14 @@
     <ClCompile Include="Contents\MyServer.cpp" />
     <ClCompile Include="Contents\RpcModule.cpp" />
     <ClCompile Include="Database\Database.cpp" />
-    <ClCompile Include="MyServerMain.cpp" />
+    <ClCompile Include="ImGui\imgui.cpp" />
+    <ClCompile Include="ImGui\imgui_demo.cpp" />
+    <ClCompile Include="ImGui\imgui_draw.cpp" />
+    <ClCompile Include="ImGui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="ImGui\imgui_tables.cpp" />
+    <ClCompile Include="ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="MyClientMain.cpp" />
     <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />
     <ClCompile Include="Network\LanServer_2.cpp" />
@@ -156,6 +163,15 @@
     <ClInclude Include="Contents\Repository\UserRepository.h" />
     <ClInclude Include="Contents\ResponseCode.h" />
     <ClInclude Include="Database\Database.h" />
+    <ClInclude Include="ImGui\imconfig.h" />
+    <ClInclude Include="ImGui\imgui.h" />
+    <ClInclude Include="ImGui\imgui_impl_dx11.h" />
+    <ClInclude Include="ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="ImGui\imgui_internal.h" />
+    <ClInclude Include="ImGui\imstb_rectpack.h" />
+    <ClInclude Include="ImGui\imstb_textedit.h" />
+    <ClInclude Include="ImGui\imstb_truetype.h" />
+    <ClInclude Include="MainView.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />
     <ClInclude Include="Network\Session.h" />

@@ -1,26 +1,41 @@
 #pragma once
 #include <queue>
+#include "GameRoom.h"
+
+class Player;
+class GameRoom;
+
 
 // TODO: 4명이상 매칭 시스템으로 업데이트
 class MatchMaker
 {
 private:
-	std::queue<int> matchQueue_;
+	std::queue<Player*> matchQueue_;
+
+	GameRoomManager* roomManager_;
 
 public:
-	int Enqueue(int playerId)
+
+	MatchMaker(GameRoomManager* roomManager)
+		: roomManager_(roomManager)
 	{
-		if (matchQueue_.empty())
+	}
+
+	void Enqueue(Player* player)
+	{
+		matchQueue_.push(player);
+
+		if (matchQueue_.size() >= 2)
 		{
-			matchQueue_.push(playerId);
+			Player* player1 = matchQueue_.front();
 
-			return 0;
+			matchQueue_.pop();
+
+			Player* player2 = matchQueue_.front();
+
+			matchQueue_.pop();
+
+			roomManager_->CreateGameRoom(player1, player2);
 		}
-
-		int otherPlayerId = matchQueue_.front();
-
-		matchQueue_.pop();
-
-		return otherPlayerId;
 	}
 };

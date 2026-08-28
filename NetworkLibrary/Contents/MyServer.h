@@ -20,18 +20,16 @@
 //#include "../RPC/RpcServerProxy.h"
 #include "../RPC/RpcServerStub.h"
 
-#include "../Database/DatabaseServerProxy.h"
+//#include "../Database/DatabaseServerProxy.h"
 #include "../Database/DatabaseServerStub.h"
 
 class RpcServerProxy;
+class DatabaseServerProxy;
 
 
 class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
 {
 private:
-
-	HANDLE hLogicThread_;
-	bool shutdown_ = false;
 
 	PacketQueue networkPacketQueue_;
 
@@ -50,10 +48,19 @@ private:
 	void OnRelease(__int64 sessionId) override;
 	void OnRecv(__int64 sessionId, Packet* packet) override;
 
-	static unsigned int __stdcall LogicThread(void* param);
-	void Update();
 
 	void ProcessNetworkQueue();
+
+
+private:
+
+	HANDLE hLogicThread_;
+	bool shutdown_ = false;
+
+private:
+
+	static unsigned int __stdcall LogicThread(void* param);
+	void Update();
 
 	// ----------------------------------------------------- //
 
@@ -67,14 +74,13 @@ private:
 	HANDLE hDatabaseThread_;
 	static unsigned int __stdcall DatabaseThread(void* param);
 
-	DatabaseServerProxy dbProxy_;
-	DatabaseServerStub dbStub_;
+	DatabaseServerProxy* dbProxy_;
+	DatabaseServerStub* dbStub_;
 
 
 	UserRepository userRepository_;
 	PlayerRepository playerRepository_;
 	InventoryRepository inventoryRepository_;
-
 
 private:
 
@@ -95,8 +101,6 @@ private:
 
 
 	bool ReqChat(__int64 sessionId, std::string& message);
-	
-	bool ReqLobbyPlayers(__int64 sessionId);
 
 	// ----------------------------------------------------- //
 
@@ -116,11 +120,12 @@ private:
 	bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
 	
 
+
 	bool ReqPlayerEnterLobbyDB(__int64 sessionId, int userId);
 
-	bool ResPlayerProfileDB(__int64 sessionId, Player player);
+	bool ResPlayerProfileDB(__int64 sessionId, Player& player);
 
-	bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character> characterList);
+	bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters);
 
 
 	// ----------------------------------------------------- //

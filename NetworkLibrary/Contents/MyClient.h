@@ -7,40 +7,64 @@
 #include "Player.h"
 #include "Character.h"
 
-#include "../RPC/RpcClientProxy.h"
+//#include "../RPC/RpcClientProxy.h"
 #include "../RPC/RpcClientStub.h"
 
 
+// TODO: 클래스 분리
+enum class SCENE
+{
+	LOGIN,
+	PLAYER_REGISTER,
+	MAIN,
+	GAME
+};
+
+
+class RpcClientProxy;
 
 class MyClient : public LanClient, public RpcClientHandler
 {
+	friend class MainView;
+
 private:
-	RpcClientProxy rpc_;
-	RpcClientStub stub_;
+
+	RpcClientProxy* rpcProxy_;
+	RpcClientStub* rpcStub_;
 
 public:
+
 	MyClient();
 
 	void OnConnect() override;
 	void OnRelease() override;
 	void OnRecv(Packet* packet) override;
 
+
+
+private:
+
+	SCENE scene_ = SCENE::LOGIN;
+
+
+
+	std::unordered_map<int, PlayerInfo> playerMap_{};
+
+	char loginSceneStatus[64];
+	int userId_ = 0;
+
+
+	std::vector<std::string> chatMessages_;
+
+	Player myPlayer_;
+
+
+	char playerSceneStatus[64];
+
+	// RPC
 	// ----------------------------------------------------- //
 
-	void TestUserRegister();
-	void TestUserLogin();
-
-	void TestPlayerRegister();
-
-	void TestPlayerEnterGame();
-
-	void TestChat();
-
-	void TestLobbyPlayers();
-
-
-
-	// ----------------------------------------------------- //
+private:
 
 	bool ResUserRegister(RESPONSE_CODE code);
 	bool ResUserLogin(RESPONSE_CODE code, int userId);
@@ -48,16 +72,16 @@ public:
 	bool ResPlayerRegister(RESPONSE_CODE code);
 
 
-	bool ResPlayerProfile(Player player);
+	bool ResPlayerProfile(Player& player);
 
-	bool ResPlayerCharacters(std::list<Character> characterList);
+	bool ResPlayerCharacters(std::list<Character>& characters);
 
 
 	bool ResChat(int playerId, std::string& message);
 
-	bool ResLobbyPlayers(std::list<Player> playerList);
+	bool ResLobbyPlayers(std::list<PlayerInfo>& players);
 
 
-	bool ResPlayerEnterLobby(Player player);
+	bool ResPlayerEnterLobby(PlayerInfo& player);
 	bool ResPlayerLeaveLobby(int playerId);
 };

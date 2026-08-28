@@ -103,6 +103,24 @@ inline Packet& operator>>(Packet& packet, Player& player)
 	return packet;
 }
 
+inline Packet& operator<<(Packet& packet, PlayerInfo info)
+{
+	packet << info.playerId_;
+	packet << info.playerName_;
+	packet << info.level_;
+
+	return packet;
+}
+
+inline Packet& operator>>(Packet& packet, PlayerInfo& info)
+{
+	packet >> info.playerId_;
+	packet >> info.playerName_;
+	packet >> info.level_;
+
+	return packet;
+}
+
 inline Packet& operator<<(Packet& packet, Character character)
 {
 	packet << character.inventoryId_;

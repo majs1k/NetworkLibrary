@@ -12,18 +12,17 @@ public:
     virtual bool ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName);
     virtual bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
     virtual bool ReqPlayerEnterLobbyDB(__int64 sessionId, int userId);
-    virtual bool ResPlayerProfileDB(__int64 sessionId, Player player);
-    virtual bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character> characterList);
+    virtual bool ResPlayerProfileDB(__int64 sessionId, Player& player);
+    virtual bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters);
+    virtual bool ResLobbyPlayersDB(__int64 sessionId, std::list<PlayerInfo>& players);
+    virtual bool ResPlayerEnterLobbyDB(__int64 sessionId, PlayerInfo& player);
+    virtual bool ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     virtual bool ReqChatDB(__int64 sessionId, std::string& message);
     virtual bool ResChatDB(__int64 sessionId, int playerId, std::string& message);
-    virtual bool ReqLobbyPlayersDB(__int64 sessionId);
-    virtual bool ResLobbyPlayersDB(__int64 sessionId, std::list<Player> playerList);
-    virtual bool ResPlayerEnterLobbyDB(__int64 sessionId, Player player);
-    virtual bool ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     virtual bool ReqBuyCharacterDB(__int64 sessionId);
-    virtual bool ResBuyCharacterDB(__int64 sessionId, Character character, int currentMoney);
+    virtual bool ResBuyCharacterDB(__int64 sessionId, Character& character, int currentMoney);
     virtual bool ReqEnterMatchQueueDB(__int64 sessionId);
-    virtual bool ResEnterMatchQueueDB(__int64 sessionId, Player otherPlayer);
+    virtual bool ResEnterMatchQueueDB(__int64 sessionId, PlayerInfo& otherPlayer);
     virtual bool ResEndMatchDB(__int64 sessionId, int result, int currentMoney);
 };
 

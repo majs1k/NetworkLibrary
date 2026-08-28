@@ -12,8 +12,12 @@ ReqPlayerRegister(int userId, std::string& playerName)					10
 ResPlayerRegister(RESPONSE_CODE code)									11
 
 ReqPlayerEnterLobby(int userId)											12
-ResPlayerProfile(Player player)											13
-ResPlayerCharacters(std::list<Character> characterList)					14
+ResPlayerProfile(Player& player)											13
+ResPlayerCharacters(std::list<Character>& characters)					14
+
+ResLobbyPlayers(std::list<PlayerInfo>& players)							15
+ResPlayerEnterLobby(PlayerInfo& player)									16
+ResPlayerLeaveLobby(int playerId)										17
 
 
 
@@ -21,19 +25,15 @@ ReqChat(std::string& message)											30
 ResChat(int playerId, std::string& message)								31
 
 
-ReqLobbyPlayers()														40
-ResLobbyPlayers(std::list<Player> playerList)							41
 
-ResPlayerEnterLobby(Player player)										42
-ResPlayerLeaveLobby(int playerId)										43
 
 
 
 ReqBuyCharacter()														50
-ResBuyCharacter(Character character, int currentMoney)					51
+ResBuyCharacter(Character& character, int currentMoney)					51
 
 
 ReqEnterMatchQueue()							60
-ResEnterMatchQueue(Player otherPlayer)			61
+ResEnterMatchQueue(PlayerInfo& otherPlayer)		61
 
 ResEndMatch(int result, int currentMoney)		62

@@ -1,75 +1,153 @@
 #pragma once
 #include <vector>	
 
+#include "Player.h"
+
 class MyServer;
 class Player;
+
 
 class GameRoom
 {
 private:
-	MyServer* server_;
+    struct GamePlayer
+    {
+        Player* player = nullptr;
+        bool isCommand_ = false;
+        int commandType_ = 0;
+    };
 
-	std::vector<Player*> players;
-	const static int maxPlayers_ = 2;
+    MyServer* server_;
+
+    GamePlayer player1_;
+    GamePlayer player2_;
 
 public:
+    GameRoom(MyServer* server, Player* player1, Player* player2)
+        : server_(server)
+    {
+        player1_.player = player1;
+        player2_.player = player2;
+    }
 
-	// 2명 입장
-	bool EnterGameRoom(Player* player)
-	{
-		if (players.size() > maxPlayers_)
-			return false;
+    void StartGame()
+    {
+        // 게임 시작 패킷
+    }
 
-		players.push_back(player);
+    void ProcessCommand(Player* player, int commandType)
+    {
+        GamePlayer* gamePlayer = nullptr;
 
-		return true;
-	}
+        if (player1_.player == player)
+            gamePlayer = &player1_;
+        else if (player2_.player == player)
+            gamePlayer = &player2_;
+        else
+            return;
 
-	void StartGame()
-	{
-		// 게임 시작 패킷 보내기?
-	}
+        if (gamePlayer->isCommand_)
+            return;
 
-	void Update()
-	{
-		// 두명이 공격 명령 패킷을 보냈다면
-		// 게임로직처리
+        gamePlayer->isCommand_ = true;
+        gamePlayer->commandType_ = commandType;
 
-		// 다음 턴 시작 패킷 보내기
+        if (player1_.isCommand_ && player2_.isCommand_)
+        {
+            ProcessTurn();
+        }
+    }
 
-		// 게임 종료시 EndGame() 호출
-	}
+    void ProcessTurn()
+    {
+        // 공격 계산
 
-	void EndGame()
-	{
-		// 게임 종료 패킷 보내기
-		// 보상 지급 패킷 보내기 및 db 반영
+        // 결과 패킷
 
-		// 게임룸 삭제?
-	}
+        if (1/* 체력 0 */)
+        {
+            EndGame();
+            return;
+        }
 
+        player1_.isCommand_ = false;
+        player2_.isCommand_ = false;
+
+        // 다음 턴
+    }
+
+    void EndGame()
+    {
+        // 종료 패킷
+        // 보상 처리
+    }
+
+    Player* GetPlayer(int index)
+    {
+        if (index == 0)
+            return player1_.player;
+
+        if (index == 1)
+            return player2_.player;
+
+        return nullptr;
+    }
 };
-
 class GameRoomManager
 {
 private:
-	std::vector<GameRoom*> rooms_;
+	
+	MyServer* server_;
+
+	//std::vector<GameRoom*> rooms_;
+
+	std::unordered_map<int, GameRoom*> rooms_;
 
 public:
 
-	GameRoom* CreateGameRoom()
+	GameRoomManager(MyServer* server)
+		: server_(server)
 	{
-		GameRoom* gm = new GameRoom();
-		rooms_.push_back(gm);
-
-		return gm;
 	}
 
-	void Update()
+	void CreateGameRoom(Player* player1, Player* player2)
 	{
-		for (auto& i : rooms_)
-		{
-			i->Update();
-		}
+		GameRoom* gm = new GameRoom(server_, player1, player2);
+
+		rooms_.insert({ player1->playerId_, gm });
+		rooms_.insert({ player2->playerId_, gm });
+
+
+		gm->StartGame();
 	}
+
+	// MyServer에서는 이 함수만 호출
+	void ProcessCommand(Player* player, int commandType)
+	{
+		GameRoom* gm = FindRoomByPlayerId(player->playerId_);
+
+		if (gm == nullptr)
+			return;
+
+		gm->ProcessCommand(player, commandType);
+	}
+
+	GameRoom* FindRoomByPlayerId(int playerId)
+	{
+		auto it = rooms_.find(playerId);
+
+		if (it == rooms_.end())
+			return nullptr;
+
+		return it->second;
+	}
+
+	void RemoveGameRoom(GameRoom* room)
+	{
+		rooms_.erase(room->GetPlayer(0)->playerId_);
+		rooms_.erase(room->GetPlayer(1)->playerId_);
+
+		delete room;
+	}
+
 };

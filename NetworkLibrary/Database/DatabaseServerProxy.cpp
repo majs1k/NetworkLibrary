@@ -92,7 +92,7 @@ void DatabaseServerProxy::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
     dbQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResPlayerProfileDB(__int64 sessionId, Player player)
+void DatabaseServerProxy::ResPlayerProfileDB(__int64 sessionId, Player& player)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -105,7 +105,7 @@ void DatabaseServerProxy::ResPlayerProfileDB(__int64 sessionId, Player player)
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResPlayerCharactersDB(__int64 sessionId, std::list<Character> characterList)
+void DatabaseServerProxy::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -113,7 +113,46 @@ void DatabaseServerProxy::ResPlayerCharactersDB(__int64 sessionId, std::list<Cha
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 14;
-    *packet << characterList;
+    *packet << characters;
+
+    logicQueue_->Push(packet);
+}
+
+void DatabaseServerProxy::ResLobbyPlayersDB(__int64 sessionId, std::list<PlayerInfo>& players)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->SetId(sessionId);
+
+    packet->GetHeaderPtr()->type_ = 15;
+    *packet << players;
+
+    logicQueue_->Push(packet);
+}
+
+void DatabaseServerProxy::ResPlayerEnterLobbyDB(__int64 sessionId, PlayerInfo& player)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->SetId(sessionId);
+
+    packet->GetHeaderPtr()->type_ = 16;
+    *packet << player;
+
+    logicQueue_->Push(packet);
+}
+
+void DatabaseServerProxy::ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->SetId(sessionId);
+
+    packet->GetHeaderPtr()->type_ = 17;
+    *packet << playerId;
 
     logicQueue_->Push(packet);
 }
@@ -144,58 +183,6 @@ void DatabaseServerProxy::ResChatDB(__int64 sessionId, int playerId, std::string
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ReqLobbyPlayersDB(__int64 sessionId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->SetId(sessionId);
-
-    packet->GetHeaderPtr()->type_ = 40;
-    *packet;
-
-    dbQueue_->Push(packet);
-}
-
-void DatabaseServerProxy::ResLobbyPlayersDB(__int64 sessionId, std::list<Player> playerList)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->SetId(sessionId);
-
-    packet->GetHeaderPtr()->type_ = 41;
-    *packet << playerList;
-
-    logicQueue_->Push(packet);
-}
-
-void DatabaseServerProxy::ResPlayerEnterLobbyDB(__int64 sessionId, Player player)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->SetId(sessionId);
-
-    packet->GetHeaderPtr()->type_ = 42;
-    *packet << player;
-
-    logicQueue_->Push(packet);
-}
-
-void DatabaseServerProxy::ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->SetId(sessionId);
-
-    packet->GetHeaderPtr()->type_ = 43;
-    *packet << playerId;
-
-    logicQueue_->Push(packet);
-}
-
 void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId)
 {
     Packet* packet = new Packet();
@@ -209,7 +196,7 @@ void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId)
     dbQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResBuyCharacterDB(__int64 sessionId, Character character, int currentMoney)
+void DatabaseServerProxy::ResBuyCharacterDB(__int64 sessionId, Character& character, int currentMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -235,7 +222,7 @@ void DatabaseServerProxy::ReqEnterMatchQueueDB(__int64 sessionId)
     dbQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResEnterMatchQueueDB(__int64 sessionId, Player otherPlayer)
+void DatabaseServerProxy::ResEnterMatchQueueDB(__int64 sessionId, PlayerInfo& otherPlayer)
 {
     Packet* packet = new Packet();
     packet->Initialize();

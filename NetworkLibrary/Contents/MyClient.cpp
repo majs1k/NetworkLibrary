@@ -1,11 +1,15 @@
 #include "MyClient.h"
 #include "../Utils/Packet.h"
 
+#include "../RPC/RpcClientProxy.h"
 
 MyClient::MyClient()
 {
-	rpc_.client_ = this;
-	stub_.handler_ = this;
+	rpcProxy_ = new RpcClientProxy();
+	rpcStub_ = new RpcClientStub();
+
+	rpcProxy_->client_ = this;
+	rpcStub_->handler_ = this;
 }
 
 void MyClient::OnConnect()
@@ -23,7 +27,7 @@ void MyClient::OnRecv(Packet* packet)
 	__int64 sessionId = 0;
 
 	// 함수의 인자 자료형 주의
-	if (!stub_.PacketProc(packet))
+	if (!rpcStub_->PacketProc(packet))
 	{
 		//disconnect(sessionId);
 
@@ -34,107 +38,48 @@ void MyClient::OnRecv(Packet* packet)
 }
 
 
-void MyClient::TestUserRegister()
-{
-	std::cout << "TestUserRegister" << std::endl;
-
-	std::string loginId;
-	std::string password;
-
-	std::cout << "input id: ";
-	std::cin >> loginId;
-	std::cout << "input pw: ";
-	std::cin >> password;
-
-
-	rpc_.ReqUserRegister(loginId, password);
-}
-
-void MyClient::TestUserLogin()
-{
-	std::cout << "TestUserLogin" << std::endl;
-
-	std::string loginId;
-	std::string password;
-
-	std::cout << "input loginId: ";
-	std::cin >> loginId;
-	std::cout << "input password: ";
-	std::cin >> password;
-
-	rpc_.ReqUserLogin(loginId, password);
-}
-
-void MyClient::TestPlayerRegister()
-{
-	std::cout << "TestPlayerRegister" << std::endl;
-
-	int userId;
-	std::string playerName;
-
-	std::cout << "input userId: ";
-	std::cin >> userId;
-	std::cout << "input playerName: ";
-	std::cin >> playerName;
-
-	rpc_.ReqPlayerRegister(userId, playerName);
-}
-
-void MyClient::TestPlayerEnterGame()
-{
-	std::cout << "TestPlayerEnterGame" << std::endl;
-
-	int userId;
-
-	std::cout << "input userId: ";
-	std::cin >> userId;
-
-	rpc_.ReqPlayerEnterLobby(userId);
-}
-
-void MyClient::TestChat()
-{
-	std::cout << "TestChat" << std::endl;
-
-	std::string message;
-
-	std::cout << "input message: ";
-	std::cin >> message;
-
-	rpc_.ReqChat(message);
-}
-
-void MyClient::TestLobbyPlayers()
-{
-	std::cout << "TestLobbyPlayers" << std::endl;
-
-	rpc_.ReqLobbyPlayers();
-}
-
-
-
 //------------------------------------------------------------------------------------------------------//
 
 bool MyClient::ResUserRegister(RESPONSE_CODE code)
 {
-	std::cout << "ResUserRegister" << std::endl;
+	switch (code)
+	{
+	case RESPONSE_CODE::SUCCESS:
 
-	std::cout << "code : " << (short)code << std::endl;
+		strcpy_s(loginSceneStatus, u8"회원가입이 성공하였습니다.");
 
-	std::cout << std::endl;
+		break;
+
+	case RESPONSE_CODE::ALREADY_EXISTS:
+
+		strcpy_s(loginSceneStatus, u8"회원가입이 실패하였습니다.");
+
+		break;
+	}
 
 	return true;
 }
 
 bool MyClient::ResUserLogin(RESPONSE_CODE code, int userId)
 {
-	std::cout << "ResUserLogin" << std::endl;
+	switch (code)
+	{
+	case RESPONSE_CODE::SUCCESS:
 
-	std::cout << "code : " << (short)code << std::endl;
+		strcpy_s(loginSceneStatus, u8"로그인에 성공하였습니다.");
 
-	std::cout << "userId : " << (short)userId << std::endl;
+		userId_ = userId;
 
-	std::cout << std::endl;
+		rpcProxy_->ReqPlayerEnterLobby(userId_);
+
+		break;
+
+	case RESPONSE_CODE::LOGIN_FAILED:
+
+		strcpy_s(loginSceneStatus, u8"로그인에 실패하였습니다.");
+
+		break;
+	}
 
 	return true;
 }
@@ -142,97 +87,84 @@ bool MyClient::ResUserLogin(RESPONSE_CODE code, int userId)
 
 bool MyClient::ResPlayerRegister(RESPONSE_CODE code)
 {
-	std::cout << "ResPlayerRegister" << std::endl;
-
-	std::cout << "code : " << (short)code << std::endl;
-
-	std::cout << std::endl;
-
-	return true;
-}
-
-bool MyClient::ResPlayerProfile(Player player)
-{
-	std::cout << "ResPlayerProfile" << std::endl;
-
-	std::cout << "playerId : " << player.playerId_ << std::endl;
-
-	std::cout << "playerName : " << player.playerName_ << std::endl;
-
-	std::cout << "level : " << player.level_ << std::endl;
-
-	std::cout << "gold : " << player.gold_ << std::endl;
-
-	std::cout << std::endl;
-
-	return true;
-}
-
-bool MyClient::ResPlayerCharacters(std::list<Character> characterList)
-{
-	std::cout << "ResPlayerCharacters" << std::endl;
-
-	for (auto& c : characterList)
+	if (code == RESPONSE_CODE::SUCCESS)
 	{
-		std::cout << "inventoryId : " << c.inventoryId_ << std::endl;
+		strcpy_s(playerSceneStatus, u8"플레이어 등록이 성공하였습니다.");
 
-		std::cout << "characterId : " << c.characterId_ << std::endl;
+		// 메인씬 입장 재시도
+		rpcProxy_->ReqPlayerEnterLobby(userId_);
 
-		std::cout << "level : " << c.level_ << std::endl;
-
-		std::cout << "attack : " << c.attack_ << std::endl;
-
-		std::cout << "hp : " << c.hp_ << std::endl;
-
-		std::cout << std::endl;
+		//screen_ = ClientScreen::MAIN;
+	}
+	else
+	{
+		strcpy_s(playerSceneStatus, u8"플레이어 등록이 실패하였습니다.");
 	}
 
-	std::cout << std::endl;
+	return true;
+}
+
+bool MyClient::ResPlayerProfile(Player& player)
+{
+	if (player.playerId_ == 0)
+	{
+		scene_ = SCENE::PLAYER_REGISTER;
+
+		return true;
+	}
+	else
+	{
+		//TODO: 이동으로 변경??
+		myPlayer_ = player;
+
+		scene_ = SCENE::MAIN;
+
+		return true;
+	}
+}
+
+bool MyClient::ResPlayerCharacters(std::list<Character>& characters)
+{
+	for (auto& c : characters)
+	{
+		myPlayer_.characterList_.push_back(c);
+	}
 
 	return true;
 }
 
 bool MyClient::ResChat(int playerId, std::string& message)
 {
-	std::cout << "ResChat" << std::endl;
+	if (playerMap_.count(playerId) == 0)
+		return true;
 
-	std::cout << "playerId : " << playerId << std::endl;
-
-	std::cout << "message : " << message << std::endl;
-
-	std::cout << std::endl;
+	// 플레이어 이름 + 메세지
+	chatMessages_.push_back(playerMap_[playerId].playerName_ + " : " + message);
 
 	return true;
 }
 
-bool MyClient::ResLobbyPlayers(std::list<Player> playerList)
+bool MyClient::ResLobbyPlayers(std::list<PlayerInfo>& players)
 {
-	std::cout << "ResPlayerList" << std::endl;
-
-	for (auto& p : playerList)
+	for (auto& info : players)
 	{
-		std::cout << "playerId : " << p.playerId_ << std::endl;
-
-		std::cout << "playerName : " << p.playerName_ << std::endl;
-
-		std::cout << "level : " << p.level_ << std::endl;
-
-		std::cout << "gold : " << p.gold_ << std::endl;
-
-		std::cout << std::endl;
+		playerMap_.insert({ info.playerId_, info });
 	}
 
-	std::cout << std::endl;
-
 	return true;
 }
 
-bool MyClient::ResPlayerEnterLobby(Player player)
+bool MyClient::ResPlayerEnterLobby(PlayerInfo& player)
 {
+	// player 복사가 일어남? 인자가 레퍼런스 였다면 어케됨?
+	playerMap_.insert({ player.playerId_, player });
 
+	return true;
 }
 
 bool MyClient::ResPlayerLeaveLobby(int playerId)
 {
+	playerMap_.erase(playerId);
 
+	return true;
 }

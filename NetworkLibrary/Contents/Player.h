@@ -24,6 +24,7 @@ struct Player
 	std::list<Character> characterList_;
 
 
+
 	void Initialize(__int64 sessionId, int playerId, std::string& playerName, int level, int gold)
 	{
 		sessionId_ = sessionId;
@@ -51,4 +52,18 @@ public:
 	//Player* GetPlayer(int playerId);
 	//bool AddPlayer(Player* player);
 	//void RemovePlayer(int playerId);
+};
+
+struct PlayerInfo
+{
+	int playerId_;
+	std::string playerName_;
+	int level_;
+
+	PlayerInfo() = default;
+
+	PlayerInfo(const Player& player)
+		:playerId_(player.playerId_), playerName_(player.playerName_), level_(player.level_)
+	{
+	}
 };

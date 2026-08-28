@@ -75,11 +75,35 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
         }
         case 14:
         {
-			std::list<Character> characterList;
+			std::list<Character> characters;
 
-            *packet >> characterList;
+            *packet >> characters;
 
-            return handler_->ResPlayerCharactersDB(sessionId, characterList);
+            return handler_->ResPlayerCharactersDB(sessionId, characters);
+        }
+        case 15:
+        {
+			std::list<PlayerInfo> players;
+
+            *packet >> players;
+
+            return handler_->ResLobbyPlayersDB(sessionId, players);
+        }
+        case 16:
+        {
+			PlayerInfo player;
+
+            *packet >> player;
+
+            return handler_->ResPlayerEnterLobbyDB(sessionId, player);
+        }
+        case 17:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return handler_->ResPlayerLeaveLobbyDB(sessionId, playerId);
         }
         case 30:
         {
@@ -97,37 +121,6 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
             *packet >> playerId >> message;
 
             return handler_->ResChatDB(sessionId, playerId, message);
-        }
-        case 40:
-        {
-
-            *packet;
-
-            return handler_->ReqLobbyPlayersDB(sessionId);
-        }
-        case 41:
-        {
-			std::list<Player> playerList;
-
-            *packet >> playerList;
-
-            return handler_->ResLobbyPlayersDB(sessionId, playerList);
-        }
-        case 42:
-        {
-			Player player;
-
-            *packet >> player;
-
-            return handler_->ResPlayerEnterLobbyDB(sessionId, player);
-        }
-        case 43:
-        {
-			int playerId;
-
-            *packet >> playerId;
-
-            return handler_->ResPlayerLeaveLobbyDB(sessionId, playerId);
         }
         case 50:
         {
@@ -154,7 +147,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
         }
         case 61:
         {
-			Player otherPlayer;
+			PlayerInfo otherPlayer;
 
             *packet >> otherPlayer;
 
@@ -214,12 +207,27 @@ bool DatabaseServerHandler::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
     return true;
 }
 
-bool DatabaseServerHandler::ResPlayerProfileDB(__int64 sessionId, Player player)
+bool DatabaseServerHandler::ResPlayerProfileDB(__int64 sessionId, Player& player)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResPlayerCharactersDB(__int64 sessionId, std::list<Character> characterList)
+bool DatabaseServerHandler::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResLobbyPlayersDB(__int64 sessionId, std::list<PlayerInfo>& players)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResPlayerEnterLobbyDB(__int64 sessionId, PlayerInfo& player)
+{
+    return true;
+}
+
+bool DatabaseServerHandler::ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId)
 {
     return true;
 }
@@ -234,32 +242,12 @@ bool DatabaseServerHandler::ResChatDB(__int64 sessionId, int playerId, std::stri
     return true;
 }
 
-bool DatabaseServerHandler::ReqLobbyPlayersDB(__int64 sessionId)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResLobbyPlayersDB(__int64 sessionId, std::list<Player> playerList)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResPlayerEnterLobbyDB(__int64 sessionId, Player player)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId)
-{
-    return true;
-}
-
 bool DatabaseServerHandler::ReqBuyCharacterDB(__int64 sessionId)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResBuyCharacterDB(__int64 sessionId, Character character, int currentMoney)
+bool DatabaseServerHandler::ResBuyCharacterDB(__int64 sessionId, Character& character, int currentMoney)
 {
     return true;
 }
@@ -269,7 +257,7 @@ bool DatabaseServerHandler::ReqEnterMatchQueueDB(__int64 sessionId)
     return true;
 }
 
-bool DatabaseServerHandler::ResEnterMatchQueueDB(__int64 sessionId, Player otherPlayer)
+bool DatabaseServerHandler::ResEnterMatchQueueDB(__int64 sessionId, PlayerInfo& otherPlayer)
 {
     return true;
 }

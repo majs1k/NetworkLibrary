@@ -4,6 +4,7 @@
 #include "../Utils/TickController.h"
 
 #include "../RPC/RpcServerProxy.h"
+#include "../Database/DatabaseServerProxy.h"
 
 #include <process.h>
 #include <Windows.h>
@@ -21,10 +22,14 @@ MyServer::MyServer()
 	rpcProxy_->server_ = this;
 	rpcStub_->handler_ = this;
 
-	dbProxy_.dbQueue_ = &dbReqQueue_;
-	dbProxy_.logicQueue_ = &dbResQueue_;
+	dbProxy_ = new DatabaseServerProxy();
+	dbStub_ = new DatabaseServerStub();
 
-	dbStub_.handler_ = this;
+
+	dbProxy_->dbQueue_ = &dbReqQueue_;
+	dbProxy_->logicQueue_ = &dbResQueue_;
+
+	dbStub_->handler_ = this;
 
 
 	db_.Connect();
@@ -38,6 +43,9 @@ MyServer::~MyServer()
 {
 	delete rpcProxy_;
 	delete rpcStub_;
+
+	delete dbProxy_;
+	delete dbStub_;
 }
 
 bool MyServer::OnConnectionRequest(const std::wstring& ip, int port)
@@ -169,7 +177,7 @@ void MyServer::ProcessDbReqQueue()
 
 		__int64 sessionId = packet->GetId();
 
-		dbStub_.DbPacketProc(sessionId, packet);
+		dbStub_->DbPacketProc(sessionId, packet);
 
 		delete packet;
 	}
@@ -188,7 +196,7 @@ void MyServer::ProcessDbResQueue()
 
 		__int64 sessionId = packet->GetId();
 
-		dbStub_.DbPacketProc(sessionId, packet);
+		dbStub_->DbPacketProc(sessionId, packet);
 
 		delete packet;
 	}
@@ -211,7 +219,7 @@ bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::str
 		return true;
 	}
 
-	dbProxy_.ReqUserRegisterDB(sessionId, loginId, password);
+	dbProxy_->ReqUserRegisterDB(sessionId, loginId, password);
 
 	return true;
 }
@@ -226,39 +234,21 @@ bool MyServer::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string
 		return true;
 	}
 
-	dbProxy_.ReqUserLoginDB(sessionId, loginId, password);
+	dbProxy_->ReqUserLoginDB(sessionId, loginId, password);
 
 	return true;
 }
 
 bool MyServer::ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName)
 {
-	dbProxy_.ReqPlayerRegisterDB(sessionId, userId, playerName);
+	dbProxy_->ReqPlayerRegisterDB(sessionId, userId, playerName);
 
 	return true;
 }
 
 bool MyServer::ReqPlayerEnterLobby(__int64 sessionId, int userId)
 {
-	dbProxy_.ReqPlayerEnterLobbyDB(sessionId, userId);
-
-	return true;
-}
-
-
-bool MyServer::ReqLobbyPlayers(__int64 sessionId)
-{
-	std::list<Player> playerList;
-
-	for (auto& i : playerMap_)
-	{
-		Player p;
-		p = *i.second;
-
-		playerList.push_back(p);
-	}
-
-	rpcProxy_->ResLobbyPlayers(sessionId, playerList);
+	dbProxy_->ReqPlayerEnterLobbyDB(sessionId, userId);
 
 	return true;
 }
@@ -294,7 +284,7 @@ bool MyServer::ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::s
 {
 	RESPONSE_CODE code = userRepository_.CreateUser(loginId, password);
 
-	dbProxy_.ResUserRegisterDB(sessionId, code);
+	dbProxy_->ResUserRegisterDB(sessionId, code);
 
 	return true;
 }
@@ -312,7 +302,7 @@ bool MyServer::ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::stri
 
 	RESPONSE_CODE code = userRepository_.FindByLoginId(loginId, password, userId);
 
-	dbProxy_.ResUserLoginDB(sessionId, code, userId);
+	dbProxy_->ResUserLoginDB(sessionId, code, userId);
 
 	return true;
 }
@@ -329,7 +319,7 @@ bool MyServer::ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& p
 {
 	RESPONSE_CODE code = playerRepository_.CreatePlayer(userId, playerName);
 
-	dbProxy_.ResPlayerRegisterDB(sessionId, code);
+	dbProxy_->ResPlayerRegisterDB(sessionId, code);
 
 	return true;
 }
@@ -349,7 +339,7 @@ bool MyServer::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
 
 	playerRepository_.FindPlayerByUserId(userId, p);
 
-	// 잘못된 요청
+	// 잘못된 요청 (해당 유저아이디의 플레이어 없음)
 	if (p.playerId_ == 0)
 	{
 		rpcProxy_->ResPlayerProfile(sessionId, p);
@@ -357,20 +347,20 @@ bool MyServer::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
 		return true;
 	}
 
-	dbProxy_.ResPlayerProfileDB(sessionId, p);
+	dbProxy_->ResPlayerProfileDB(sessionId, p);
 
 
 	std::list<Character> lst;
 
 	inventoryRepository_.FindCharacterByPlayerId(p.playerId_, lst);
 
-	dbProxy_.ResPlayerCharactersDB(sessionId, lst);
+	dbProxy_->ResPlayerCharactersDB(sessionId, lst);
 
 
 	return true;
 }
 
-bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player player)
+bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 {
 	// 잘못된 요청 (플레이어 이미 접속)
 	if (playerMap_.count(player.playerId_) != 0)
@@ -393,28 +383,44 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player player)
 
 	rpcProxy_->ResPlayerProfile(sessionId, player);
 
-	// 다른 플레이어들에게 입장 알림
-	for (auto& i : playerMap_)
+
+	// 플레이어에게 로비 플레이어들 정보 송신
+	std::list<PlayerInfo> infos;
+
+	for (auto& p : playerMap_)
 	{
-		rpcProxy_->ResPlayerEnterLobby(i.second->sessionId_, player);
+		PlayerInfo info(*(p.second));
+
+		infos.push_back(info);
+	}
+
+	rpcProxy_->ResLobbyPlayers(sessionId, infos);
+
+	// 복사생성자 호출
+	PlayerInfo info(player);
+
+	// 다른 플레이어들에게도 입장 알림
+	for (auto& p : playerMap_)
+	{
+		rpcProxy_->ResPlayerEnterLobby(p.second->sessionId_, info);
 	}
 
 	return true;
 }
 
-bool MyServer::ResPlayerCharactersDB(__int64 sessionId, std::list<Character> characterList)
+bool MyServer::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters)
 {
 	int playerId = sessionToPlayer_[sessionId];
 
 	Player* p = playerMap_[playerId];
 
 	// 플레이어의 캐릭터 등록
-	for (auto& c : characterList)
+	for (auto& c : characters)
 	{
 		p->characterList_.push_back(c);
 	}
 
-	rpcProxy_->ResPlayerCharacters(sessionId, characterList);
+	rpcProxy_->ResPlayerCharacters(sessionId, characters);
 
 	return true;
 }
