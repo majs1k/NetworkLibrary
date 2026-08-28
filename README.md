@@ -6,15 +6,36 @@ IOCP 기반 게임 서버 프로젝트입니다.
 
 클라이언트와 서버 모두 솔루션 안에 구현되어 있습니다.
 
-| 항목       | 내용                            |
-| -------- | ----------------------------- |
-| Project  | TCPFighterServer              |
-| Language | C++14                         |
-| Platform | Windows 11 x64                |
-| IDE      | Visual Studio 2022            |
-| Client   | C++, ImGui(DX11)              |
-| Database | MySQL                         |
-| Network  | TCP / IOCP                    |
+Stack    : C++14, MySQL, ImGui(DX11)
+Platform : Windows 11 x64 / Visual Studio 2022
+
+---
+
+## IOCP Network Library
+
+IOCP 네트워크 클래스 `LanServer`를 컨텐츠에서 상속받아 이벤트를 구현합니다.
+
+```cpp
+class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
+{
+private:
+    bool OnConnectionRequest(const std::wstring& ip, int port) override;
+
+    void OnAccept(__int64 sessionId) override;
+    void OnRelease(__int64 sessionId) override;
+    void OnRecv(__int64 sessionId, Packet* packet) override;
+};
+```
+
+## Details
+
+* IOCP 기반 Overlapped IO(비동기 IO) TCP 서버
+* Accept Thread / Worker Thread 분리
+* Session간 동기화
+* Send / Receive Ring Buffer
+* IO Count 기반 Session 수명 관리
+* Packet 단위 Receive 처리
+* 컨텐츠에서 Session ID 기반 접근
 
 ## Thread Model
 
@@ -53,34 +74,6 @@ IOCP 기반 게임 서버 프로젝트입니다.
               └───────────────┘
 ```
 
----
-
-## IOCP Network Library
-
-IOCP 네트워크 클래스 `LanServer`를 컨텐츠에서 상속받아 이벤트를 구현합니다.
-
-```cpp
-class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
-{
-private:
-    bool OnConnectionRequest(const std::wstring& ip, int port) override;
-
-    void OnAccept(__int64 sessionId) override;
-    void OnRelease(__int64 sessionId) override;
-    void OnRecv(__int64 sessionId, Packet* packet) override;
-};
-```
-
-* IOCP 기반 Overlapped IO(비동기 IO) TCP 서버
-* Accept Thread / Worker Thread 분리
-* Session간 동기화
-* Send / Receive Ring Buffer
-* IO Count 기반 Session 수명 관리
-* Packet 단위 Receive 처리
-* 컨텐츠에서 Session ID 기반 접근
-
----
-
 ### Protocol Header
 
 ```text
@@ -109,8 +102,6 @@ Packet& operator<<(char value)
 *packet << loginId << password;
 *packet >> loginId >> password;
 ```
-
----
 
 ## RPC
 
@@ -200,11 +191,11 @@ bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::str
 }
 ```
 
----
-
-### DB Proxy / Stub
+## Database
 
 컨텐츠 저장을 직렬로 하기 위해 DB Thread에서만 쿼리를 실행합니다.
+
+### DB Proxy / Stub
 
 DB 요청 및 응답 RPC와 유사한 Proxy / Stub 구조로 자동화하여,
 
@@ -248,8 +239,6 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 }
 ```
 
----
-
 ### Stateful Server
 
 게임 플레이 중 발생하는 모든 상태 변경은 서버 메모리를 중심으로 검증 및 처리한 후,
@@ -291,9 +280,7 @@ ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고 서
 * 게임 종료 및 결과 처리
 * 게임 플레이 컨텐츠
 
----
-
-### Folder Tree
+## Folder Tree
 
 ```text
 NetworkLibrary
