@@ -1,12 +1,10 @@
-# TCPGameServer
+# IOCPGameServer
 
-C++ 기반의 TCP 게임 서버 프로젝트입니다.
+IOCP 기반 게임 서버 프로젝트입니다.
 
-IOCP를 기반으로 네트워크 라이브러리를 직접 구현하고, 커스텀 바이너리 패킷 프로토콜과 IDL 기반 RPC 코드 자동화를 적용했습니다.
+커스텀 바이너리 패킷 프로토콜을 사용합니다.
 
-클라이언트와 서버를 하나의 솔루션에서 개발하며, 네트워크 계층과 컨텐츠 계층을 분리하여 컨텐츠 구현 시, TCP 스트림 및 소켓을 직접 다루지 않도록 구성했습니다.
-
-## Project Information
+클라이언트와 서버 모두 솔루션 안에 구현되어 있습니다.
 
 | 항목       | 내용                            |
 | -------- | ----------------------------- |
@@ -14,13 +12,11 @@ IOCP를 기반으로 네트워크 라이브러리를 직접 구현하고, 커스
 | Language | C++14                         |
 | Platform | Windows 11 x64                |
 | IDE      | Visual Studio 2022            |
-| Client   | C++, ImGui                    |
+| Client   | C++, ImGui(DX11)              |
 | Database | MySQL                         |
 | Network  | TCP / IOCP                    |
 
 ## Thread Model
-
-전체 서버는 네트워크 처리, 게임 로직, 데이터베이스 처리를 분리하는 구조로 구성했습니다.
 
 ```text
                     Client
@@ -28,8 +24,7 @@ IOCP를 기반으로 네트워크 라이브러리를 직접 구현하고, 커스
                       │ TCP
                       ▼
               ┌───────────────┐
-              │   LanServer   │
-              │     IOCP      │
+              │   IO Worker   │
               └───────┬───────┘
                       │
                  Packet 조립
@@ -39,11 +34,10 @@ IOCP를 기반으로 네트워크 라이브러리를 직접 구현하고, 커스
                       │
                       ▼
               ┌───────────────┐
-              │    MyServer   │
               │  Logic Thread │
               └───────┬───────┘
                       │
-             DB Request Queue
+               DB Request Queue
                       │
                       ▼
               ┌───────────────┐
@@ -51,18 +45,19 @@ IOCP를 기반으로 네트워크 라이브러리를 직접 구현하고, 커스
               │     MySQL     │
               └───────┬───────┘
                       │
-             DB Response Queue
+               DB Response Queue
                       │
                       ▼
               ┌───────────────┐
-              │    MyServer   │
               │ Logic Thread  │
               └───────────────┘
 ```
 
-### Network Layer
+---
 
-`LanServer`는 IOCP 기반의 네트워크 클래스로, 컨텐츠에서 상속받아 필요한 이벤트를 구현합니다.
+## IOCP Network Library
+
+IOCP 네트워크 클래스 `LanServer`를 컨텐츠에서 상속받아 이벤트를 구현합니다.
 
 ```cpp
 class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
@@ -76,39 +71,17 @@ private:
 };
 ```
 
-`Session`은 네트워크 계층에서 관리하며, 컨텐츠 계층에는 소켓이나 `Session` 객체를 직접 노출하지 않고 `sessionId`를 통해 세션을 식별합니다.
-
-```text
-Network Layer
-    │
-    │ sessionId
-    ▼
-Content Layer
-```
-
-수신 받은 패킷의 타입에 따라 컨텐츠 코드에서 처리합니다.
-
----
-
-## IOCP Network Library
-
-Windows IOCP를 기반으로 TCP 네트워크 라이브러리를 구현했습니다.
-
-### 주요 구성
-
 * IOCP 기반 Overlapped IO(비동기 IO) TCP 서버
 * Accept Thread / Worker Thread 분리
 * Session간 동기화
 * Send / Receive Ring Buffer
 * IO Count 기반 Session 수명 관리
 * Packet 단위 Receive 처리
-* Session ID 기반 외부 인터페이스
+* 컨텐츠에서 Session ID 기반 접근
 
 ---
 
-# Custom Binary Packet
-
-커스텀 바이너리 패킷 프로토콜을 구현했습니다.
+### Protocol Header
 
 ```text
 ┌──────────────┬──────────────┬──────────────────┐
@@ -116,7 +89,7 @@ Windows IOCP를 기반으로 TCP 네트워크 라이브러리를 구현했습니
 └──────────────┴──────────────┴──────────────────┘
 ```
 
-## Serialization
+### Serialization
 
 `Packet` 객체에 `operator<<`, `operator>>`를 구현하여 패킷 직렬화와 역직렬화를 처리합니다.
 
@@ -139,18 +112,16 @@ Packet& operator<<(char value)
 
 ---
 
-# RPC
+## RPC
 
-IDL을 기반으로 Client / Server RPC 코드를 자동 생성하는 구조를 구현했습니다.
+IDL 파일을 기반으로 Client / Server RPC 코드를 자동 생성합니다.
 
-RPC 정의는 별도의 IDL 파일에서 관리합니다.
 
 ```text
+// 프로토콜 정의 예시
 ReqUserRegister(std::string& loginId, std::string& password)     0
 ResUserRegister(RESPONSE_CODE code)                              1
 ```
-
-IDL을 기반으로 다음 코드가 생성됩니다.
 
 ```text
              RPC IDL
@@ -160,12 +131,12 @@ IDL을 기반으로 다음 코드가 생성됩니다.
                 │
         ┌───────┴───────┐
         ▼               ▼
-   Client Proxy      Server Stub
+   Server Proxy      Server Stub
 ```
 
-## Server Proxy
+### Server Proxy
 
-서버에서 클라이언트로 패킷을 보내는 코드를 Proxy가 담당합니다.
+송신할 패킷을 Proxy가 담당합니다.
 
 ```cpp
 void RpcServerProxy::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
@@ -182,7 +153,7 @@ void RpcServerProxy::ReqUserRegister(__int64 sessionId, std::string& loginId, st
 }
 ```
 
-## Server Stub
+### Server Stub
 
 수신한 패킷은 Stub에서 `type_`을 기준으로 역직렬화한 후 Handler를 호출합니다.
 
@@ -191,6 +162,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 {
     switch (packet->GetHeaderPtr()->type_)
     {
+        // 타입 id별 분기
         case 0:
         {
 			std::string loginId;
@@ -210,6 +182,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 실제 동작은 Handler를 상속해서 직접 구현합니다.
 
 ```cpp
+// 자동 생성된 함수
 bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
 	// 컨텐츠 개발 시 직접 구현
@@ -229,7 +202,7 @@ bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::str
 
 ---
 
-## DB Proxy / Stub
+### DB Proxy / Stub
 
 컨텐츠 저장을 직렬로 하기 위해 DB Thread에서만 쿼리를 실행합니다.
 
@@ -277,7 +250,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
 ---
 
-# Stateful Server
+### Stateful Server
 
 게임 플레이 중 발생하는 모든 상태 변경은 서버 메모리를 중심으로 검증 및 처리한 후,
 
@@ -300,7 +273,7 @@ ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고 서
 
 ---
 
-# Current Content
+## Current Content
 ### Implemented
 
 * 회원가입
@@ -320,7 +293,7 @@ ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고 서
 
 ---
 
-# Folder Tree
+### Folder Tree
 
 ```text
 NetworkLibrary
