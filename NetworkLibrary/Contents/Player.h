@@ -21,7 +21,7 @@ struct Player
 
 	PLAYER_STATE state_;
 
-	std::list<Character> characterList_;
+	std::list<Character> characters_;
 
 
 
@@ -53,6 +53,7 @@ public:
 	//bool AddPlayer(Player* player);
 	//void RemovePlayer(int playerId);
 };
+
 
 struct PlayerInfo
 {

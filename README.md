@@ -7,11 +7,12 @@ IOCP 기반 게임 서버 프로젝트입니다.
 클라이언트와 서버 모두 솔루션 안에 구현되어 있습니다.
 
 Stack    : C++14, MySQL, ImGui(DX11)
+
 Platform : Windows 11 x64 / Visual Studio 2022
 
 ---
 
-## IOCP Network Library
+## Network Library
 
 IOCP 네트워크 클래스 `LanServer`를 컨텐츠에서 상속받아 이벤트를 구현합니다.
 
@@ -20,14 +21,13 @@ class MyServer : public LanServer, public RpcServerHandler, public DatabaseServe
 {
 private:
     bool OnConnectionRequest(const std::wstring& ip, int port) override;
-
     void OnAccept(__int64 sessionId) override;
     void OnRelease(__int64 sessionId) override;
     void OnRecv(__int64 sessionId, Packet* packet) override;
 };
 ```
 
-## Details
+### Details
 
 * IOCP 기반 Overlapped IO(비동기 IO) TCP 서버
 * Accept Thread / Worker Thread 분리
@@ -36,8 +36,9 @@ private:
 * IO Count 기반 Session 수명 관리
 * Packet 단위 Receive 처리
 * 컨텐츠에서 Session ID 기반 접근
+* 로직스레드에서만 게임 컨텐츠 접근 및 수정
 
-## Thread Model
+### Thread Model
 
 ```text
                     Client

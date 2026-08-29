@@ -63,7 +63,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> userId;
 
-            return handler_->ReqPlayerEnterLobby(sessionId, userId);
+            return handler_->ReqPlayerConnection(sessionId, userId);
         }
         case 13:
         {
@@ -132,11 +132,11 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
         case 51:
         {
 			Character character;
-			int currentMoney;
+			int curGold;
 
-            *packet >> character >> currentMoney;
+            *packet >> character >> curGold;
 
-            return handler_->ResBuyCharacter(sessionId, character, currentMoney);
+            return handler_->ResBuyCharacter(sessionId, character, curGold);
         }
         case 60:
         {
@@ -202,7 +202,7 @@ bool RpcServerHandler::ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code)
     return true;
 }
 
-bool RpcServerHandler::ReqPlayerEnterLobby(__int64 sessionId, int userId)
+bool RpcServerHandler::ReqPlayerConnection(__int64 sessionId, int userId)
 {
     return true;
 }
@@ -247,7 +247,7 @@ bool RpcServerHandler::ReqBuyCharacter(__int64 sessionId)
     return true;
 }
 
-bool RpcServerHandler::ResBuyCharacter(__int64 sessionId, Character& character, int currentMoney)
+bool RpcServerHandler::ResBuyCharacter(__int64 sessionId, Character& character, int curGold)
 {
     return true;
 }

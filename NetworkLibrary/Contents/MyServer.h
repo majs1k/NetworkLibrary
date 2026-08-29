@@ -97,10 +97,13 @@ private:
 
 	bool ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName);
 
-	bool ReqPlayerEnterLobby(__int64 sessionId, int userId);
+	bool ReqPlayerConnection(__int64 sessionId, int userId);
 
 
 	bool ReqChat(__int64 sessionId, std::string& message);
+
+
+	bool ReqBuyCharacter(__int64 sessionId);
 
 	// ----------------------------------------------------- //
 
@@ -121,11 +124,14 @@ private:
 	
 
 
-	bool ReqPlayerEnterLobbyDB(__int64 sessionId, int userId);
+	bool ReqPlayerConnectionDB(__int64 sessionId, int userId);
 
 	bool ResPlayerProfileDB(__int64 sessionId, Player& player);
 
 	bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters);
+
+
+	bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold);
 
 
 	// ----------------------------------------------------- //

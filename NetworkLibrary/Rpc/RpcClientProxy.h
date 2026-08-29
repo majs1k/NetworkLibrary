@@ -15,7 +15,7 @@ public:
     void ResUserLogin(RESPONSE_CODE code, int userId);
     void ReqPlayerRegister(int userId, std::string& playerName);
     void ResPlayerRegister(RESPONSE_CODE code);
-    void ReqPlayerEnterLobby(int userId);
+    void ReqPlayerConnection(int userId);
     void ResPlayerProfile(Player& player);
     void ResPlayerCharacters(std::list<Character>& characters);
     void ResLobbyPlayers(std::list<PlayerInfo>& players);
@@ -24,7 +24,7 @@ public:
     void ReqChat(std::string& message);
     void ResChat(int playerId, std::string& message);
     void ReqBuyCharacter();
-    void ResBuyCharacter(Character& character, int currentMoney);
+    void ResBuyCharacter(Character& character, int curGold);
     void ReqEnterMatchQueue();
     void ResEnterMatchQueue(PlayerInfo& otherPlayer);
     void ResEndMatch(int result, int currentMoney);

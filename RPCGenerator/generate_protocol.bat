@@ -1,6 +1,7 @@
 @echo off
 
-copy /Y  "my_idl.txt" ".\bin\Release\net8.0\"
+copy /Y  "myrpc_idl.txt" ".\bin\Release\net8.0\"
+copy /Y  "mydb_idl.txt" ".\bin\Release\net8.0\"
 
 start /wait "" ".\bin\Release\net8.0\RpcGenerator.exe"
 

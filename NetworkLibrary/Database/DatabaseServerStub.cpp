@@ -63,7 +63,7 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> userId;
 
-            return handler_->ReqPlayerEnterLobbyDB(sessionId, userId);
+            return handler_->ReqPlayerConnectionDB(sessionId, userId);
         }
         case 13:
         {
@@ -124,19 +124,22 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
         }
         case 50:
         {
+			int playerId;
+			int characterId;
+			int curGold;
 
-            *packet;
+            *packet >> playerId >> characterId >> curGold;
 
-            return handler_->ReqBuyCharacterDB(sessionId);
+            return handler_->ReqBuyCharacterDB(sessionId, playerId, characterId, curGold);
         }
         case 51:
         {
 			Character character;
-			int currentMoney;
+			int curGold;
 
-            *packet >> character >> currentMoney;
+            *packet >> character >> curGold;
 
-            return handler_->ResBuyCharacterDB(sessionId, character, currentMoney);
+            return handler_->ResBuyCharacterDB(sessionId, character, curGold);
         }
         case 60:
         {
@@ -202,7 +205,7 @@ bool DatabaseServerHandler::ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE
     return true;
 }
 
-bool DatabaseServerHandler::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
+bool DatabaseServerHandler::ReqPlayerConnectionDB(__int64 sessionId, int userId)
 {
     return true;
 }
@@ -242,12 +245,12 @@ bool DatabaseServerHandler::ResChatDB(__int64 sessionId, int playerId, std::stri
     return true;
 }
 
-bool DatabaseServerHandler::ReqBuyCharacterDB(__int64 sessionId)
+bool DatabaseServerHandler::ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResBuyCharacterDB(__int64 sessionId, Character& character, int currentMoney)
+bool DatabaseServerHandler::ResBuyCharacterDB(__int64 sessionId, Character& character, int curGold)
 {
     return true;
 }

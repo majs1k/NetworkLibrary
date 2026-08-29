@@ -4,11 +4,12 @@
     {
         static void Main(string[] args)
         {
-            var idlFile = "my_idl.txt";
+            var rpcFile = "myrpc_idl.txt";
+            var dbFile = "mydb_idl.txt";
 
-            RpcServerGenerator.Generate(idlFile);
-            RpcClientGenerator.Generate(idlFile);
-            DatabaseServerGenerator.Generate(idlFile);
+            RpcServerGenerator.Generate(rpcFile);
+            RpcClientGenerator.Generate(rpcFile);
+            DatabaseServerGenerator.Generate(dbFile);
         }
     }
 }

@@ -79,7 +79,7 @@ void DatabaseServerProxy::ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE c
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
+void DatabaseServerProxy::ReqPlayerConnectionDB(__int64 sessionId, int userId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -183,7 +183,7 @@ void DatabaseServerProxy::ResChatDB(__int64 sessionId, int playerId, std::string
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId)
+void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -191,12 +191,12 @@ void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId)
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 50;
-    *packet;
+    *packet << playerId << characterId << curGold;
 
     dbQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResBuyCharacterDB(__int64 sessionId, Character& character, int currentMoney)
+void DatabaseServerProxy::ResBuyCharacterDB(__int64 sessionId, Character& character, int curGold)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -204,7 +204,7 @@ void DatabaseServerProxy::ResBuyCharacterDB(__int64 sessionId, Character& charac
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 51;
-    *packet << character << currentMoney;
+    *packet << character << curGold;
 
     logicQueue_->Push(packet);
 }

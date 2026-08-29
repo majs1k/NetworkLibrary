@@ -246,34 +246,78 @@ bool MyServer::ReqPlayerRegister(__int64 sessionId, int userId, std::string& pla
 	return true;
 }
 
-bool MyServer::ReqPlayerEnterLobby(__int64 sessionId, int userId)
+bool MyServer::ReqPlayerConnection(__int64 sessionId, int userId)
 {
-	dbProxy_->ReqPlayerEnterLobbyDB(sessionId, userId);
+	dbProxy_->ReqPlayerConnectionDB(sessionId, userId);
 
 	return true;
 }
 
 bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 {
-	int senderId = sessionToPlayer_[sessionId];
-
 	// 플레이어가 등록되지 않았다면 리턴
-	if (playerMap_.count(senderId) == 0)
+	if (sessionToPlayer_.count(sessionId) == 0)
 		return true;
 
+	int playerId = sessionToPlayer_[sessionId];
+
+	//if (playerMap_.count(playerId) == 0)
+	//	return true;
+
 	// 플레이어가 로비가 아니라면 리턴
-	if ((playerMap_[senderId])->state_ != PLAYER_STATE::LOBBY)
+	if ((playerMap_[playerId])->state_ != PLAYER_STATE::LOBBY)
 		return true;
 
 	for (auto& p : playerMap_)
 	{
 		Player* other = p.second;
 
-		rpcProxy_->ResChat(other->sessionId_, senderId, message);
+		rpcProxy_->ResChat(other->sessionId_, playerId, message);
 	}
 
 	return true;
 }
+
+bool MyServer::ReqBuyCharacter(__int64 sessionId)
+{
+	// 플레이어가 등록되지 않았다면 리턴
+	if (sessionToPlayer_.count(sessionId) == 0)
+		return true;
+
+	int playerId = sessionToPlayer_[sessionId];
+
+	Player* player = playerMap_[playerId];
+
+	// 플레이어가 로비가 아니라면 리턴
+	if (player->state_ != PLAYER_STATE::LOBBY)
+		return true;
+
+	Character ch{};
+
+	if (player->gold_ < 1000)
+	{
+		Character ch{};
+		ch.characterId_ = 0;
+
+		rpcProxy_->ResBuyCharacter(sessionId, ch,player->gold_);
+
+		return true;
+	}
+
+	player->gold_ -= 1000;
+
+	// TODO: 캐릭터 임의 생성 수정
+	// 이것도 charinfo 따로 만들어야할듯..
+	ch.characterId_ = 1;
+
+	rpcProxy_->ResBuyCharacter(sessionId, ch, player->gold_);
+
+	/// 잠만 이거 어케 전달해야함???
+	dbProxy_->ReqBuyCharacterDB(sessionId, playerId, ch.characterId_, player->gold_);
+
+	return true;
+}
+
 
 // ----------------------------------------------------- //
 // DB
@@ -331,7 +375,7 @@ bool MyServer::ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code)
 	return true;
 }
 
-bool MyServer::ReqPlayerEnterLobbyDB(__int64 sessionId, int userId)
+bool MyServer::ReqPlayerConnectionDB(__int64 sessionId, int userId)
 {
 	Player p;
 	//TODO: 클라이언트 측에선 playerId 0으로 수신시 오류메세지 띄우기
@@ -417,10 +461,19 @@ bool MyServer::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& ch
 	// 플레이어의 캐릭터 등록
 	for (auto& c : characters)
 	{
-		p->characterList_.push_back(c);
+		p->characters_.push_back(c);
 	}
 
 	rpcProxy_->ResPlayerCharacters(sessionId, characters);
 
+	return true;
+}
+
+bool MyServer::ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold)
+{
+	///TODO: 트랜잭션 추가
+	playerRepository_.UpdateGold(playerId, curGold);
+	inventoryRepository_.CreateCharacter(playerId, characterId);
+	
 	return true;
 }

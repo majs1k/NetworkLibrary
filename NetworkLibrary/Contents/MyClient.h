@@ -47,20 +47,18 @@ private:
 	SCENE scene_ = SCENE::LOGIN;
 
 
-
-	std::unordered_map<int, PlayerInfo> playerMap_{};
-
-	char loginSceneStatus[64];
+	char loginSceneStatus_[64];
 	int userId_ = 0;
 
+	char playerSceneStatus_[64];
+
+
+	Player myPlayer_;
+	std::unordered_map<int, PlayerInfo> playerMap_{};
 
 	std::vector<std::string> chatMessages_;
 
-	Player myPlayer_;
-
-
-	char playerSceneStatus[64];
-
+	// ----------------------------------------------------- //
 	// RPC
 	// ----------------------------------------------------- //
 
@@ -84,4 +82,7 @@ private:
 
 	bool ResPlayerEnterLobby(PlayerInfo& player);
 	bool ResPlayerLeaveLobby(int playerId);
+
+
+	bool ResBuyCharacter(Character& character, int curGold);
 };

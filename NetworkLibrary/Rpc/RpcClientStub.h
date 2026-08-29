@@ -11,7 +11,7 @@ public:
     virtual bool ResUserLogin(RESPONSE_CODE code, int userId);
     virtual bool ReqPlayerRegister(int userId, std::string& playerName);
     virtual bool ResPlayerRegister(RESPONSE_CODE code);
-    virtual bool ReqPlayerEnterLobby(int userId);
+    virtual bool ReqPlayerConnection(int userId);
     virtual bool ResPlayerProfile(Player& player);
     virtual bool ResPlayerCharacters(std::list<Character>& characters);
     virtual bool ResLobbyPlayers(std::list<PlayerInfo>& players);
@@ -20,7 +20,7 @@ public:
     virtual bool ReqChat(std::string& message);
     virtual bool ResChat(int playerId, std::string& message);
     virtual bool ReqBuyCharacter();
-    virtual bool ResBuyCharacter(Character& character, int currentMoney);
+    virtual bool ResBuyCharacter(Character& character, int curGold);
     virtual bool ReqEnterMatchQueue();
     virtual bool ResEnterMatchQueue(PlayerInfo& otherPlayer);
     virtual bool ResEndMatch(int result, int currentMoney);

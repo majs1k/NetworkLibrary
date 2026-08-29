@@ -63,11 +63,11 @@ public:
 		{
 			if (loginId[0] == '\0' || password[0] == '\0')
 			{
-				strcpy_s(client_->loginSceneStatus, u8"ID와 Password를 입력해주세요.");
+				strcpy_s(client_->loginSceneStatus_, u8"ID와 Password를 입력해주세요.");
 			}
 			else
 			{
-				strcpy_s(client_->loginSceneStatus, u8"");
+				strcpy_s(client_->loginSceneStatus_, u8"");
 
 				std::string id = loginId;
 				std::string pw = password;
@@ -83,11 +83,11 @@ public:
 		{
 			if (loginId[0] == '\0' || password[0] == '\0')
 			{
-				strcpy_s(client_->loginSceneStatus, u8"ID와 Password를 입력해주세요.");
+				strcpy_s(client_->loginSceneStatus_, u8"ID와 Password를 입력해주세요.");
 			}
 			else
 			{
-				strcpy_s(client_->loginSceneStatus, u8"");
+				strcpy_s(client_->loginSceneStatus_, u8"");
 
 				std::string id = loginId;
 				std::string pw = password;
@@ -99,7 +99,7 @@ public:
 		ImGui::Spacing();
 
 		/// 상태 메세지 출력
-		ImGui::Text("%s", client_->loginSceneStatus);
+		ImGui::Text("%s", client_->loginSceneStatus_);
 
 
 		ImGui::End();
@@ -122,11 +122,11 @@ public:
 		{
 			if (playerName[0] == '\0')
 			{
-				strcpy_s(client_->playerSceneStatus, u8"플레이어 이름을 입력해주세요.");
+				strcpy_s(client_->playerSceneStatus_, u8"플레이어 이름을 입력해주세요.");
 			}
 			else
 			{
-				strcpy_s(client_->playerSceneStatus, u8"");
+				strcpy_s(client_->playerSceneStatus_, u8"");
 
 				std::string name = playerName;
 
@@ -137,7 +137,7 @@ public:
 		ImGui::Spacing();
 
 		/// 상태 메시지
-		ImGui::Text("%s", client_->playerSceneStatus);
+		ImGui::Text("%s", client_->playerSceneStatus_);
 
 		ImGui::End();
 	}
@@ -231,7 +231,7 @@ private:
 		{
 			ImGui::BeginChild("CharacterList", ImVec2(0, 0), true);
 
-			for (const Character& character : client_->myPlayer_.characterList_)
+			for (const Character& character : client_->myPlayer_.characters_)
 			{
 				ImGui::Text(u8"Character ID : %d", character.characterId_);
 			}
@@ -276,8 +276,12 @@ private:
 			ImGui::Spacing();
 			ImGui::Spacing();
 
+			static int count = 0;
+			count++;
+			std::string dots((count/30)%4, '.');
+
 			ImGui::Text(u8"게임을 찾는 중입니다.");
-			ImGui::Text(u8"잠시만 기다려주세요...");
+			ImGui::Text(u8"잠시만 기다려주세요%s", dots);
 
 			ImGui::Spacing();
 

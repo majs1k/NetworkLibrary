@@ -46,13 +46,13 @@ bool MyClient::ResUserRegister(RESPONSE_CODE code)
 	{
 	case RESPONSE_CODE::SUCCESS:
 
-		strcpy_s(loginSceneStatus, u8"회원가입이 성공하였습니다.");
+		strcpy_s(loginSceneStatus_, u8"회원가입이 성공하였습니다.");
 
 		break;
 
 	case RESPONSE_CODE::ALREADY_EXISTS:
 
-		strcpy_s(loginSceneStatus, u8"회원가입이 실패하였습니다.");
+		strcpy_s(loginSceneStatus_, u8"회원가입이 실패하였습니다.");
 
 		break;
 	}
@@ -66,17 +66,17 @@ bool MyClient::ResUserLogin(RESPONSE_CODE code, int userId)
 	{
 	case RESPONSE_CODE::SUCCESS:
 
-		strcpy_s(loginSceneStatus, u8"로그인에 성공하였습니다.");
+		strcpy_s(loginSceneStatus_, u8"로그인에 성공하였습니다.");
 
 		userId_ = userId;
 
-		rpcProxy_->ReqPlayerEnterLobby(userId_);
+		rpcProxy_->ReqPlayerConnection(userId_);
 
 		break;
 
 	case RESPONSE_CODE::LOGIN_FAILED:
 
-		strcpy_s(loginSceneStatus, u8"로그인에 실패하였습니다.");
+		strcpy_s(loginSceneStatus_, u8"로그인에 실패하였습니다.");
 
 		break;
 	}
@@ -89,16 +89,16 @@ bool MyClient::ResPlayerRegister(RESPONSE_CODE code)
 {
 	if (code == RESPONSE_CODE::SUCCESS)
 	{
-		strcpy_s(playerSceneStatus, u8"플레이어 등록이 성공하였습니다.");
+		strcpy_s(playerSceneStatus_, u8"플레이어 등록이 성공하였습니다.");
 
 		// 메인씬 입장 재시도
-		rpcProxy_->ReqPlayerEnterLobby(userId_);
+		rpcProxy_->ReqPlayerConnection(userId_);
 
 		//screen_ = ClientScreen::MAIN;
 	}
 	else
 	{
-		strcpy_s(playerSceneStatus, u8"플레이어 등록이 실패하였습니다.");
+		strcpy_s(playerSceneStatus_, u8"플레이어 등록이 실패하였습니다.");
 	}
 
 	return true;
@@ -127,7 +127,7 @@ bool MyClient::ResPlayerCharacters(std::list<Character>& characters)
 {
 	for (auto& c : characters)
 	{
-		myPlayer_.characterList_.push_back(c);
+		myPlayer_.characters_.push_back(c);
 	}
 
 	return true;
@@ -167,4 +167,11 @@ bool MyClient::ResPlayerLeaveLobby(int playerId)
 	playerMap_.erase(playerId);
 
 	return true;
+}
+
+bool MyClient::ResBuyCharacter(Character& character, int curGold)
+{
+	myPlayer_.gold_ = curGold;
+
+	myPlayer_.characters_.push_back(character);
 }

@@ -67,7 +67,7 @@ void RpcServerProxy::ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ReqPlayerEnterLobby(__int64 sessionId, int userId)
+void RpcServerProxy::ReqPlayerConnection(__int64 sessionId, int userId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -166,13 +166,13 @@ void RpcServerProxy::ReqBuyCharacter(__int64 sessionId)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResBuyCharacter(__int64 sessionId, Character& character, int currentMoney)
+void RpcServerProxy::ResBuyCharacter(__int64 sessionId, Character& character, int curGold)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 51;
-    *packet << character << currentMoney;
+    *packet << character << curGold;
 
     server_->SendPacket(sessionId, packet);
 }
