@@ -1,5 +1,6 @@
 #include <conio.h>
 #include "./Contents/MyServer.h"
+#include "./Database/Database.h"
 #include "./Utils/ConfigLoader.h"
 #include "./Utils/CrashDump.h"
 #include "./Utils/Profiler.h"
@@ -12,7 +13,11 @@ int main()
 
 	ConfigLoader::Instance().Load(CONFIG_FILENAME);
 
-	MyServer server;
+	Database db;
+
+	db.Connect(config.dbHost, config.dbUser, config.dbPassword, config.dbSchema);
+
+	MyServer server(&db);
 
 	server.Start(config.ip, config.port, config.sessionMax, config.concurrentCount, config.workerCount);
 

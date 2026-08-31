@@ -89,6 +89,7 @@ inline Packet& operator<<(Packet& packet, Player player)
 	packet << player.playerName_;
 	packet << player.level_;
 	packet << player.gold_;
+	packet << player.equippedInvenId_;
 
 	return packet;
 }
@@ -99,6 +100,7 @@ inline Packet& operator>>(Packet& packet, Player& player)
 	packet >> player.playerName_;
 	packet >> player.level_;
 	packet >> player.gold_;
+	packet >> player.equippedInvenId_;
 
 	return packet;
 }

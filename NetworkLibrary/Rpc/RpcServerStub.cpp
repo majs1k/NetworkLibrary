@@ -138,12 +138,28 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             return handler_->ResBuyCharacter(sessionId, character, curGold);
         }
+        case 52:
+        {
+			int inventoryId;
+
+            *packet >> inventoryId;
+
+            return handler_->ReqChangeEquipment(sessionId, inventoryId);
+        }
+        case 53:
+        {
+			int inventoryId;
+
+            *packet >> inventoryId;
+
+            return handler_->ResChangeEquipment(sessionId, inventoryId);
+        }
         case 60:
         {
 
             *packet;
 
-            return handler_->ReqEnterMatchQueue(sessionId);
+            return handler_->ReqStartGame(sessionId);
         }
         case 61:
         {
@@ -151,16 +167,32 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> otherPlayer;
 
-            return handler_->ResEnterMatchQueue(sessionId, otherPlayer);
+            return handler_->ResStartGame(sessionId, otherPlayer);
         }
         case 62:
+        {
+			int commandType;
+
+            *packet >> commandType;
+
+            return handler_->ReqGameCommand(sessionId, commandType);
+        }
+        case 63:
+        {
+			Character character;
+
+            *packet >> character;
+
+            return handler_->ResGameCommand(sessionId, character);
+        }
+        case 64:
         {
 			int result;
 			int currentMoney;
 
             *packet >> result >> currentMoney;
 
-            return handler_->ResEndMatch(sessionId, result, currentMoney);
+            return handler_->ResEndGame(sessionId, result, currentMoney);
         }
     default:
     {
@@ -252,17 +284,37 @@ bool RpcServerHandler::ResBuyCharacter(__int64 sessionId, Character& character, 
     return true;
 }
 
-bool RpcServerHandler::ReqEnterMatchQueue(__int64 sessionId)
+bool RpcServerHandler::ReqChangeEquipment(__int64 sessionId, int inventoryId)
 {
     return true;
 }
 
-bool RpcServerHandler::ResEnterMatchQueue(__int64 sessionId, PlayerInfo& otherPlayer)
+bool RpcServerHandler::ResChangeEquipment(__int64 sessionId, int inventoryId)
 {
     return true;
 }
 
-bool RpcServerHandler::ResEndMatch(__int64 sessionId, int result, int currentMoney)
+bool RpcServerHandler::ReqStartGame(__int64 sessionId)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer)
+{
+    return true;
+}
+
+bool RpcServerHandler::ReqGameCommand(__int64 sessionId, int commandType)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResGameCommand(__int64 sessionId, Character& character)
+{
+    return true;
+}
+
+bool RpcServerHandler::ResEndGame(__int64 sessionId, int result, int currentMoney)
 {
     return true;
 }

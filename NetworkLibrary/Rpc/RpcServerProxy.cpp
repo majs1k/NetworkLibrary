@@ -177,7 +177,29 @@ void RpcServerProxy::ResBuyCharacter(__int64 sessionId, Character& character, in
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ReqEnterMatchQueue(__int64 sessionId)
+void RpcServerProxy::ReqChangeEquipment(__int64 sessionId, int inventoryId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 52;
+    *packet << inventoryId;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResChangeEquipment(__int64 sessionId, int inventoryId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 53;
+    *packet << inventoryId;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ReqStartGame(__int64 sessionId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -188,7 +210,7 @@ void RpcServerProxy::ReqEnterMatchQueue(__int64 sessionId)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResEnterMatchQueue(__int64 sessionId, PlayerInfo& otherPlayer)
+void RpcServerProxy::ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -199,12 +221,34 @@ void RpcServerProxy::ResEnterMatchQueue(__int64 sessionId, PlayerInfo& otherPlay
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResEndMatch(__int64 sessionId, int result, int currentMoney)
+void RpcServerProxy::ReqGameCommand(__int64 sessionId, int commandType)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 62;
+    *packet << commandType;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResGameCommand(__int64 sessionId, Character& character)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 63;
+    *packet << character;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ResEndGame(__int64 sessionId, int result, int currentMoney)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 64;
     *packet << result << currentMoney;
 
     server_->SendPacket(sessionId, packet);

@@ -2,57 +2,71 @@
 #include <vector>	
 
 #include "Player.h"
-
-class MyServer;
-class Player;
-
+#include "../RPC/RpcServerProxy.h"
 
 class GameRoom
 {
 private:
-    struct GamePlayer
-    {
-        Player* player = nullptr;
-        bool isCommand_ = false;
-        int commandType_ = 0;
-    };
 
-    MyServer* server_;
+    Player* player_[2];
+    int commandType_[2];
 
-    GamePlayer player1_;
-    GamePlayer player2_;
+    bool isGameOver_ = false;
 
 public:
-    GameRoom(MyServer* server, Player* player1, Player* player2)
-        : server_(server)
+
+    GameRoom(Player* player1, Player* player2)
     {
-        player1_.player = player1;
-        player2_.player = player2;
+        player_[0] = player1;
+        player_[1] = player2;
+
+        player1->room_ = this;
+        player2->room_ = this;
+    }
+
+    bool IsGameOver()
+    {
+        return isGameOver_;
     }
 
     void StartGame()
     {
         // 게임 시작 패킷
+
+        // TODO: 개선방법???
+        PlayerInfo playerInfo0 = *(player_[0]);
+        PlayerInfo playerInfo1 = *(player_[1]);
+
+
+        player_[0]->rpcProxy_->ResStartGame(player_[0]->sessionId_, playerInfo1);
+        player_[1]->rpcProxy_->ResStartGame(player_[1]->sessionId_, playerInfo0);
+    }
+
+    int GetPlayerIndex(Player* player)
+    {
+        if (player_[0] == player)
+            return 0;
+
+        if (player_[1] == player)
+            return 1;
+
+        return -1;
     }
 
     void ProcessCommand(Player* player, int commandType)
     {
-        GamePlayer* gamePlayer = nullptr;
+        int idx = GetPlayerIndex(player);
 
-        if (player1_.player == player)
-            gamePlayer = &player1_;
-        else if (player2_.player == player)
-            gamePlayer = &player2_;
-        else
+        if (idx == -1)
             return;
 
-        if (gamePlayer->isCommand_)
+        if (player_[idx]->state_ != PLAYER_STATE::GAME_WAITING)
             return;
 
-        gamePlayer->isCommand_ = true;
-        gamePlayer->commandType_ = commandType;
+        player_[idx]->state_ = PLAYER_STATE::GAME_COMMAND;
+        commandType_[idx] = commandType;
 
-        if (player1_.isCommand_ && player2_.isCommand_)
+        if (player_[0]->state_ == PLAYER_STATE::GAME_COMMAND && player_[1]->state_ == PLAYER_STATE::GAME_COMMAND)
         {
             ProcessTurn();
         }
@@ -70,27 +84,22 @@ public:
             return;
         }
 
-        player1_.isCommand_ = false;
-        player2_.isCommand_ = false;
-
         // 다음 턴
+        player_[0]->state_ = PLAYER_STATE::GAME_WAITING;
+        player_[1]->state_ = PLAYER_STATE::GAME_WAITING;
+
     }
 
     void EndGame()
     {
         // 종료 패킷
+        
         // 보상 처리
-    }
 
-    Player* GetPlayer(int index)
-    {
-        if (index == 0)
-            return player1_.player;
+        player_[0]->state_ = PLAYER_STATE::LOBBY;
+        player_[1]->state_ = PLAYER_STATE::LOBBY;
 
-        if (index == 1)
-            return player2_.player;
-
-        return nullptr;
+        isGameOver_ = true;
     }
 };
 
@@ -98,58 +107,29 @@ public:
 class GameRoomManager
 {
 private:
-	
-	MyServer* server_;
 
-	//std::vector<GameRoom*> rooms_;
-
-	std::unordered_map<int, GameRoom*> rooms_;
+    std::vector<GameRoom*> rooms_;
 
 public:
 
-	GameRoomManager(MyServer* server)
-		: server_(server)
+	void Create(Player* player1, Player* player2)
 	{
+		GameRoom* room = new GameRoom(player1, player2);
+
+        rooms_.push_back(room);
+
+		room->StartGame();
 	}
 
-	void CreateGameRoom(Player* player1, Player* player2)
+	void Remove(GameRoom* room)
 	{
-		GameRoom* gm = new GameRoom(server_, player1, player2);
+        auto it = std::find(rooms_.begin(), rooms_.end(), room);
 
-		rooms_.insert({ player1->playerId_, gm });
-		rooms_.insert({ player2->playerId_, gm });
+        if (it == rooms_.end())
+            return;
+            
+        delete room;
 
-
-		gm->StartGame();
+        rooms_.erase(it);
 	}
-
-	// MyServer에서는 이 함수만 호출
-	void ProcessCommand(Player* player, int commandType)
-	{
-		GameRoom* gm = FindRoomByPlayerId(player->playerId_);
-
-		if (gm == nullptr)
-			return;
-
-		gm->ProcessCommand(player, commandType);
-	}
-
-	GameRoom* FindRoomByPlayerId(int playerId)
-	{
-		auto it = rooms_.find(playerId);
-
-		if (it == rooms_.end())
-			return nullptr;
-
-		return it->second;
-	}
-
-	void RemoveGameRoom(GameRoom* room)
-	{
-		rooms_.erase(room->GetPlayer(0)->playerId_);
-		rooms_.erase(room->GetPlayer(1)->playerId_);
-
-		delete room;
-	}
-
 };

@@ -27,8 +27,15 @@ ResChat(int playerId, std::string& message)								31
 ReqBuyCharacter()														50
 ResBuyCharacter(Character& character, int curGold)						51
 
+ReqChangeEquipment(int inventoryId)										52
+ResChangeEquipment(int inventoryId)										53
 
-ReqEnterMatchQueue()							60
-ResEnterMatchQueue(PlayerInfo& otherPlayer)		61
 
-ResEndMatch(int result, int currentMoney)		62
+ReqStartGame()											60
+ResStartGame(PlayerInfo& otherPlayer)					61
+
+ReqGameCommand(int commandType)							62
+ResGameCommand(Character& character)					63
+
+ResEndGame(int result, int currentMoney)				64
+

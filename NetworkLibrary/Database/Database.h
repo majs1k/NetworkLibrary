@@ -11,10 +11,6 @@
 #include <cppconn/resultset.h>
 #include <cppconn/exception.h>
 
-#define DB_HOST      "tcp://127.0.0.1:3306"
-#define DB_USER      "root"
-#define DB_PASSWORD  "dhwotlr5849"
-#define DB_SCHEMA    "test"
 
 class Database
 {
@@ -26,7 +22,7 @@ public:
 	Database();
 	~Database();
 
-	bool Connect();
+	bool Connect(std::string host, std::string user, std::string password, std::string schema);
 
 	std::unique_ptr<sql::PreparedStatement> Prepare(const std::string& query);
 

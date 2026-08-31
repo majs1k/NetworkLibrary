@@ -21,9 +21,13 @@ public:
     virtual bool ResChat(int playerId, std::string& message);
     virtual bool ReqBuyCharacter();
     virtual bool ResBuyCharacter(Character& character, int curGold);
-    virtual bool ReqEnterMatchQueue();
-    virtual bool ResEnterMatchQueue(PlayerInfo& otherPlayer);
-    virtual bool ResEndMatch(int result, int currentMoney);
+    virtual bool ReqChangeEquipment(int inventoryId);
+    virtual bool ResChangeEquipment(int inventoryId);
+    virtual bool ReqStartGame();
+    virtual bool ResStartGame(PlayerInfo& otherPlayer);
+    virtual bool ReqGameCommand(int commandType);
+    virtual bool ResGameCommand(Character& character);
+    virtual bool ResEndGame(int result, int currentMoney);
 };
 
 class RpcClientStub

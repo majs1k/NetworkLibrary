@@ -24,9 +24,8 @@ public:
     void ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     void ReqChatDB(__int64 sessionId, std::string& message);
     void ResChatDB(__int64 sessionId, int playerId, std::string& message);
-    void ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold);
+    void ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold);
     void ResBuyCharacterDB(__int64 sessionId, Character& character, int curGold);
-    void ReqEnterMatchQueueDB(__int64 sessionId);
-    void ResEnterMatchQueueDB(__int64 sessionId, PlayerInfo& otherPlayer);
-    void ResEndMatchDB(__int64 sessionId, int result, int currentMoney);
+    void ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
+    void ReqEndGameDB(__int64 sessionId, int result, int currentMoney);
 };

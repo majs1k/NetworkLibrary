@@ -138,12 +138,28 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             return handler_->ResBuyCharacter(character, curGold);
         }
+        case 52:
+        {
+			int inventoryId;
+
+            *packet >> inventoryId;
+
+            return handler_->ReqChangeEquipment(inventoryId);
+        }
+        case 53:
+        {
+			int inventoryId;
+
+            *packet >> inventoryId;
+
+            return handler_->ResChangeEquipment(inventoryId);
+        }
         case 60:
         {
 
             *packet;
 
-            return handler_->ReqEnterMatchQueue();
+            return handler_->ReqStartGame();
         }
         case 61:
         {
@@ -151,16 +167,32 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet >> otherPlayer;
 
-            return handler_->ResEnterMatchQueue(otherPlayer);
+            return handler_->ResStartGame(otherPlayer);
         }
         case 62:
+        {
+			int commandType;
+
+            *packet >> commandType;
+
+            return handler_->ReqGameCommand(commandType);
+        }
+        case 63:
+        {
+			Character character;
+
+            *packet >> character;
+
+            return handler_->ResGameCommand(character);
+        }
+        case 64:
         {
 			int result;
 			int currentMoney;
 
             *packet >> result >> currentMoney;
 
-            return handler_->ResEndMatch(result, currentMoney);
+            return handler_->ResEndGame(result, currentMoney);
         }
     default:
     {
@@ -252,17 +284,37 @@ bool RpcClientHandler::ResBuyCharacter(Character& character, int curGold)
     return true;
 }
 
-bool RpcClientHandler::ReqEnterMatchQueue()
+bool RpcClientHandler::ReqChangeEquipment(int inventoryId)
 {
     return true;
 }
 
-bool RpcClientHandler::ResEnterMatchQueue(PlayerInfo& otherPlayer)
+bool RpcClientHandler::ResChangeEquipment(int inventoryId)
 {
     return true;
 }
 
-bool RpcClientHandler::ResEndMatch(int result, int currentMoney)
+bool RpcClientHandler::ReqStartGame()
+{
+    return true;
+}
+
+bool RpcClientHandler::ResStartGame(PlayerInfo& otherPlayer)
+{
+    return true;
+}
+
+bool RpcClientHandler::ReqGameCommand(int commandType)
+{
+    return true;
+}
+
+bool RpcClientHandler::ResGameCommand(Character& character)
+{
+    return true;
+}
+
+bool RpcClientHandler::ResEndGame(int result, int currentMoney)
 {
     return true;
 }

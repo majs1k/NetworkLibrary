@@ -12,6 +12,10 @@ Packet 크기 제한 & 예외처리
 warning 제거 , 캐스팅 수정
 
 팀플과 지금의 구현방식차이 (jwt로 인증 등등.. 서버권위구조)
+
+Player 테이블에 user_id는 index가 필요할까?
+
+메모리풀 락 추가
 ```
 
 ## Question
@@ -19,4 +23,9 @@ warning 제거 , 캐스팅 수정
 worker 1 client 1 oversend 100 loop 0 -> zero copy 유리 (패킷 크기 약 1000byte)
 
 스레드간 전달 방식 -> 구조체 vs 직렬화버퍼
+
+vector 를 써야할상황? (데이터가 적을떄??)
+
+
+
 ```

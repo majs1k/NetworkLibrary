@@ -174,4 +174,35 @@ bool MyClient::ResBuyCharacter(Character& character, int curGold)
 	myPlayer_.gold_ = curGold;
 
 	myPlayer_.characters_.push_back(character);
+
+	return true;
+}
+
+bool MyClient::ResChangeEquipment(int inventoryId)
+{
+	myPlayer_.equippedInvenId_ = inventoryId;
+
+	return true;
+}
+
+bool MyClient::ResStartGame(PlayerInfo& otherPlayer)
+{
+	scene_ = SCENE::GAME;
+
+	for (auto& c : myPlayer_.characters_)
+	{
+		if (c.inventoryId_ == myPlayer_.equippedInvenId_)
+		{
+			myCharacter_ = c;
+			myCharacter_.currentHp_ = myCharacter_.hp_;
+			break;
+		}
+	}
+
+	enemyPlayer_ = otherPlayer;
+
+	// TODO: 상대 캐릭터 정보 추가
+	//enemyCharacter = &character;
+
+	return true;
 }

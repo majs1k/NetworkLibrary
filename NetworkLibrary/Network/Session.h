@@ -32,7 +32,7 @@ struct Session
 	// 컨텐츠 코드에서 sessionId로만 접근 (컨텐츠 구현 용이)
 	__int64 sessionId_;
 
-	std::wstring ip_;
+	std::string ip_;
 	int port_;
 
 
@@ -53,7 +53,7 @@ struct Session
 
 	std::recursive_mutex sessionLock_;
 
-	void Initialize(SOCKET socket, std::wstring ip, int port, __int64 id)
+	void Initialize(SOCKET socket, std::string ip, int port, __int64 id)
 	{
 		socket_ = socket;
 		sessionId_ = id;

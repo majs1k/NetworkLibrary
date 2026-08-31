@@ -58,6 +58,11 @@ private:
 
 	std::vector<std::string> chatMessages_;
 
+
+	PlayerInfo enemyPlayer_;
+	Character myCharacter_;
+	Character enemyCharacter_;
+
 	// ----------------------------------------------------- //
 	// RPC
 	// ----------------------------------------------------- //
@@ -85,4 +90,9 @@ private:
 
 
 	bool ResBuyCharacter(Character& character, int curGold);
+
+	virtual bool ResChangeEquipment(int inventoryId);
+
+
+	virtual bool ResStartGame(PlayerInfo& otherPlayer);
 };

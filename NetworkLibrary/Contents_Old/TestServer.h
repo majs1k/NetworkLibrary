@@ -14,7 +14,7 @@ class TestServer : public LanServer
 public:
 	TestServer();
 
-	bool OnConnectionRequest(const std::wstring& ip, int port) override;
+	bool OnConnectionRequest(const std::string& ip, int port) override;
 	void OnAccept(__int64 sessionId) override;
 	void OnRelease(__int64 sessionId) override;
 	void OnRecv(__int64 sessionId, Packet* packet) override;

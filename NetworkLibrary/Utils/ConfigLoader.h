@@ -9,15 +9,16 @@ using namespace rapidjson;
 
 struct ServerConfig
 {
-    std::wstring ip;
+    std::string ip;
     int port;
     int sessionMax;
     int concurrentCount;
     int workerCount;
 
-    std::wstring DBHost;
-    std::wstring DBUser;
-    std::wstring DBPassword;
+    std::string dbHost;
+    std::string dbUser;
+    std::string dbPassword;
+    std::string dbSchema;
 };
 
 extern ServerConfig config;
@@ -46,8 +47,7 @@ public:
             return false;
         }
 
-        std::string ip = doc["IP"].GetString();
-        config.ip.assign(ip.begin(), ip.end());
+        config.ip = doc["IP"].GetString();
 
         config.port = doc["Port"].GetInt();
 
@@ -57,14 +57,15 @@ public:
 
         config.workerCount = doc["WorkerCount"].GetInt();
 
-        std::string dbHost = doc["DBHost"].GetString();
-        config.DBHost.assign(dbHost.begin(), dbHost.end());
 
-        std::string dbUser = doc["DBUser"].GetString();
-        config.DBUser.assign(dbUser.begin(), dbUser.end());
 
-        std::string dbPassword = doc["DBPassword"].GetString();
-        config.DBPassword.assign(dbPassword.begin(), dbPassword.end());
+        config.dbHost = doc["DBHost"].GetString();
+
+        config.dbUser = doc["DBUser"].GetString();
+
+        config.dbPassword = doc["DBPassword"].GetString();
+
+        config.dbSchema = doc["DBSchema"].GetString();
 
         return true;
     }

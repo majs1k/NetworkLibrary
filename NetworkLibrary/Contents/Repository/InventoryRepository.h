@@ -20,7 +20,6 @@ public:
 			"level INT NOT NULL DEFAULT 1,"
 			//"attack INT NOT NULL,"
 			//"hp INT NOT NULL,"
-			//"stat_point INT NOT NULL DEFAULT 0,"
 			"acquired_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
 			"FOREIGN KEY (player_id) REFERENCES players(player_id)"
 			");");
@@ -45,7 +44,7 @@ public:
 		return newInventoryId_++;
 	}
 
-	void CreateCharacter(int playerId, int characterId)
+	void CreateCharacter(int playerId, int inventoryId, int characterId)
 	{
 		try
 		{
@@ -53,7 +52,7 @@ public:
 				"INSERT INTO inventories(inventory_id, player_id, character_id) "
 				"VALUES(?, ?, ?)");
 
-			stmt->setInt(1, GenerateInventoryId());
+			stmt->setInt(1, inventoryId);
 			stmt->setInt(2, playerId);
 			stmt->setInt(3, characterId);
 
@@ -91,7 +90,6 @@ public:
 				character.level_ = result->getInt("level");
 				//character.attack_ = result->getInt("attack");
 				//character.hp_ = result->getInt("hp");
-				//character.statPoint_ = result->getInt("stat_point");
 
 				lst.push_back(character);
 			}

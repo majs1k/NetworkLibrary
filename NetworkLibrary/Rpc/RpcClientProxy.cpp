@@ -177,7 +177,29 @@ void RpcClientProxy::ResBuyCharacter(Character& character, int curGold)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqEnterMatchQueue()
+void RpcClientProxy::ReqChangeEquipment(int inventoryId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 52;
+    *packet << inventoryId;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResChangeEquipment(int inventoryId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 53;
+    *packet << inventoryId;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ReqStartGame()
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -188,7 +210,7 @@ void RpcClientProxy::ReqEnterMatchQueue()
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResEnterMatchQueue(PlayerInfo& otherPlayer)
+void RpcClientProxy::ResStartGame(PlayerInfo& otherPlayer)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -199,12 +221,34 @@ void RpcClientProxy::ResEnterMatchQueue(PlayerInfo& otherPlayer)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResEndMatch(int result, int currentMoney)
+void RpcClientProxy::ReqGameCommand(int commandType)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 62;
+    *packet << commandType;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResGameCommand(Character& character)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 63;
+    *packet << character;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResEndGame(int result, int currentMoney)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 64;
     *packet << result << currentMoney;
 
     client_->SendPacket(packet);

@@ -25,7 +25,11 @@ public:
     void ResChat(int playerId, std::string& message);
     void ReqBuyCharacter();
     void ResBuyCharacter(Character& character, int curGold);
-    void ReqEnterMatchQueue();
-    void ResEnterMatchQueue(PlayerInfo& otherPlayer);
-    void ResEndMatch(int result, int currentMoney);
+    void ReqChangeEquipment(int inventoryId);
+    void ResChangeEquipment(int inventoryId);
+    void ReqStartGame();
+    void ResStartGame(PlayerInfo& otherPlayer);
+    void ReqGameCommand(int commandType);
+    void ResGameCommand(Character& character);
+    void ResEndGame(int result, int currentMoney);
 };

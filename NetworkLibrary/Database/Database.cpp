@@ -1,5 +1,7 @@
 #include "Database.h"
+
 #include <iostream>
+#include <Windows.h>
 
 Database::Database()
 {
@@ -10,15 +12,15 @@ Database::~Database()
 	delete connection_;
 }
 
-bool Database::Connect()
+bool Database::Connect(std::string host, std::string user, std::string password, std::string schema)
 {
 	try
 	{
 		driver_ = sql::mysql::get_mysql_driver_instance();
 
-		connection_ = driver_->connect(DB_HOST, DB_USER, DB_PASSWORD);
+		connection_ = driver_->connect(host, user, password);
 
-		connection_->setSchema(DB_SCHEMA);
+		connection_->setSchema(schema);
 
 		return true;
 	}

@@ -25,7 +25,11 @@ public:
     void ResChat(__int64 sessionId, int playerId, std::string& message);
     void ReqBuyCharacter(__int64 sessionId);
     void ResBuyCharacter(__int64 sessionId, Character& character, int curGold);
-    void ReqEnterMatchQueue(__int64 sessionId);
-    void ResEnterMatchQueue(__int64 sessionId, PlayerInfo& otherPlayer);
-    void ResEndMatch(__int64 sessionId, int result, int currentMoney);
+    void ReqChangeEquipment(__int64 sessionId, int inventoryId);
+    void ResChangeEquipment(__int64 sessionId, int inventoryId);
+    void ReqStartGame(__int64 sessionId);
+    void ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer);
+    void ReqGameCommand(__int64 sessionId, int commandType);
+    void ResGameCommand(__int64 sessionId, Character& character);
+    void ResEndGame(__int64 sessionId, int result, int currentMoney);
 };

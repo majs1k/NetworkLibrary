@@ -125,12 +125,13 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
         case 50:
         {
 			int playerId;
+			int inventoryId;
 			int characterId;
 			int curGold;
 
-            *packet >> playerId >> characterId >> curGold;
+            *packet >> playerId >> inventoryId >> characterId >> curGold;
 
-            return handler_->ReqBuyCharacterDB(sessionId, playerId, characterId, curGold);
+            return handler_->ReqBuyCharacterDB(sessionId, playerId, inventoryId, characterId, curGold);
         }
         case 51:
         {
@@ -141,29 +142,23 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             return handler_->ResBuyCharacterDB(sessionId, character, curGold);
         }
-        case 60:
+        case 52:
         {
+			int playerId;
+			int inventoryId;
 
-            *packet;
+            *packet >> playerId >> inventoryId;
 
-            return handler_->ReqEnterMatchQueueDB(sessionId);
+            return handler_->ReqChangeEquipmentDB(sessionId, playerId, inventoryId);
         }
-        case 61:
-        {
-			PlayerInfo otherPlayer;
-
-            *packet >> otherPlayer;
-
-            return handler_->ResEnterMatchQueueDB(sessionId, otherPlayer);
-        }
-        case 62:
+        case 64:
         {
 			int result;
 			int currentMoney;
 
             *packet >> result >> currentMoney;
 
-            return handler_->ResEndMatchDB(sessionId, result, currentMoney);
+            return handler_->ReqEndGameDB(sessionId, result, currentMoney);
         }
     default:
     {
@@ -245,7 +240,7 @@ bool DatabaseServerHandler::ResChatDB(__int64 sessionId, int playerId, std::stri
     return true;
 }
 
-bool DatabaseServerHandler::ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold)
+bool DatabaseServerHandler::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold)
 {
     return true;
 }
@@ -255,17 +250,12 @@ bool DatabaseServerHandler::ResBuyCharacterDB(__int64 sessionId, Character& char
     return true;
 }
 
-bool DatabaseServerHandler::ReqEnterMatchQueueDB(__int64 sessionId)
+bool DatabaseServerHandler::ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId)
 {
     return true;
 }
 
-bool DatabaseServerHandler::ResEnterMatchQueueDB(__int64 sessionId, PlayerInfo& otherPlayer)
-{
-    return true;
-}
-
-bool DatabaseServerHandler::ResEndMatchDB(__int64 sessionId, int result, int currentMoney)
+bool DatabaseServerHandler::ReqEndGameDB(__int64 sessionId, int result, int currentMoney)
 {
     return true;
 }

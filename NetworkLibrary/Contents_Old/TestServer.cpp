@@ -13,7 +13,7 @@ TestServer::TestServer()
 	//shutdown_ = true;
 }
 
-bool TestServer::OnConnectionRequest(const std::wstring& ip, int port)
+bool TestServer::OnConnectionRequest(const std::string& ip, int port)
 {
 	if (SessionCount() >= SessionMax())
 	{

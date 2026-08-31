@@ -10,7 +10,7 @@
 #include <Windows.h>
 
 
-MyServer::MyServer()
+MyServer::MyServer(Database* db)
 {
 	hLogicThread_ = (HANDLE)_beginthreadex(nullptr, 0, LogicThread, this, 0, nullptr);
 
@@ -31,12 +31,13 @@ MyServer::MyServer()
 
 	dbStub_->handler_ = this;
 
+	db_ = db;
 
-	db_.Connect();
+	userRepository_.Initialize(db_);
+	playerRepository_.Initialize(db_);
+	inventoryRepository_.Initialize(db_);
 
-	userRepository_.Initialize(&db_);
-	playerRepository_.Initialize(&db_);
-	inventoryRepository_.Initialize(&db_);
+	matchMaker_.Initialize(&roomManager_);
 }
 
 MyServer::~MyServer()
@@ -48,7 +49,7 @@ MyServer::~MyServer()
 	delete dbStub_;
 }
 
-bool MyServer::OnConnectionRequest(const std::wstring& ip, int port)
+bool MyServer::OnConnectionRequest(const std::string& ip, int port)
 {
 	if (SessionCount() >= SessionMax())
 	{
@@ -67,19 +68,20 @@ void MyServer::OnAccept(__int64 sessionId)
 
 void MyServer::OnRelease(__int64 sessionId)
 {
-	if (sessionToPlayer_.count(sessionId) == 0)
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
 		return;
 
-	int playerId = sessionToPlayer_[sessionId];
+	int playerId = player->playerId_;
 
-	playerMap_.erase(playerId);
-
-	sessionToPlayer_.erase(sessionId);
+	// TODO: 인자 수정
+	playerManager_.RemovePlayer(playerId);
 
 	// 다른 플레이어들에게 퇴장 알림
-	for (auto& i : playerMap_)
+	for (auto& p : playerManager_.GetPlayers())
 	{
-		rpcProxy_->ResPlayerLeaveLobby(i.second->sessionId_, playerId);
+		rpcProxy_->ResPlayerLeaveLobby(p.second->sessionId_,playerId);
 	}
 }
 
@@ -255,24 +257,17 @@ bool MyServer::ReqPlayerConnection(__int64 sessionId, int userId)
 
 bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 {
-	// 플레이어가 등록되지 않았다면 리턴
-	if (sessionToPlayer_.count(sessionId) == 0)
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
 		return true;
 
-	int playerId = sessionToPlayer_[sessionId];
-
-	//if (playerMap_.count(playerId) == 0)
-	//	return true;
-
-	// 플레이어가 로비가 아니라면 리턴
-	if ((playerMap_[playerId])->state_ != PLAYER_STATE::LOBBY)
+	if (player->state_ != PLAYER_STATE::LOBBY)
 		return true;
 
-	for (auto& p : playerMap_)
+	for (auto& i : playerManager_.GetPlayers())
 	{
-		Player* other = p.second;
-
-		rpcProxy_->ResChat(other->sessionId_, playerId, message);
+		rpcProxy_->ResChat(			i.second->sessionId_,player->playerId_,message);
 	}
 
 	return true;
@@ -280,15 +275,13 @@ bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 
 bool MyServer::ReqBuyCharacter(__int64 sessionId)
 {
-	// 플레이어가 등록되지 않았다면 리턴
-	if (sessionToPlayer_.count(sessionId) == 0)
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
 		return true;
 
-	int playerId = sessionToPlayer_[sessionId];
+	int playerId = player->playerId_;
 
-	Player* player = playerMap_[playerId];
-
-	// 플레이어가 로비가 아니라면 리턴
 	if (player->state_ != PLAYER_STATE::LOBBY)
 		return true;
 
@@ -307,16 +300,55 @@ bool MyServer::ReqBuyCharacter(__int64 sessionId)
 	player->gold_ -= 1000;
 
 	// TODO: 캐릭터 임의 생성 수정
-	// 이것도 charinfo 따로 만들어야할듯..
 	ch.characterId_ = 1;
+	ch.inventoryId_ = inventoryRepository_.GenerateInventoryId();
 
 	rpcProxy_->ResBuyCharacter(sessionId, ch, player->gold_);
 
-	/// 잠만 이거 어케 전달해야함???
-	dbProxy_->ReqBuyCharacterDB(sessionId, playerId, ch.characterId_, player->gold_);
+	dbProxy_->ReqBuyCharacterDB(sessionId, playerId, ch.inventoryId_, ch.characterId_, player->gold_);
 
 	return true;
 }
+
+bool MyServer::ReqChangeEquipment(__int64 sessionId, int inventoryId)
+{
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
+		return true;
+
+	// 플레이어가 로비가 아니라면 리턴
+	if (player->state_ != PLAYER_STATE::LOBBY)
+		return true;
+
+	// 해당 캐릭터 id를 보유하고 있을시, db 저장
+	for (auto& c : player->characters_)
+	{
+		if (c.inventoryId_ == inventoryId)
+		{
+			rpcProxy_->ResChangeEquipment(sessionId, inventoryId);
+
+			dbProxy_->ReqChangeEquipmentDB(sessionId, player->playerId_, inventoryId);
+
+			break;
+		}
+	}
+
+	return true;
+}
+
+bool MyServer::ReqStartGame(__int64 sessionId)
+{
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
+		return true;
+
+	matchMaker_.Add(player);
+
+	return true;
+}
+
 
 
 // ----------------------------------------------------- //
@@ -406,8 +438,8 @@ bool MyServer::ReqPlayerConnectionDB(__int64 sessionId, int userId)
 
 bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 {
-	// 잘못된 요청 (플레이어 이미 접속)
-	if (playerMap_.count(player.playerId_) != 0)
+	// 잘못된 요청 (플레이어 이미 서버 접속)
+	if (playerManager_.ContainsPlayer(player.playerId_))
 	{
 		player.playerId_ = 0;
 
@@ -416,14 +448,20 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 		return true;
 	}
 
-	/// 플레이어 자료구조들은 로직스레드에서만 변경
-	sessionToPlayer_.insert({ sessionId, player.playerId_ });
-
 	Player* newPlayer = new Player();
-	newPlayer->Initialize(sessionId, player.playerId_, player.playerName_, player.level_, player.gold_);
+	newPlayer->Initialize(this->rpcProxy_, sessionId, player.playerId_, player.playerName_, player.level_, player.gold_, player.equippedInvenId_);
 
-	playerMap_.insert({ player.playerId_ , newPlayer });
+	if (!playerManager_.AddPlayer(sessionId, newPlayer))
+	{
+		delete newPlayer;
 
+		// 클라이언트는 해당 패킷 수신시, 플레이어 등록 안되었음을 확인
+		player.playerId_ = 0;
+
+		rpcProxy_->ResPlayerProfile(sessionId, player);
+
+		return true;
+	}
 
 	rpcProxy_->ResPlayerProfile(sessionId, player);
 
@@ -431,10 +469,9 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 	// 플레이어에게 로비 플레이어들 정보 송신
 	std::list<PlayerInfo> infos;
 
-	for (auto& p : playerMap_)
+	for (auto& p: playerManager_.GetPlayers())
 	{
 		PlayerInfo info(*(p.second));
-
 		infos.push_back(info);
 	}
 
@@ -444,7 +481,7 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 	PlayerInfo info(player);
 
 	// 다른 플레이어들에게도 입장 알림
-	for (auto& p : playerMap_)
+	for (auto& p : playerManager_.GetPlayers())
 	{
 		rpcProxy_->ResPlayerEnterLobby(p.second->sessionId_, info);
 	}
@@ -454,13 +491,15 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 
 bool MyServer::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters)
 {
-	int playerId = sessionToPlayer_[sessionId];
+	Player* p = playerManager_.GetPlayerBySessionId(sessionId);
 
-	Player* p = playerMap_[playerId];
+	if (p == nullptr)
+		return true;
 
 	// 플레이어의 캐릭터 등록
 	for (auto& c : characters)
 	{
+		// TODO: emplace_back???
 		p->characters_.push_back(c);
 	}
 
@@ -469,11 +508,21 @@ bool MyServer::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& ch
 	return true;
 }
 
-bool MyServer::ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold)
+bool MyServer::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold)
 {
-	///TODO: 트랜잭션 추가
+	db_-> BeginTransaction();
+
 	playerRepository_.UpdateGold(playerId, curGold);
-	inventoryRepository_.CreateCharacter(playerId, characterId);
+	inventoryRepository_.CreateCharacter(playerId, inventoryId, characterId);
+
+	db_->Commit();
 	
+	return true;
+}
+
+bool MyServer::ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId)
+{
+	playerRepository_.UpdateEquipment(playerId, inventoryId);
+
 	return true;
 }

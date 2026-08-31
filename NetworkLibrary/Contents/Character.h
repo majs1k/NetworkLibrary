@@ -1,12 +1,6 @@
 #pragma once
 #include <string>
 
-//enum class PLAYER_STATE : short
-//{
-//	LOBBY,
-//	INGAME,
-//};
-
 struct Character
 {
 	int inventoryId_;
@@ -15,7 +9,7 @@ struct Character
 	int level_;
 	int attack_;
 	int hp_;
-	//int statPoint_;
+	int currentHp_;
 
 	void Initialize(int inventoryId, int characterId, int level, int attack, int hp)
 	{
@@ -24,6 +18,5 @@ struct Character
 		level_ = level;
 		attack_ = attack;
 		hp_ = hp;
-		//statPoint_ = statPoint;
 	}
 };

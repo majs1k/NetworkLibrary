@@ -24,7 +24,7 @@ LanServer::~LanServer()
 	WSACleanup();
 }
 
-bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount)
+bool LanServer::Start(std::string ip, int port, int sessionMax, int concurrentCount, int workerCount)
 {
 	serverIp_ = ip;
 	serverPort_ = port;
@@ -73,7 +73,7 @@ bool LanServer::Start(std::wstring ip, int port, int sessionMax, int concurrentC
 	SOCKADDR_IN serverAddr;
 	ZeroMemory(&serverAddr, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
-	InetPton(AF_INET, serverIp_.c_str(), &serverAddr.sin_addr);
+	InetPtonA(AF_INET, serverIp_.c_str(), &serverAddr.sin_addr);
 	serverAddr.sin_port = htons(serverPort_);
 
 	if (bind(listenSocket_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
@@ -243,9 +243,9 @@ unsigned int __stdcall LanServer::AcceptThread(void* param)
 
 		InterlockedIncrement(&server->acceptCount_);
 
-		WCHAR str[16];
-		InetNtop(AF_INET, &clientAddr.sin_addr, str, 16);
-		std::wstring ip = str;
+		CHAR str[16];
+		InetNtopA(AF_INET, &clientAddr.sin_addr, str, 16);
+		std::string ip = str;
 		int port = ntohs(clientAddr.sin_port);
 
 		// 허용되지 않은 ip와 port라면 바로 연결을 끊음

@@ -36,9 +36,10 @@ public:
 			DrawMain();
 			break;
 
-			//case ClientScreen::GAME:
-			//	DrawGame();
-			//	break;
+		case SCENE::GAME:
+			DrawGame();
+			break;
+
 		}
 	}
 
@@ -233,10 +234,39 @@ private:
 
 			for (const Character& character : client_->myPlayer_.characters_)
 			{
+				// 화면에는 Character ID를 표시
 				ImGui::Text(u8"Character ID : %d", character.characterId_);
+
+				ImGui::SameLine();
+
+				// 실제 장착 여부는 Inventory ID로 판단
+				if (character.inventoryId_ == client_->myPlayer_.equippedInvenId_)
+				{
+					ImGui::Text(u8"[장착 중]");
+				}
+				else
+				{
+					// Inventory ID를 이용해서 버튼을 유일하게 만듦
+					ImGui::PushID(character.inventoryId_);
+
+					if (ImGui::Button(u8"선택", ImVec2(80, 30)))
+					{
+						rpcProxy_->ReqChangeEquipment(character.inventoryId_);
+					}
+
+					ImGui::PopID();
+				}
 			}
 
 			ImGui::EndChild();
+
+			ImGui::Separator();
+
+			if (ImGui::Button(u8"닫기", ImVec2(100, 40)))
+			{
+				ImGui::CloseCurrentPopup();
+				showCharacterList = false;
+			}
 
 			ImGui::EndPopup();
 		}
@@ -252,7 +282,35 @@ private:
 
 			if (ImGui::Button(u8"구매하기", ImVec2(140, 45)))
 			{
-				// rpcProxy_->ReqBuyCharacter(...);
+				if (client_->myPlayer_.gold_ < 1000)
+				{
+					ImGui::OpenPopup(u8"구매실패");
+				}
+				else
+				{
+					rpcProxy_->ReqBuyCharacter();
+					ImGui::OpenPopup(u8"구매성공");
+				}
+			}
+
+			if (ImGui::BeginPopupModal(u8"구매실패", nullptr, ImGuiWindowFlags_NoResize))
+			{
+				ImGui::Text(u8"골드가 부족합니다.");
+
+				if (ImGui::Button(u8"확인", ImVec2(100, 40)))
+					ImGui::CloseCurrentPopup();
+
+				ImGui::EndPopup();
+			}
+
+			if (ImGui::BeginPopupModal(u8"구매성공", nullptr, ImGuiWindowFlags_NoResize))
+			{
+				ImGui::Text(u8"구매를 성공하였습니다.");
+
+				if (ImGui::Button(u8"확인", ImVec2(100, 40)))
+					ImGui::CloseCurrentPopup();
+
+				ImGui::EndPopup();
 			}
 
 			ImGui::Spacing();
@@ -268,7 +326,7 @@ private:
 			ImGui::SetNextWindowSize(ImVec2(300, 250));
 			ImGui::OpenPopup(u8"게임 시작");
 
-			// rpcProxy_->ReqEnterMatchQueue();
+			rpcProxy_->ReqStartGame();
 		}
 
 		if (ImGui::BeginPopupModal(u8"게임 시작", &showMatching, ImGuiWindowFlags_NoResize))
@@ -278,7 +336,7 @@ private:
 
 			static int count = 0;
 			count++;
-			std::string dots((count/30)%4, '.');
+			std::string dots((count / 30) % 4, '.');
 
 			ImGui::Text(u8"게임을 찾는 중입니다.");
 			ImGui::Text(u8"잠시만 기다려주세요%s", dots);
@@ -335,5 +393,195 @@ private:
 
 		ImGui::End();
 	}
+
+
+	void DrawGame()
+	{
+		static bool commandEnabled = true;
+
+		static bool showWin = false;
+		static bool showLose = false;
+
+		ImVec2 displaySize = ImGui::GetIO().DisplaySize;
+
+		// 화면 전체를 사용하는 GameUI
+		ImGui::SetNextWindowPos(ImVec2(0, 0));
+		ImGui::SetNextWindowSize(displaySize);
+
+		ImGui::Begin("GameUI", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+
+		// =========================================================
+		// 상단 : 내 정보 / 상대 정보
+		// =========================================================
+
+		float halfWidth = displaySize.x * 0.5f;
+
+		// -------------------------
+		// 내 정보
+		// -------------------------
+		ImGui::BeginChild("MyInfo", ImVec2(halfWidth, displaySize.y - 120), true);
+
+		ImGui::PushFont(titleFont);
+		ImGui::Text(u8"내 정보");
+		ImGui::PopFont();
+
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::Text(u8"이름 : %s", client_->myPlayer_.playerName_.c_str());
+
+		ImGui::Text(u8"레벨 : %d", client_->myPlayer_.level_);
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+
+		ImGui::Text(u8"Character ID : %d", client_->myCharacter_.characterId_);
+
+		ImGui::Text(u8"캐릭터 레벨 : %d", client_->myCharacter_.level_);
+
+		ImGui::Text(u8"공격력 : %d", client_->myCharacter_.attack_);
+
+		// 현재 체력은 별도 표시
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::Text(u8"현재 체력 : %d / %d", client_->myCharacter_.currentHp_, client_->myCharacter_.hp_);
+
+
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+
+		// -------------------------
+		// 상대 정보
+		// -------------------------
+		ImGui::BeginChild("EnemyInfo", ImVec2(0, displaySize.y - 120), true);
+
+		ImGui::PushFont(titleFont);
+		ImGui::Text(u8"상대 정보");
+		ImGui::PopFont();
+
+		ImGui::Separator();
+		ImGui::Spacing();
+
+
+		ImGui::Text(u8"이름 : %s", client_->enemyPlayer_.playerName_.c_str());
+
+		ImGui::Text(u8"레벨 : %d", client_->enemyPlayer_.level_);
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+
+		ImGui::Text(u8"Character ID : %d", client_->enemyCharacter_.characterId_);
+
+		ImGui::Text(u8"캐릭터 레벨 : %d", client_->enemyCharacter_.level_);
+
+		ImGui::Text(u8"공격력 : %d", client_->enemyCharacter_.attack_);
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		ImGui::Text(u8"현재 체력 : %d / %d", client_->enemyCharacter_.currentHp_, client_->enemyCharacter_.hp_);
+
+
+		ImGui::EndChild();
+
+		// =========================================================
+		// 하단 : 명령 버튼
+		// =========================================================
+
+		ImGui::Separator();
+		ImGui::Spacing();
+
+		float buttonWidth = (displaySize.x - 40.0f) / 3.0f;
+
+		ImGui::BeginDisabled(!commandEnabled);
+
+		// 공격
+		if (ImGui::Button(u8"공격한다", ImVec2(buttonWidth, 60)))
+		{
+			commandEnabled = false;
+
+			//rpcProxy_->ReqAttack();
+		}
+
+		ImGui::SameLine();
+
+		// 교체
+		if (ImGui::Button(u8"교체한다", ImVec2(buttonWidth, 60)))
+		{
+			commandEnabled = false;
+
+			//rpcProxy_->ReqChangeEquipment();
+		}
+
+		ImGui::SameLine();
+
+		// 항복
+		if (ImGui::Button(u8"항복한다", ImVec2(buttonWidth, 60)))
+		{
+			commandEnabled = false;
+
+			//rpcProxy_->ReqGiveUp();
+		}
+
+		ImGui::EndDisabled();
+
+		// =========================================================
+		// 승리 / 패배 팝업
+		// =========================================================
+
+		if (showWin)
+		{
+			ImGui::OpenPopup(u8"승리");
+			showWin = false;
+		}
+
+		if (showLose)
+		{
+			ImGui::OpenPopup(u8"패배");
+			showLose = false;
+		}
+
+		if (ImGui::BeginPopupModal(u8"승리", nullptr, ImGuiWindowFlags_NoResize))
+		{
+			ImGui::Text(u8"승리하였습니다!");
+
+			if (ImGui::Button(u8"확인", ImVec2(100, 40)))
+			{
+				ImGui::CloseCurrentPopup();
+
+				// 필요하다면 여기서 Main으로 이동
+				// client_->ChangeScene(...);
+			}
+
+			ImGui::EndPopup();
+		}
+
+		if (ImGui::BeginPopupModal(u8"패배", nullptr, ImGuiWindowFlags_NoResize))
+		{
+			ImGui::Text(u8"패배하였습니다.");
+
+			if (ImGui::Button(u8"확인", ImVec2(100, 40)))
+			{
+				ImGui::CloseCurrentPopup();
+
+				// 필요하다면 여기서 Main으로 이동
+				// client_->ChangeScene(...);
+			}
+
+			ImGui::EndPopup();
+		}
+
+		ImGui::End();
+	}
+
 
 };

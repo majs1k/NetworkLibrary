@@ -183,7 +183,7 @@ void DatabaseServerProxy::ResChatDB(__int64 sessionId, int playerId, std::string
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold)
+void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -191,7 +191,7 @@ void DatabaseServerProxy::ReqBuyCharacterDB(__int64 sessionId, int playerId, int
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 50;
-    *packet << playerId << characterId << curGold;
+    *packet << playerId << inventoryId << characterId << curGold;
 
     dbQueue_->Push(packet);
 }
@@ -209,41 +209,28 @@ void DatabaseServerProxy::ResBuyCharacterDB(__int64 sessionId, Character& charac
     logicQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ReqEnterMatchQueueDB(__int64 sessionId)
+void DatabaseServerProxy::ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->SetId(sessionId);
 
-    packet->GetHeaderPtr()->type_ = 60;
-    *packet;
+    packet->GetHeaderPtr()->type_ = 52;
+    *packet << playerId << inventoryId;
 
     dbQueue_->Push(packet);
 }
 
-void DatabaseServerProxy::ResEnterMatchQueueDB(__int64 sessionId, PlayerInfo& otherPlayer)
+void DatabaseServerProxy::ReqEndGameDB(__int64 sessionId, int result, int currentMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->SetId(sessionId);
 
-    packet->GetHeaderPtr()->type_ = 61;
-    *packet << otherPlayer;
-
-    logicQueue_->Push(packet);
-}
-
-void DatabaseServerProxy::ResEndMatchDB(__int64 sessionId, int result, int currentMoney)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->SetId(sessionId);
-
-    packet->GetHeaderPtr()->type_ = 62;
+    packet->GetHeaderPtr()->type_ = 64;
     *packet << result << currentMoney;
 
-    logicQueue_->Push(packet);
+    dbQueue_->Push(packet);
 }

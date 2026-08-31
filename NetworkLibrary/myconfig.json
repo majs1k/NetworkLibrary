@@ -5,7 +5,8 @@
   "ConcurrentCount": 2,
   "WorkerCount": 2,
 
-  "DBHost": "127.0.0.1",
+  "DBHost": "tcp://127.0.0.1:3306",
   "DBUser": "root",
-  "DBPassword": "1234"
+  "DBPassword": "1234",
+  "DBSchema": "test"
 }

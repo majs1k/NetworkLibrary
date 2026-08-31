@@ -15,7 +15,7 @@ private:
 
 	SOCKET listenSocket_;
 
-	std::wstring serverIp_;
+	std::string serverIp_;
 	int serverPort_;
 
 	HANDLE hIOCP_;
@@ -37,7 +37,7 @@ public:
 	LanServer();
 	virtual ~LanServer();
 
-	bool Start(std::wstring ip, int port, int sessionMax, int concurrentCount, int workerCount);
+	bool Start(std::string ip, int port, int sessionMax, int concurrentCount, int workerCount);
 	void Stop();
 
 	int SessionCount() const;
@@ -47,7 +47,7 @@ public:
 	bool SendPacket(__int64 sessionId, Packet* packet);
 
 	// (외부/해외/공격)IP 차단 기능 + 패치 후 점검 white ip만 가능케(운영에 필수적)
-	virtual bool OnConnectionRequest(const std::wstring& ip, int port) = 0;
+	virtual bool OnConnectionRequest(const std::string& ip, int port) = 0;
 	// 인자 미정
 	// Session 포인터, socket -> 컨텐츠로 절대 전달 x
 	virtual void OnAccept(__int64 sessionId) = 0;

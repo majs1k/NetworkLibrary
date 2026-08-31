@@ -11,6 +11,9 @@
 #include "Player.h"
 #include "Character.h"
 
+#include "MatchMaker.h"
+#include "GameRoom.h"
+
 #include "Repository/UserRepository.h"
 #include "Repository/PlayerRepository.h"
 #include "Repository/InventoryRepository.h"
@@ -38,12 +41,12 @@ private:
 
 public:
 
-	MyServer();
+	MyServer(Database* db);
 	~MyServer();
 
 private:
 
-	bool OnConnectionRequest(const std::wstring& ip, int port) override;
+	bool OnConnectionRequest(const std::string& ip, int port) override;
 	void OnAccept(__int64 sessionId) override;
 	void OnRelease(__int64 sessionId) override;
 	void OnRecv(__int64 sessionId, Packet* packet) override;
@@ -66,7 +69,7 @@ private:
 
 private:
 
-	Database db_;
+	Database* db_;
 
 	PacketQueue dbReqQueue_;
 	PacketQueue dbResQueue_;
@@ -105,6 +108,11 @@ private:
 
 	bool ReqBuyCharacter(__int64 sessionId);
 
+	virtual bool ReqChangeEquipment(__int64 sessionId, int inventoryId);
+
+
+	virtual bool ReqStartGame(__int64 sessionId);
+
 	// ----------------------------------------------------- //
 
 
@@ -131,7 +139,9 @@ private:
 	bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters);
 
 
-	bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int characterId, int curGold);
+	bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold);
+
+	virtual bool ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
 
 
 	// ----------------------------------------------------- //
@@ -139,7 +149,13 @@ private:
 private:
 
 	// 클라이언트에서 보내는 playerId는 신뢰할수 없음. 서버에서 sessionId를 매핑해서 알아냄
-	std::unordered_map<__int64, int> sessionToPlayer_;
-	std::unordered_map<int, Player*> playerMap_{};
-	int playerCount_ = 0;
+	//std::unordered_map<__int64, int> sessionToPlayer_;
+	//std::unordered_map<int, Player*> playerMap_{};
+	//int playerCount_ = 0;
+
+	PlayerManager playerManager_;
+
+	MatchMaker matchMaker_;
+
+	GameRoomManager roomManager_;
 };
