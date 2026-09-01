@@ -16,9 +16,6 @@ class GameRoom;
 
 struct Player
 {
-	//MyServer* server_;
-	RpcServerProxy* rpcProxy_;
-
 	__int64 sessionId_;
 
 	int playerId_;
@@ -34,9 +31,8 @@ struct Player
 	GameRoom* room_;
 
 
-	void Initialize(RpcServerProxy* rpcProxy, __int64 sessionId, int playerId, std::string& playerName, int level, int gold, int equippedId)
+	void Initialize(__int64 sessionId, int playerId, std::string& playerName, int level, int gold, int equippedId)
 	{
-		rpcProxy_ = rpcProxy;
 		sessionId_ = sessionId;
 
 		playerId_ = playerId;

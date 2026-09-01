@@ -2,9 +2,12 @@
 
 #include "../Utils/Packet.h"
 
-class DatabaseServerHandler
+class DbStub
 {
 public:
+
+    bool DbPacketProc(__int64 sessionId, Packet* packet);
+    
     virtual bool ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password);
     virtual bool ResUserRegisterDB(__int64 sessionId, RESPONSE_CODE code);
     virtual bool ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::string& password);
@@ -23,13 +26,4 @@ public:
     virtual bool ResBuyCharacterDB(__int64 sessionId, Character& character, int curGold);
     virtual bool ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
     virtual bool ReqEndGameDB(__int64 sessionId, int result, int currentMoney);
-};
-
-class DatabaseServerStub
-{
-public:
-    DatabaseServerHandler* handler_;
-
-public:
-    bool DbPacketProc(__int64 sessionId, Packet* packet);
 };

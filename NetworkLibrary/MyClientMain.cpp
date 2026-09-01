@@ -36,6 +36,7 @@
 ImFont* titleFont;
 
 #include "./Contents/MyClient.h"
+#include "./Contents/RpcModule.h"
 #include "./Utils/ConfigLoader.h"
 #include "./Utils/CrashDump.h"
 
@@ -139,13 +140,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	/// Ä¿½ºÅÒ °´Ã¼ /////////////////////
 	MyClient client;
+	client.AttachProxy(&g_ClientRpcProxy);
 	MainView mainView(&client);
 
 	CrashDump().Initialize();
 
 	client.Connect(SERVER_IP, SERVER_PORT);
-	 
-	
+
+
 	// Main loop
 	bool done = false;
 	while (!done)

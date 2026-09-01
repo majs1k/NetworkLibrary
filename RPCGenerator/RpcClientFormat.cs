@@ -63,18 +63,12 @@ void RpcClientProxy::{0}({1})
 
 #include ""../Utils/Packet.h""
 
-class RpcClientHandler
-{{
-public:{0}
-}};
-
 class RpcClientStub
 {{
 public:
-    RpcClientHandler* handler_;
 
-public:
     bool PacketProc(Packet* packet);
+    {0}
 }};
 ";
 
@@ -103,7 +97,7 @@ bool RpcClientStub::PacketProc(Packet* packet)
         // CPP의 RPC 함수 구현
         public static string stubCppFunc =
 @"
-bool RpcClientHandler::{0}({1})
+bool RpcClientStub::{0}({1})
 {{
     return true;
 }}
@@ -120,7 +114,7 @@ bool RpcClientHandler::{0}({1})
 {1}
             *packet{2};
 
-            return handler_->{3}({4});
+            return {3}({4});
         }}";
 
         public static string shiftRight =

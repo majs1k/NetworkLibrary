@@ -2,7 +2,7 @@
 
 namespace PacketGenerator
 {
-    class DatabaseServerFormat
+    class DbFormat
     {
         // ============================================================
         // Proxy
@@ -14,11 +14,11 @@ namespace PacketGenerator
 #include ""../Utils/PacketQueue.h""
 #include ""../Utils/Packet.h""
 
-class DatabaseServerProxy
+class DbProxy
 {{
 public:
-    PacketQueue* logicQueue_;
-    PacketQueue* dbQueue_;
+    PacketQueue* dbReqQueue_;
+    PacketQueue* dbResQueue_;
 
 public:{0}
 }};
@@ -32,7 +32,7 @@ public:{0}
         // CPP에 들어갈 실제 구현
         public static string proxyCppFunc =
         @"
-void DatabaseServerProxy::{0}(__int64 sessionId{1})
+void DbProxy::{0}(__int64 sessionId{1})
 {{
     Packet* packet = new Packet();
     packet->Initialize();
@@ -47,7 +47,7 @@ void DatabaseServerProxy::{0}(__int64 sessionId{1})
 ";
 
         public static string proxyCppHeader =
-@"#include ""DatabaseServerProxy.h""
+@"#include ""DbProxy.h""
 ";
 
         public static string funcParam =
@@ -66,18 +66,12 @@ void DatabaseServerProxy::{0}(__int64 sessionId{1})
 
 #include ""../Utils/Packet.h""
 
-class DatabaseServerHandler
-{{
-public:{0}
-}};
-
-class DatabaseServerStub
+class DbStub
 {{
 public:
-    DatabaseServerHandler* handler_;
 
-public:
     bool DbPacketProc(__int64 sessionId, Packet* packet);
+    {0}
 }};
 ";
 
@@ -89,7 +83,7 @@ public:
         // PacketProc 구현
         public static string stubCppPacketProc =
 @"
-bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
+bool DbStub::DbPacketProc(__int64 sessionId, Packet* packet)
 {{
     switch (packet->GetHeaderPtr()->type_)
     {{{0}
@@ -106,14 +100,14 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
         // 각 Database 함수의 기본 구현
         public static string stubCppFunc =
 @"
-bool DatabaseServerHandler::{0}(__int64 sessionId{1})
+bool DbStub::{0}(__int64 sessionId{1})
 {{
     return true;
 }}
 ";
 
         public static string stubCppHeader =
-@"#include ""DatabaseServerStub.h""
+@"#include ""DbStub.h""
 ";
 
         public static string stubPacketProcCase =
@@ -123,7 +117,7 @@ bool DatabaseServerHandler::{0}(__int64 sessionId{1})
 {1}
             *packet{2};
 
-            return handler_->{3}(sessionId{4});
+            return {3}(sessionId{4});
         }}";
 
         public static string shiftRight =

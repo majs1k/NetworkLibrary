@@ -4,103 +4,105 @@
 #include "Player.h"
 #include "../RPC/RpcServerProxy.h"
 
+#include "RpcModule.h"
+
 class GameRoom
 {
 private:
 
-    Player* player_[2];
-    int commandType_[2];
+	Player* player_[2];
+	int commandType_[2];
 
-    bool isGameOver_ = false;
+	bool isGameOver_ = false;
 
 public:
 
-    GameRoom(Player* player1, Player* player2)
-    {
-        player_[0] = player1;
-        player_[1] = player2;
+	GameRoom(Player* player1, Player* player2)
+	{
+		player_[0] = player1;
+		player_[1] = player2;
 
-        player1->room_ = this;
-        player2->room_ = this;
-    }
+		player1->room_ = this;
+		player2->room_ = this;
+	}
 
-    bool IsGameOver()
-    {
-        return isGameOver_;
-    }
+	bool IsGameOver()
+	{
+		return isGameOver_;
+	}
 
-    void StartGame()
-    {
-        // 게임 시작 패킷
+	void StartGame()
+	{
+		// 게임 시작 패킷
 
-        // TODO: 개선방법???
-        PlayerInfo playerInfo0 = *(player_[0]);
-        PlayerInfo playerInfo1 = *(player_[1]);
+		// TODO: 개선방법???
+		PlayerInfo playerInfo0 = *(player_[0]);
+		PlayerInfo playerInfo1 = *(player_[1]);
 
 
-        player_[0]->rpcProxy_->ResStartGame(player_[0]->sessionId_, playerInfo1);
-        player_[1]->rpcProxy_->ResStartGame(player_[1]->sessionId_, playerInfo0);
-    }
+		g_RpcProxy.ResStartGame(player_[0]->sessionId_, playerInfo1);
+		g_RpcProxy.ResStartGame(player_[1]->sessionId_, playerInfo0);
+	}
 
-    int GetPlayerIndex(Player* player)
-    {
-        if (player_[0] == player)
-            return 0;
+	int GetPlayerIndex(Player* player)
+	{
+		if (player_[0] == player)
+			return 0;
 
-        if (player_[1] == player)
-            return 1;
+		if (player_[1] == player)
+			return 1;
 
-        return -1;
-    }
+		return -1;
+	}
 
-    void ProcessCommand(Player* player, int commandType)
-    {
-        int idx = GetPlayerIndex(player);
+	void ProcessCommand(Player* player, int commandType)
+	{
+		int idx = GetPlayerIndex(player);
 
-        if (idx == -1)
-            return;
+		if (idx == -1)
+			return;
 
-        if (player_[idx]->state_ != PLAYER_STATE::GAME_WAITING)
-            return;
+		if (player_[idx]->state_ != PLAYER_STATE::GAME_WAITING)
+			return;
 
-        player_[idx]->state_ = PLAYER_STATE::GAME_COMMAND;
-        commandType_[idx] = commandType;
+		player_[idx]->state_ = PLAYER_STATE::GAME_COMMAND;
+		commandType_[idx] = commandType;
 
-        if (player_[0]->state_ == PLAYER_STATE::GAME_COMMAND && player_[1]->state_ == PLAYER_STATE::GAME_COMMAND)
-        {
-            ProcessTurn();
-        }
-    }
+		if (player_[0]->state_ == PLAYER_STATE::GAME_COMMAND && player_[1]->state_ == PLAYER_STATE::GAME_COMMAND)
+		{
+			ProcessTurn();
+		}
+	}
 
-    void ProcessTurn()
-    {
-        // 공격 계산
+	void ProcessTurn()
+	{
+		// 공격 계산
 
-        // 결과 패킷
+		// 결과 패킷
 
-        if (1/* 체력 0 */)
-        {
-            EndGame();
-            return;
-        }
+		if (1/* 체력 0 */)
+		{
+			EndGame();
+			return;
+		}
 
-        // 다음 턴
-        player_[0]->state_ = PLAYER_STATE::GAME_WAITING;
-        player_[1]->state_ = PLAYER_STATE::GAME_WAITING;
+		// 다음 턴
+		player_[0]->state_ = PLAYER_STATE::GAME_WAITING;
+		player_[1]->state_ = PLAYER_STATE::GAME_WAITING;
 
-    }
+	}
 
-    void EndGame()
-    {
-        // 종료 패킷
-        
-        // 보상 처리
+	void EndGame()
+	{
+		// 종료 패킷
 
-        player_[0]->state_ = PLAYER_STATE::LOBBY;
-        player_[1]->state_ = PLAYER_STATE::LOBBY;
+		// 보상 처리
 
-        isGameOver_ = true;
-    }
+		player_[0]->state_ = PLAYER_STATE::LOBBY;
+		player_[1]->state_ = PLAYER_STATE::LOBBY;
+
+		isGameOver_ = true;
+	}
 };
 
 
@@ -108,7 +110,7 @@ class GameRoomManager
 {
 private:
 
-    std::vector<GameRoom*> rooms_;
+	std::vector<GameRoom*> rooms_;
 
 public:
 
@@ -116,20 +118,20 @@ public:
 	{
 		GameRoom* room = new GameRoom(player1, player2);
 
-        rooms_.push_back(room);
+		rooms_.push_back(room);
 
 		room->StartGame();
 	}
 
 	void Remove(GameRoom* room)
 	{
-        auto it = std::find(rooms_.begin(), rooms_.end(), room);
+		auto it = std::find(rooms_.begin(), rooms_.end(), room);
 
-        if (it == rooms_.end())
-            return;
-            
-        delete room;
+		if (it == rooms_.end())
+			return;
 
-        rooms_.erase(it);
+		delete room;
+
+		rooms_.erase(it);
 	}
 };

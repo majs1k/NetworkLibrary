@@ -1,6 +1,7 @@
 #pragma once
 #include "./Contents/MyClient.h"
 #include "./RPC/RpcClientProxy.h"
+#include "./Contents/RpcModule.h"
 
 
 
@@ -9,11 +10,10 @@ class MainView
 private:
 
 	MyClient* client_;
-	RpcClientProxy* rpcProxy_;
 
 public:
 	MainView(MyClient* client)
-		: client_(client), rpcProxy_(client->rpcProxy_)
+		: client_(client)
 	{
 	}
 
@@ -73,7 +73,7 @@ public:
 				std::string id = loginId;
 				std::string pw = password;
 
-				rpcProxy_->ReqUserLogin(id, pw);
+				g_ClientRpcProxy.ReqUserLogin(id, pw);
 			}
 		}
 
@@ -93,7 +93,7 @@ public:
 				std::string id = loginId;
 				std::string pw = password;
 
-				rpcProxy_->ReqUserRegister(id, pw);
+				g_ClientRpcProxy.ReqUserRegister(id, pw);
 			}
 		}
 
@@ -131,7 +131,7 @@ public:
 
 				std::string name = playerName;
 
-				rpcProxy_->ReqPlayerRegister(client_->userId_, name);
+				g_ClientRpcProxy.ReqPlayerRegister(client_->userId_, name);
 			}
 		}
 
@@ -173,7 +173,7 @@ private:
 			if (chatInput[0] != '\0')
 			{
 				std::string chat = chatInput;
-				rpcProxy_->ReqChat(chat);
+				g_ClientRpcProxy.ReqChat(chat);
 				chatInput[0] = '\0';
 				ImGui::SetKeyboardFocusHere(-1);
 			}
@@ -251,7 +251,7 @@ private:
 
 					if (ImGui::Button(u8"선택", ImVec2(80, 30)))
 					{
-						rpcProxy_->ReqChangeEquipment(character.inventoryId_);
+						g_ClientRpcProxy.ReqChangeEquipment(character.inventoryId_);
 					}
 
 					ImGui::PopID();
@@ -288,7 +288,7 @@ private:
 				}
 				else
 				{
-					rpcProxy_->ReqBuyCharacter();
+					g_ClientRpcProxy.ReqBuyCharacter();
 					ImGui::OpenPopup(u8"구매성공");
 				}
 			}
@@ -326,7 +326,7 @@ private:
 			ImGui::SetNextWindowSize(ImVec2(300, 250));
 			ImGui::OpenPopup(u8"게임 시작");
 
-			rpcProxy_->ReqStartGame();
+			g_ClientRpcProxy.ReqStartGame();
 		}
 
 		if (ImGui::BeginPopupModal(u8"게임 시작", &showMatching, ImGuiWindowFlags_NoResize))
@@ -346,7 +346,7 @@ private:
 			if (ImGui::Button(u8"매칭 취소", ImVec2(140, 50)))
 			{
 				showMatching = false;
-				//rpcProxy_->ReqCancelMatch();
+				//g_ClientRpcProxy.ReqCancelMatch();
 			}
 
 			ImGui::EndPopup();
@@ -509,7 +509,7 @@ private:
 		{
 			commandEnabled = false;
 
-			//rpcProxy_->ReqAttack();
+			//g_ClientRpcProxy.ReqAttack();
 		}
 
 		ImGui::SameLine();
@@ -519,7 +519,7 @@ private:
 		{
 			commandEnabled = false;
 
-			//rpcProxy_->ReqChangeEquipment();
+			//g_ClientRpcProxy.ReqChangeEquipment();
 		}
 
 		ImGui::SameLine();
@@ -529,7 +529,7 @@ private:
 		{
 			commandEnabled = false;
 
-			//rpcProxy_->ReqGiveUp();
+			//g_ClientRpcProxy.ReqGiveUp();
 		}
 
 		ImGui::EndDisabled();

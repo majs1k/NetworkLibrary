@@ -1,23 +1,29 @@
 # IOCPGameServer
 
-IOCP 기반 게임 서버 프로젝트입니다.
-
-커스텀 바이너리 패킷 프로토콜을 사용합니다.
+IOCP 모델 게임 서버 프로젝트입니다.
 
 클라이언트와 서버 모두 솔루션 안에 구현되어 있습니다.
 
-Stack    : C++14, MySQL, ImGui(DX11)
+Tech     : C++14, MySQL, ImGui(DX11)
 
 Platform : Windows 11 x64 / Visual Studio 2022
 
 ---
+
+## Key Technical Points
+
+* IOCP 기반 Overlapped I/O 네트워크 라이브러리 직접 구현
+* IO / Logic / DB Thread 분리를 통한 게임 로직 단일 접근 구조
+* IO Count 기반 Session 생명주기 관리 및 Lock 동기화
+* IDL 기반 RPC / DB Proxy-Stub 코드 자동 생성
+* Stateful Server와 서버 권위 구조
 
 ## Network Library
 
 IOCP 네트워크 클래스 `LanServer`를 컨텐츠에서 상속받아 이벤트를 구현합니다.
 
 ```cpp
-class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
+class MyServer : public LanServer, public RpcServerStub, public DbServerStub
 {
 private:
     bool OnConnectionRequest(const std::wstring& ip, int port) override;
@@ -26,17 +32,6 @@ private:
     void OnRecv(__int64 sessionId, Packet* packet) override;
 };
 ```
-
-### Details
-
-* IOCP 기반 Overlapped IO(비동기 IO) TCP 서버
-* Accept Thread / Worker Thread 분리
-* Session간 동기화
-* Send / Receive Ring Buffer
-* IO Count 기반 Session 수명 관리
-* Packet 단위 Receive 처리
-* 컨텐츠에서 Session ID 기반 접근
-* 로직스레드에서만 게임 컨텐츠 접근 및 수정
 
 ### Thread Model
 
@@ -75,7 +70,9 @@ private:
               └───────────────┘
 ```
 
-### Protocol Header
+### Serialization
+
+커스텀 바이너리 프로토콜을 사용합니다.
 
 ```text
 ┌──────────────┬──────────────┬──────────────────┐
@@ -83,26 +80,7 @@ private:
 └──────────────┴──────────────┴──────────────────┘
 ```
 
-### Serialization
-
 `Packet` 객체에 `operator<<`, `operator>>`를 구현하여 패킷 직렬화와 역직렬화를 처리합니다.
-
-```cpp
-Packet& operator<<(char value)
-{
-    *(char*)(buffer_ + writePos_) = value;
-    writePos_ += sizeof(char);
-
-    return *this;
-}
-```
-
-사용하는 쪽에서는 타입별 직렬화 구현을 다음과 같이 사용할 수 있습니다.
-
-```cpp
-*packet << loginId << password;
-*packet >> loginId >> password;
-```
 
 ## RPC
 
@@ -116,7 +94,7 @@ ResUserRegister(RESPONSE_CODE code)                              1
 ```
 
 ```text
-             RPC IDL
+               IDL
                 │
                 ▼
           RPC Generator
@@ -162,7 +140,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> loginId >> password;
 
-            return handler_->ReqUserRegister(sessionId, loginId, password);
+            return ReqUserRegister(sessionId, loginId, password);
         }
 
         case 1:
@@ -171,74 +149,22 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 }
 ```
 
-실제 동작은 Handler를 상속해서 직접 구현합니다.
+실제 동작은 Stub을 상속해서 `ReqUserRegister`을 컨텐츠에서 구현합니다.
 
-```cpp
-// 자동 생성된 함수
-bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
-{
-	// 컨텐츠 개발 시 직접 구현
-	if (loginId.length() > 20 || password.length() > 20)
-	{
-		RESPONSE_CODE c = RESPONSE_CODE::INPUT_LENGTH_OVER;
-		rpcProxy_->ResUserRegister(sessionId, c);
-
-		return true;
-	}
-
-	dbProxy_->ReqUserRegisterDB(sessionId, loginId, password);
-
-	return true;
-}
-```
 
 ## Database
 
-컨텐츠 저장을 직렬로 하기 위해 DB Thread에서만 쿼리를 실행합니다.
+DB Thread에서 쿼리요청을 직렬 처리합니다.
+
+Logic Thread는 dbReqQueue에 요청을 전달하고,
+
+DB Thread가 쿼리를 수행한 뒤 dbResQueue를 통해 결과를 전달합니다.
 
 ### DB Proxy / Stub
 
-DB 요청 및 응답 RPC와 유사한 Proxy / Stub 구조로 자동화하여,
+DB 요청 및 응답을 RPC와 유사한 Proxy / Stub 구조로 자동화하여,
 
 DB Thread와 Logic Thread 간 Queue를 통해 통신합니다.
-
-```cpp
-void DatabaseServerProxy::ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password)
-{
-    Packet* packet = new Packet();
-    packet->Initialize();
-
-    packet->SetId(sessionId);
-    packet->GetHeaderPtr()->type_ = 0;
-
-    *packet << loginId << password;
-
-    dbQueue_->Push(packet);
-}
-```
-
-```cpp
-bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
-{
-    switch (packet->GetHeaderPtr()->type_)
-    {
-        case 0:
-        {
-            std::string loginId;
-            std::string password;
-
-            *packet >> loginId >> password;
-
-            return handler_->ReqUserRegisterDB(
-                sessionId,
-                loginId,
-                password);
-        }
-    }
-
-    return false;
-}
-```
 
 ### Stateful Server
 
@@ -246,7 +172,9 @@ bool DatabaseServerStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
 클라이언트에 송신 후 DB에 비동기적으로 저장합니다.
 
-ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고 서버가 매핑하여 처리합니다.
+ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고, 
+
+서버가 Session → Player 매핑을 기준으로 처리합니다.
 
 ```text
          Client Request
@@ -264,22 +192,10 @@ ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고 서
 ---
 
 ## Current Content
-### Implemented
 
-* 회원가입
-* 로그인
-* 로비
-* 플레이어 정보
-* 캐릭터 보유 목록
-* 전체 채팅
-* 게임 접속 중 유저 목록
+Implemented: 회원가입 / 로그인 / 로비 / 채팅 / 캐릭터 / 상점 / 매치 진입
 
-### Planned
-
-* 상점
-* 게임 매치 진입
-* 게임 종료 및 결과 처리
-* 게임 플레이 컨텐츠
+Planned: 게임 결과 처리 / 게임 플레이 컨텐츠
 
 ## Folder Tree
 
@@ -289,22 +205,22 @@ NetworkLibrary
 ├── Contents
 │   ├── MyServer
 │   ├── MyClient
-│   ├── RpcMoudle
+│   ├── RpcModule
 │   ├── Repository
 │   └── ...
 │
 ├── Network
 │   ├── LanServer
-│   ├── LanClient
-│   ├── Database
-│   ├── Repository
-│   └── Content
+│   └── LanClient
+│
+├── Rpc
+│   ├── RpcProxy
+│   └── RpcStub
 │
 ├── Database
 │   ├── Database
 │   ├── DatabaseProxy
 │   └── DatabaseStub
-│
 │
 ├── Util
 │   ├── Profiler
@@ -313,7 +229,7 @@ NetworkLibrary
 │   ├── RingBuffer
 │   └── ...
 │
-└── RPCGenerator   
+└── RPCGenerator
 ```
 
 ---

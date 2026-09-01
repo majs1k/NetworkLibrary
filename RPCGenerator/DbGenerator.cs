@@ -1,6 +1,6 @@
 ﻿using PacketGenerator;
 
-class DatabaseServerGenerator
+class DbGenerator
 {
     public static void Generate(string readFile)
     {
@@ -40,7 +40,7 @@ class DatabaseServerGenerator
 
                     funcParam += ", ";
                     funcParam += string.Format(
-                        DatabaseServerFormat.funcParam,
+                        DbFormat.funcParam,
                         p.type,
                         p.name);
 
@@ -50,7 +50,7 @@ class DatabaseServerGenerator
                     // ------------------------------------------------
 
                     shiftParam += string.Format(
-                        DatabaseServerFormat.shiftLeft,
+                        DbFormat.shiftLeft,
                         p.name);
                 }
 
@@ -63,11 +63,11 @@ class DatabaseServerGenerator
 
                 if (parsed.Name.StartsWith("Req"))
                 {
-                    queueName = "dbQueue_";
+                    queueName = "dbReqQueue_";
                 }
                 else if (parsed.Name.StartsWith("Res"))
                 {
-                    queueName = "logicQueue_";
+                    queueName = "dbResQueue_";
                 }
                 else
                 {
@@ -81,7 +81,7 @@ class DatabaseServerGenerator
                 // ====================================================
 
                 proxyHeaderFunc += string.Format(
-                    DatabaseServerFormat.proxyHeaderFunc,
+                    DbFormat.proxyHeaderFunc,
                     parsed.Name + "DB",
                     funcParam);
 
@@ -91,7 +91,7 @@ class DatabaseServerGenerator
                 // ====================================================
 
                 proxyCppFunc += string.Format(
-                    DatabaseServerFormat.proxyCppFunc,
+                    DbFormat.proxyCppFunc,
                     parsed.Name + "DB",
                     funcParam,
                     parsed.PacketType,
@@ -105,11 +105,11 @@ class DatabaseServerGenerator
             // ========================================================
 
             string proxyHeader = string.Format(
-                DatabaseServerFormat.proxyHeader,
+                DbFormat.proxyHeader,
                 proxyHeaderFunc);
 
             File.WriteAllText(
-                "DatabaseServerProxy.h",
+                "DbProxy.h",
                 proxyHeader);
 
 
@@ -118,12 +118,12 @@ class DatabaseServerGenerator
             // ========================================================
 
             string proxyCpp =
-                DatabaseServerFormat.proxyCppHeader +
+                DbFormat.proxyCppHeader +
                 Environment.NewLine +
                 proxyCppFunc;
 
             File.WriteAllText(
-                "DatabaseServerProxy.cpp",
+                "DbProxy.cpp",
                 proxyCpp);
         }
     }
@@ -163,7 +163,7 @@ class DatabaseServerGenerator
 
                     funcParam += ", ";
                     funcParam += string.Format(
-                        DatabaseServerFormat.funcParam,
+                        DbFormat.funcParam,
                         p.type,
                         p.name);
 
@@ -187,7 +187,7 @@ class DatabaseServerGenerator
                     funcParam2 += "\t\t\t";
 
                     funcParam2 += string.Format(
-                        DatabaseServerFormat.funcParam,
+                        DbFormat.funcParam,
                         localType,
                         p.name);
 
@@ -200,7 +200,7 @@ class DatabaseServerGenerator
                     // =================================================
 
                     shiftParam += string.Format(
-                        DatabaseServerFormat.shiftRight,
+                        DbFormat.shiftRight,
                         p.name);
                 }
 
@@ -210,7 +210,7 @@ class DatabaseServerGenerator
                 // ====================================================
 
                 stubHeaderFunc += string.Format(
-                    DatabaseServerFormat.stubHeaderFunc,
+                    DbFormat.stubHeaderFunc,
                     parsed.Name + "DB",
                     funcParam);
 
@@ -220,7 +220,7 @@ class DatabaseServerGenerator
                 // ====================================================
 
                 stubPacketProc += string.Format(
-                    DatabaseServerFormat.stubPacketProcCase,
+                    DbFormat.stubPacketProcCase,
                     parsed.PacketType,
                     funcParam2,
                     shiftParam,
@@ -233,7 +233,7 @@ class DatabaseServerGenerator
                 // ====================================================
 
                 stubCppFunc += string.Format(
-                    DatabaseServerFormat.stubCppFunc,
+                    DbFormat.stubCppFunc,
                     parsed.Name + "DB",
                     funcParam);
             }
@@ -244,11 +244,11 @@ class DatabaseServerGenerator
             // ========================================================
 
             string stubHeader = string.Format(
-                DatabaseServerFormat.stubHeader,
+                DbFormat.stubHeader,
                 stubHeaderFunc);
 
             File.WriteAllText(
-                "DatabaseServerStub.h",
+                "DbStub.h",
                 stubHeader);
 
 
@@ -257,16 +257,16 @@ class DatabaseServerGenerator
             // ========================================================
 
             string stubCpp =
-                DatabaseServerFormat.stubCppHeader +
+                DbFormat.stubCppHeader +
                 Environment.NewLine +
                 string.Format(
-                    DatabaseServerFormat.stubCppPacketProc,
+                    DbFormat.stubCppPacketProc,
                     stubPacketProc) +
                 Environment.NewLine +
                 stubCppFunc;
 
             File.WriteAllText(
-                "DatabaseServerStub.cpp",
+                "DbStub.cpp",
                 stubCpp);
         }
     }

@@ -12,7 +12,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> loginId >> password;
 
-            return handler_->ReqUserRegister(sessionId, loginId, password);
+            return ReqUserRegister(sessionId, loginId, password);
         }
         case 1:
         {
@@ -20,7 +20,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code;
 
-            return handler_->ResUserRegister(sessionId, code);
+            return ResUserRegister(sessionId, code);
         }
         case 2:
         {
@@ -29,7 +29,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> loginId >> password;
 
-            return handler_->ReqUserLogin(sessionId, loginId, password);
+            return ReqUserLogin(sessionId, loginId, password);
         }
         case 3:
         {
@@ -38,7 +38,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code >> userId;
 
-            return handler_->ResUserLogin(sessionId, code, userId);
+            return ResUserLogin(sessionId, code, userId);
         }
         case 10:
         {
@@ -47,7 +47,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> userId >> playerName;
 
-            return handler_->ReqPlayerRegister(sessionId, userId, playerName);
+            return ReqPlayerRegister(sessionId, userId, playerName);
         }
         case 11:
         {
@@ -55,7 +55,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> code;
 
-            return handler_->ResPlayerRegister(sessionId, code);
+            return ResPlayerRegister(sessionId, code);
         }
         case 12:
         {
@@ -63,7 +63,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> userId;
 
-            return handler_->ReqPlayerConnection(sessionId, userId);
+            return ReqPlayerConnection(sessionId, userId);
         }
         case 13:
         {
@@ -71,7 +71,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> player;
 
-            return handler_->ResPlayerProfile(sessionId, player);
+            return ResPlayerProfile(sessionId, player);
         }
         case 14:
         {
@@ -79,7 +79,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> characters;
 
-            return handler_->ResPlayerCharacters(sessionId, characters);
+            return ResPlayerCharacters(sessionId, characters);
         }
         case 15:
         {
@@ -87,7 +87,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> players;
 
-            return handler_->ResLobbyPlayers(sessionId, players);
+            return ResLobbyPlayers(sessionId, players);
         }
         case 16:
         {
@@ -95,7 +95,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> player;
 
-            return handler_->ResPlayerEnterLobby(sessionId, player);
+            return ResPlayerEnterLobby(sessionId, player);
         }
         case 17:
         {
@@ -103,7 +103,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> playerId;
 
-            return handler_->ResPlayerLeaveLobby(sessionId, playerId);
+            return ResPlayerLeaveLobby(sessionId, playerId);
         }
         case 30:
         {
@@ -111,7 +111,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> message;
 
-            return handler_->ReqChat(sessionId, message);
+            return ReqChat(sessionId, message);
         }
         case 31:
         {
@@ -120,14 +120,14 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> playerId >> message;
 
-            return handler_->ResChat(sessionId, playerId, message);
+            return ResChat(sessionId, playerId, message);
         }
         case 50:
         {
 
             *packet;
 
-            return handler_->ReqBuyCharacter(sessionId);
+            return ReqBuyCharacter(sessionId);
         }
         case 51:
         {
@@ -136,7 +136,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> character >> curGold;
 
-            return handler_->ResBuyCharacter(sessionId, character, curGold);
+            return ResBuyCharacter(sessionId, character, curGold);
         }
         case 52:
         {
@@ -144,7 +144,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> inventoryId;
 
-            return handler_->ReqChangeEquipment(sessionId, inventoryId);
+            return ReqChangeEquipment(sessionId, inventoryId);
         }
         case 53:
         {
@@ -152,14 +152,14 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> inventoryId;
 
-            return handler_->ResChangeEquipment(sessionId, inventoryId);
+            return ResChangeEquipment(sessionId, inventoryId);
         }
         case 60:
         {
 
             *packet;
 
-            return handler_->ReqStartGame(sessionId);
+            return ReqStartGame(sessionId);
         }
         case 61:
         {
@@ -167,7 +167,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> otherPlayer;
 
-            return handler_->ResStartGame(sessionId, otherPlayer);
+            return ResStartGame(sessionId, otherPlayer);
         }
         case 62:
         {
@@ -175,7 +175,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> commandType;
 
-            return handler_->ReqGameCommand(sessionId, commandType);
+            return ReqGameCommand(sessionId, commandType);
         }
         case 63:
         {
@@ -183,7 +183,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> character;
 
-            return handler_->ResGameCommand(sessionId, character);
+            return ResGameCommand(sessionId, character);
         }
         case 64:
         {
@@ -192,7 +192,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> result >> currentMoney;
 
-            return handler_->ResEndGame(sessionId, result, currentMoney);
+            return ResEndGame(sessionId, result, currentMoney);
         }
     default:
     {
@@ -204,117 +204,117 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 }
 
 
-bool RpcServerHandler::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
+bool RpcServerStub::ReqUserRegister(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool RpcServerHandler::ResUserRegister(__int64 sessionId, RESPONSE_CODE code)
+bool RpcServerStub::ResUserRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password)
+bool RpcServerStub::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string& password)
 {
     return true;
 }
 
-bool RpcServerHandler::ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int userId)
+bool RpcServerStub::ResUserLogin(__int64 sessionId, RESPONSE_CODE code, int userId)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName)
+bool RpcServerStub::ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName)
 {
     return true;
 }
 
-bool RpcServerHandler::ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code)
+bool RpcServerStub::ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqPlayerConnection(__int64 sessionId, int userId)
+bool RpcServerStub::ReqPlayerConnection(__int64 sessionId, int userId)
 {
     return true;
 }
 
-bool RpcServerHandler::ResPlayerProfile(__int64 sessionId, Player& player)
+bool RpcServerStub::ResPlayerProfile(__int64 sessionId, Player& player)
 {
     return true;
 }
 
-bool RpcServerHandler::ResPlayerCharacters(__int64 sessionId, std::list<Character>& characters)
+bool RpcServerStub::ResPlayerCharacters(__int64 sessionId, std::list<Character>& characters)
 {
     return true;
 }
 
-bool RpcServerHandler::ResLobbyPlayers(__int64 sessionId, std::list<PlayerInfo>& players)
+bool RpcServerStub::ResLobbyPlayers(__int64 sessionId, std::list<PlayerInfo>& players)
 {
     return true;
 }
 
-bool RpcServerHandler::ResPlayerEnterLobby(__int64 sessionId, PlayerInfo& player)
+bool RpcServerStub::ResPlayerEnterLobby(__int64 sessionId, PlayerInfo& player)
 {
     return true;
 }
 
-bool RpcServerHandler::ResPlayerLeaveLobby(__int64 sessionId, int playerId)
+bool RpcServerStub::ResPlayerLeaveLobby(__int64 sessionId, int playerId)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqChat(__int64 sessionId, std::string& message)
+bool RpcServerStub::ReqChat(__int64 sessionId, std::string& message)
 {
     return true;
 }
 
-bool RpcServerHandler::ResChat(__int64 sessionId, int playerId, std::string& message)
+bool RpcServerStub::ResChat(__int64 sessionId, int playerId, std::string& message)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqBuyCharacter(__int64 sessionId)
+bool RpcServerStub::ReqBuyCharacter(__int64 sessionId)
 {
     return true;
 }
 
-bool RpcServerHandler::ResBuyCharacter(__int64 sessionId, Character& character, int curGold)
+bool RpcServerStub::ResBuyCharacter(__int64 sessionId, Character& character, int curGold)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqChangeEquipment(__int64 sessionId, int inventoryId)
+bool RpcServerStub::ReqChangeEquipment(__int64 sessionId, int inventoryId)
 {
     return true;
 }
 
-bool RpcServerHandler::ResChangeEquipment(__int64 sessionId, int inventoryId)
+bool RpcServerStub::ResChangeEquipment(__int64 sessionId, int inventoryId)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqStartGame(__int64 sessionId)
+bool RpcServerStub::ReqStartGame(__int64 sessionId)
 {
     return true;
 }
 
-bool RpcServerHandler::ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer)
+bool RpcServerStub::ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer)
 {
     return true;
 }
 
-bool RpcServerHandler::ReqGameCommand(__int64 sessionId, int commandType)
+bool RpcServerStub::ReqGameCommand(__int64 sessionId, int commandType)
 {
     return true;
 }
 
-bool RpcServerHandler::ResGameCommand(__int64 sessionId, Character& character)
+bool RpcServerStub::ResGameCommand(__int64 sessionId, Character& character)
 {
     return true;
 }
 
-bool RpcServerHandler::ResEndGame(__int64 sessionId, int result, int currentMoney)
+bool RpcServerStub::ResEndGame(__int64 sessionId, int result, int currentMoney)
 {
     return true;
 }

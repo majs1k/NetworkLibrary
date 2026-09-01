@@ -162,6 +162,7 @@
     <ClInclude Include="Contents\Repository\PlayerRepository.h" />
     <ClInclude Include="Contents\Repository\UserRepository.h" />
     <ClInclude Include="Contents\ResponseCode.h" />
+    <ClInclude Include="Contents\RpcModule.h" />
     <ClInclude Include="Database\Database.h" />
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />

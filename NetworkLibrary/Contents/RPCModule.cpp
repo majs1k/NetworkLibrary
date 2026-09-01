@@ -3,15 +3,14 @@
 // 직렬화 버퍼에 필요한 가변 인자들 전역 오버로딩 추가
 //
 // -------------------------------------------------
+#include "RpcModule.h"
 #include "../Utils/Packet.h"
 
 #include <list>	
 #include <string>
 
-#include "Player.h"
-#include "Character.h"
-
-#include "ResponseCode.h"
+RpcServerProxy g_RpcProxy;
+RpcClientProxy g_ClientRpcProxy;
 
 
 inline Packet& operator<<(Packet& packet, std::string& str)
@@ -151,5 +150,5 @@ inline Packet& operator>>(Packet& packet, Character& character)
 #include "../RPC/RpcClientProxy.cpp"
 #include "../RPC/RpcClientStub.cpp"
 
-#include "../Database/DatabaseServerProxy.cpp"
-#include "../Database/DatabaseServerStub.cpp"
+#include "../Database/DbProxy.cpp"
+#include "../Database/DbStub.cpp"

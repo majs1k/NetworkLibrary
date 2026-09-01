@@ -2,9 +2,12 @@
 
 #include "../Utils/Packet.h"
 
-class RpcClientHandler
+class RpcClientStub
 {
 public:
+
+    bool PacketProc(Packet* packet);
+    
     virtual bool ReqUserRegister(std::string& loginId, std::string& password);
     virtual bool ResUserRegister(RESPONSE_CODE code);
     virtual bool ReqUserLogin(std::string& loginId, std::string& password);
@@ -28,13 +31,4 @@ public:
     virtual bool ReqGameCommand(int commandType);
     virtual bool ResGameCommand(Character& character);
     virtual bool ResEndGame(int result, int currentMoney);
-};
-
-class RpcClientStub
-{
-public:
-    RpcClientHandler* handler_;
-
-public:
-    bool PacketProc(Packet* packet);
 };

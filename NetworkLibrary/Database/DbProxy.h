@@ -3,11 +3,11 @@
 #include "../Utils/PacketQueue.h"
 #include "../Utils/Packet.h"
 
-class DatabaseServerProxy
+class DbProxy
 {
 public:
-    PacketQueue* logicQueue_;
-    PacketQueue* dbQueue_;
+    PacketQueue* dbReqQueue_;
+    PacketQueue* dbResQueue_;
 
 public:
     void ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::string& password);

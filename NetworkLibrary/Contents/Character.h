@@ -5,7 +5,7 @@ struct Character
 {
 	int inventoryId_;
 	int characterId_;
-	
+
 	int level_;
 	int attack_;
 	int hp_;

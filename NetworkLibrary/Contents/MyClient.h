@@ -3,7 +3,6 @@
 #include "../Network/LanClient.h"
 
 #include "ResponseCode.h"
-
 #include "Player.h"
 #include "Character.h"
 
@@ -20,27 +19,19 @@ enum class SCENE
 	GAME
 };
 
-
 class RpcClientProxy;
 
-class MyClient : public LanClient, public RpcClientHandler
+class MyClient : public LanClient, public RpcClientStub
 {
 	friend class MainView;
 
-private:
-
-	RpcClientProxy* rpcProxy_;
-	RpcClientStub* rpcStub_;
-
 public:
 
-	MyClient();
+	void AttachProxy(RpcClientProxy* rpcProxy);
 
 	void OnConnect() override;
 	void OnRelease() override;
 	void OnRecv(Packet* packet) override;
-
-
 
 private:
 
@@ -91,8 +82,8 @@ private:
 
 	bool ResBuyCharacter(Character& character, int curGold);
 
-	virtual bool ResChangeEquipment(int inventoryId);
+	bool ResChangeEquipment(int inventoryId);
 
 
-	virtual bool ResStartGame(PlayerInfo& otherPlayer);
+	bool ResStartGame(PlayerInfo& otherPlayer);
 };

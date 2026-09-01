@@ -1,8 +1,5 @@
 @echo off
 
-copy /Y  "myrpc_idl.txt" ".\bin\Release\net8.0\"
-copy /Y  "mydb_idl.txt" ".\bin\Release\net8.0\"
-
 start /wait "" ".\bin\Release\net8.0\RpcGenerator.exe"
 
 move /Y "RpcServerProxy.h" "..\NetworkLibrary\Rpc\"
@@ -15,9 +12,24 @@ move /Y "RpcClientProxy.cpp" "..\NetworkLibrary\Rpc\"
 move /Y "RpcClientStub.h" "..\NetworkLibrary\Rpc\"
 move /Y "RpcClientStub.cpp" "..\NetworkLibrary\Rpc\"
 
-move /Y "DatabaseServerProxy.h" "..\NetworkLibrary\Database\"
-move /Y "DatabaseServerProxy.cpp" "..\NetworkLibrary\Database\"
-move /Y "DatabaseServerStub.h" "..\NetworkLibrary\Database\"
-move /Y "DatabaseServerStub.cpp" "..\NetworkLibrary\Database\"
+move /Y "DbProxy.h" "..\NetworkLibrary\Database\"
+move /Y "DbProxy.cpp" "..\NetworkLibrary\Database\"
+move /Y "DbStub.h" "..\NetworkLibrary\Database\"
+move /Y "DbStub.cpp" "..\NetworkLibrary\Database\"
+
+del /Q ".\bin\Release\net8.0\RpcServerProxy.h"
+del /Q ".\bin\Release\net8.0\RpcServerProxy.cpp"
+del /Q ".\bin\Release\net8.0\RpcServerStub.h"
+del /Q ".\bin\Release\net8.0\RpcServerStub.cpp"
+
+del /Q ".\bin\Release\net8.0\RpcClientProxy.h"
+del /Q ".\bin\Release\net8.0\RpcClientProxy.cpp"
+del /Q ".\bin\Release\net8.0\RpcClientStub.h"
+del /Q ".\bin\Release\net8.0\RpcClientStub.cpp"
+
+del /Q ".\bin\Release\net8.0\DbProxy.h"
+del /Q ".\bin\Release\net8.0\DbProxy.cpp"
+del /Q ".\bin\Release\net8.0\DbStub.h"
+del /Q ".\bin\Release\net8.0\DbStub.cpp"
 
 exit

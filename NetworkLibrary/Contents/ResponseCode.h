@@ -5,7 +5,7 @@ enum class RESPONSE_CODE : short
 	SUCCESS,
 
 	ALREADY_EXISTS,
-	
+
 	LOGIN_FAILED,
 
 	INPUT_LENGTH_OVER,

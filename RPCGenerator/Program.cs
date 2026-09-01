@@ -9,7 +9,7 @@
 
             RpcServerGenerator.Generate(rpcFile);
             RpcClientGenerator.Generate(rpcFile);
-            DatabaseServerGenerator.Generate(dbFile);
+            DbGenerator.Generate(dbFile);
         }
     }
 }

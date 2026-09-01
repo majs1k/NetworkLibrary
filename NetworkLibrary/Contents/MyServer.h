@@ -1,48 +1,42 @@
 #pragma once
-#include <list>
-
 #include "../Network/LanServer.h"
 #include "../Utils/PacketQueue.h"
 
 #include "ResponseCode.h"
-#include "../Database/Database.h"
-
-
 #include "Player.h"
 #include "Character.h"
-
 #include "MatchMaker.h"
 #include "GameRoom.h"
+
+#include "../Database/Database.h"
 
 #include "Repository/UserRepository.h"
 #include "Repository/PlayerRepository.h"
 #include "Repository/InventoryRepository.h"
 
-
-
 //#include "../RPC/RpcServerProxy.h"
 #include "../RPC/RpcServerStub.h"
 
-//#include "../Database/DatabaseServerProxy.h"
-#include "../Database/DatabaseServerStub.h"
+#include "../Database/DbProxy.h"
+#include "../Database/DbStub.h"
+
 
 class RpcServerProxy;
 class DatabaseServerProxy;
 
 
-class MyServer : public LanServer, public RpcServerHandler, public DatabaseServerHandler
+class MyServer : public LanServer, public RpcServerStub, public DbStub
 {
 private:
 
-	PacketQueue networkPacketQueue_;
-
-	RpcServerProxy* rpcProxy_;
-	RpcServerStub* rpcStub_;
+	PacketQueue networkQueue_;
 
 public:
 
-	MyServer(Database* db);
-	~MyServer();
+	MyServer();
+
+	void AttachProxy(RpcServerProxy* rpcProxy);
+	void AttachDb(Database* db);
 
 private:
 
@@ -51,9 +45,7 @@ private:
 	void OnRelease(__int64 sessionId) override;
 	void OnRecv(__int64 sessionId, Packet* packet) override;
 
-
 	void ProcessNetworkQueue();
-
 
 private:
 
@@ -77,8 +69,7 @@ private:
 	HANDLE hDatabaseThread_;
 	static unsigned int __stdcall DatabaseThread(void* param);
 
-	DatabaseServerProxy* dbProxy_;
-	DatabaseServerStub* dbStub_;
+	DbProxy dbProxy_;
 
 
 	UserRepository userRepository_;
@@ -105,13 +96,11 @@ private:
 
 	bool ReqChat(__int64 sessionId, std::string& message);
 
-
 	bool ReqBuyCharacter(__int64 sessionId);
 
-	virtual bool ReqChangeEquipment(__int64 sessionId, int inventoryId);
+	bool ReqChangeEquipment(__int64 sessionId, int inventoryId);
 
-
-	virtual bool ReqStartGame(__int64 sessionId);
+	bool ReqStartGame(__int64 sessionId);
 
 	// ----------------------------------------------------- //
 
@@ -129,7 +118,7 @@ private:
 	bool ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& playerName);
 
 	bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
-	
+
 
 
 	bool ReqPlayerConnectionDB(__int64 sessionId, int userId);
@@ -141,7 +130,7 @@ private:
 
 	bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold);
 
-	virtual bool ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
+	bool ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
 
 
 	// ----------------------------------------------------- //

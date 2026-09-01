@@ -2,14 +2,12 @@
 #include "../Utils/Packet.h"
 
 #include "../RPC/RpcClientProxy.h"
+#include "RpcModule.h"
 
-MyClient::MyClient()
+
+void MyClient::AttachProxy(RpcClientProxy* rpcProxy)
 {
-	rpcProxy_ = new RpcClientProxy();
-	rpcStub_ = new RpcClientStub();
-
-	rpcProxy_->client_ = this;
-	rpcStub_->handler_ = this;
+	rpcProxy->client_ = this;
 }
 
 void MyClient::OnConnect()
@@ -27,7 +25,7 @@ void MyClient::OnRecv(Packet* packet)
 	__int64 sessionId = 0;
 
 	// 함수의 인자 자료형 주의
-	if (!rpcStub_->PacketProc(packet))
+	if (!PacketProc(packet))
 	{
 		//disconnect(sessionId);
 
@@ -70,7 +68,7 @@ bool MyClient::ResUserLogin(RESPONSE_CODE code, int userId)
 
 		userId_ = userId;
 
-		rpcProxy_->ReqPlayerConnection(userId_);
+		g_ClientRpcProxy.ReqPlayerConnection(userId_);
 
 		break;
 
@@ -92,7 +90,7 @@ bool MyClient::ResPlayerRegister(RESPONSE_CODE code)
 		strcpy_s(playerSceneStatus_, u8"플레이어 등록이 성공하였습니다.");
 
 		// 메인씬 입장 재시도
-		rpcProxy_->ReqPlayerConnection(userId_);
+		g_ClientRpcProxy.ReqPlayerConnection(userId_);
 
 		//screen_ = ClientScreen::MAIN;
 	}
