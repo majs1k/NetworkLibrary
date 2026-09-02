@@ -105,7 +105,7 @@ void DbProxy::ResPlayerProfileDB(__int64 sessionId, Player& player)
     dbResQueue_->Push(packet);
 }
 
-void DbProxy::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters)
+void DbProxy::ResPlayerCharactersDB(__int64 sessionId, std::vector<Character>& characters)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -118,7 +118,7 @@ void DbProxy::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& cha
     dbResQueue_->Push(packet);
 }
 
-void DbProxy::ResLobbyPlayersDB(__int64 sessionId, std::list<PlayerInfo>& players)
+void DbProxy::ResLobbyPlayersDB(__int64 sessionId, std::vector<PlayerInfo>& players)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -229,7 +229,7 @@ void DbProxy::ReqEndGameDB(__int64 sessionId, int result, int currentMoney)
 
     packet->SetId(sessionId);
 
-    packet->GetHeaderPtr()->type_ = 64;
+    packet->GetHeaderPtr()->type_ = 70;
     *packet << result << currentMoney;
 
     dbReqQueue_->Push(packet);

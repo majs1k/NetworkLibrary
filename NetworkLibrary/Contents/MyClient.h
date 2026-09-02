@@ -1,5 +1,5 @@
 #pragma once
-#include <list>
+#include <vector>
 #include "../Network/LanClient.h"
 
 #include "ResponseCode.h"
@@ -21,9 +21,10 @@ enum class SCENE
 
 class RpcClientProxy;
 
+
 class MyClient : public LanClient, public RpcClientStub
 {
-	friend class MainView;
+	friend class GameUI;
 
 public:
 
@@ -32,6 +33,10 @@ public:
 	void OnConnect() override;
 	void OnRelease() override;
 	void OnRecv(Packet* packet) override;
+
+	// ===================================================================================== //
+	// Contents
+	// ===================================================================================== //
 
 private:
 
@@ -54,9 +59,9 @@ private:
 	Character myCharacter_;
 	Character enemyCharacter_;
 
-	// ----------------------------------------------------- //
+	// ===================================================================================== //
 	// RPC
-	// ----------------------------------------------------- //
+	// ===================================================================================== //
 
 private:
 
@@ -68,12 +73,12 @@ private:
 
 	bool ResPlayerProfile(Player& player);
 
-	bool ResPlayerCharacters(std::list<Character>& characters);
+	bool ResPlayerCharacters(std::vector<Character>& characters);
 
 
 	bool ResChat(int playerId, std::string& message);
 
-	bool ResLobbyPlayers(std::list<PlayerInfo>& players);
+	bool ResLobbyPlayers(std::vector<PlayerInfo>& players);
 
 
 	bool ResPlayerEnterLobby(PlayerInfo& player);

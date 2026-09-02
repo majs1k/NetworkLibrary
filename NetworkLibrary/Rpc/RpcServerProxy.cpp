@@ -89,7 +89,7 @@ void RpcServerProxy::ResPlayerProfile(__int64 sessionId, Player& player)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResPlayerCharacters(__int64 sessionId, std::list<Character>& characters)
+void RpcServerProxy::ResPlayerCharacters(__int64 sessionId, std::vector<Character>& characters)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -100,7 +100,7 @@ void RpcServerProxy::ResPlayerCharacters(__int64 sessionId, std::list<Character>
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ResLobbyPlayers(__int64 sessionId, std::list<PlayerInfo>& players)
+void RpcServerProxy::ResLobbyPlayers(__int64 sessionId, std::vector<PlayerInfo>& players)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -221,12 +221,23 @@ void RpcServerProxy::ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer)
     server_->SendPacket(sessionId, packet);
 }
 
-void RpcServerProxy::ReqGameCommand(__int64 sessionId, int commandType)
+void RpcServerProxy::ReqCancelGame(__int64 sessionId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 62;
+    *packet;
+
+    server_->SendPacket(sessionId, packet);
+}
+
+void RpcServerProxy::ReqGameCommand(__int64 sessionId, int commandType)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 65;
     *packet << commandType;
 
     server_->SendPacket(sessionId, packet);
@@ -237,7 +248,7 @@ void RpcServerProxy::ResGameCommand(__int64 sessionId, Character& character)
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 63;
+    packet->GetHeaderPtr()->type_ = 66;
     *packet << character;
 
     server_->SendPacket(sessionId, packet);
@@ -248,7 +259,7 @@ void RpcServerProxy::ResEndGame(__int64 sessionId, int result, int currentMoney)
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 64;
+    packet->GetHeaderPtr()->type_ = 70;
     *packet << result << currentMoney;
 
     server_->SendPacket(sessionId, packet);

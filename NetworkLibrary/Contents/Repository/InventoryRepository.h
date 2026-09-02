@@ -66,7 +66,7 @@ public:
 		}
 	}
 
-	void FindCharacterByPlayerId(int playerId, std::list<Character>& lst)
+	void FindCharacterByPlayerId(int playerId, std::vector<Character>& lst)
 	{
 		try
 		{

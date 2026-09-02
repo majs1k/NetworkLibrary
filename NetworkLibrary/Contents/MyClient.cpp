@@ -110,6 +110,12 @@ bool MyClient::ResPlayerProfile(Player& player)
 
 		return true;
 	}
+	else if (player.playerId_ == -1)
+	{
+		scene_ = SCENE::LOGIN;
+
+		return true;
+	}
 	else
 	{
 		//TODO: 이동으로 변경??
@@ -121,7 +127,7 @@ bool MyClient::ResPlayerProfile(Player& player)
 	}
 }
 
-bool MyClient::ResPlayerCharacters(std::list<Character>& characters)
+bool MyClient::ResPlayerCharacters(std::vector<Character>& characters)
 {
 	for (auto& c : characters)
 	{
@@ -142,7 +148,7 @@ bool MyClient::ResChat(int playerId, std::string& message)
 	return true;
 }
 
-bool MyClient::ResLobbyPlayers(std::list<PlayerInfo>& players)
+bool MyClient::ResLobbyPlayers(std::vector<PlayerInfo>& players)
 {
 	for (auto& info : players)
 	{

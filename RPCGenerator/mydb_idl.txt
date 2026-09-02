@@ -13,9 +13,9 @@ ResPlayerRegister(RESPONSE_CODE code)									11
 
 ReqPlayerConnection(int userId)											12
 ResPlayerProfile(Player& player)										13
-ResPlayerCharacters(std::list<Character>& characters)					14
+ResPlayerCharacters(std::vector<Character>& characters)					14
 
-ResLobbyPlayers(std::list<PlayerInfo>& players)							15
+ResLobbyPlayers(std::vector<PlayerInfo>& players)						15
 ResPlayerEnterLobby(PlayerInfo& player)									16
 ResPlayerLeaveLobby(int playerId)										17
 
@@ -32,5 +32,5 @@ ReqChangeEquipment(int playerId, int inventoryId)						52
 
 
 
-ReqEndGame(int result, int currentMoney)				64
+ReqEndGame(int result, int currentMoney)				70
 

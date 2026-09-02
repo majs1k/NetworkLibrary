@@ -17,8 +17,8 @@ public:
     void ResPlayerRegister(__int64 sessionId, RESPONSE_CODE code);
     void ReqPlayerConnection(__int64 sessionId, int userId);
     void ResPlayerProfile(__int64 sessionId, Player& player);
-    void ResPlayerCharacters(__int64 sessionId, std::list<Character>& characters);
-    void ResLobbyPlayers(__int64 sessionId, std::list<PlayerInfo>& players);
+    void ResPlayerCharacters(__int64 sessionId, std::vector<Character>& characters);
+    void ResLobbyPlayers(__int64 sessionId, std::vector<PlayerInfo>& players);
     void ResPlayerEnterLobby(__int64 sessionId, PlayerInfo& player);
     void ResPlayerLeaveLobby(__int64 sessionId, int playerId);
     void ReqChat(__int64 sessionId, std::string& message);
@@ -29,6 +29,7 @@ public:
     void ResChangeEquipment(__int64 sessionId, int inventoryId);
     void ReqStartGame(__int64 sessionId);
     void ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer);
+    void ReqCancelGame(__int64 sessionId);
     void ReqGameCommand(__int64 sessionId, int commandType);
     void ResGameCommand(__int64 sessionId, Character& character);
     void ResEndGame(__int64 sessionId, int result, int currentMoney);

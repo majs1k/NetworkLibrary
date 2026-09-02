@@ -6,7 +6,7 @@
 #include "RpcModule.h"
 #include "../Utils/Packet.h"
 
-#include <list>	
+#include <vector>
 #include <string>
 
 RpcServerProxy g_RpcProxy;
@@ -35,18 +35,18 @@ inline Packet& operator>>(Packet& packet, std::string& str)
 }
 
 template<typename T>
-inline Packet& operator<<(Packet& packet, std::list<T>& lst)
+inline Packet& operator<<(Packet& packet, std::vector<T>& vec)
 {
-	packet << static_cast<short>(lst.size());
+	packet << static_cast<short>(vec.size());
 
-	for (auto& l : lst)
-		packet << l;
+	for (auto& v : vec)
+		packet << v;
 
 	return packet;
 }
 
 template<typename T>
-inline Packet& operator>>(Packet& packet, std::list<T>& lst)
+inline Packet& operator>>(Packet& packet, std::vector<T>& vec)
 {
 	short size = 0;
 
@@ -57,7 +57,7 @@ inline Packet& operator>>(Packet& packet, std::list<T>& lst)
 	for (int i = 0; i < size; i++)
 	{
 		packet >> data;
-		lst.push_back(data);
+		vec.push_back(data);
 	}
 
 	return packet;

@@ -75,7 +75,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
         }
         case 14:
         {
-			std::list<Character> characters;
+			std::vector<Character> characters;
 
             *packet >> characters;
 
@@ -83,7 +83,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
         }
         case 15:
         {
-			std::list<PlayerInfo> players;
+			std::vector<PlayerInfo> players;
 
             *packet >> players;
 
@@ -171,13 +171,20 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
         }
         case 62:
         {
+
+            *packet;
+
+            return ReqCancelGame(sessionId);
+        }
+        case 65:
+        {
 			int commandType;
 
             *packet >> commandType;
 
             return ReqGameCommand(sessionId, commandType);
         }
-        case 63:
+        case 66:
         {
 			Character character;
 
@@ -185,7 +192,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             return ResGameCommand(sessionId, character);
         }
-        case 64:
+        case 70:
         {
 			int result;
 			int currentMoney;
@@ -244,12 +251,12 @@ bool RpcServerStub::ResPlayerProfile(__int64 sessionId, Player& player)
     return true;
 }
 
-bool RpcServerStub::ResPlayerCharacters(__int64 sessionId, std::list<Character>& characters)
+bool RpcServerStub::ResPlayerCharacters(__int64 sessionId, std::vector<Character>& characters)
 {
     return true;
 }
 
-bool RpcServerStub::ResLobbyPlayers(__int64 sessionId, std::list<PlayerInfo>& players)
+bool RpcServerStub::ResLobbyPlayers(__int64 sessionId, std::vector<PlayerInfo>& players)
 {
     return true;
 }
@@ -300,6 +307,11 @@ bool RpcServerStub::ReqStartGame(__int64 sessionId)
 }
 
 bool RpcServerStub::ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer)
+{
+    return true;
+}
+
+bool RpcServerStub::ReqCancelGame(__int64 sessionId)
 {
     return true;
 }

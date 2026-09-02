@@ -22,6 +22,7 @@ public:
 
 	void Add(Player* player)
 	{
+		// 이미 큐에 등록되었다면 리턴
 		if (std::find(matchQueue_.begin(), matchQueue_.end(), player) != matchQueue_.end())
 			return;
 

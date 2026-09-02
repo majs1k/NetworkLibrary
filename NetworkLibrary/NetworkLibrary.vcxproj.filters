@@ -66,6 +66,12 @@
     <ClCompile Include="ImGui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Contents\MyServer_Rpc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Contents\MyServer_Db.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="MyClientMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -182,10 +188,13 @@
     <ClInclude Include="ImGui\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MainView.h">
+    <ClInclude Include="Contents\RpcModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Contents\RpcModule.h">
+    <ClInclude Include="Contents\GameUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Contents\OmokGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

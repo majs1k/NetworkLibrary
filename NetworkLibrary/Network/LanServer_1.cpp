@@ -37,21 +37,19 @@ bool LanServer::Start(std::string ip, int port, int sessionMax, int concurrentCo
 	if (listenSocket_ == INVALID_SOCKET)
 		wprintf(L"socket() error");
 
-	// 링거 옵션 - closesocekt() 호출시 즉시 리턴, 연결 강제 종료
+	/// 링거 - closesocekt() 호출시 즉시 리턴, 연결 강제 종료
 	// 서버 클라 둘다 설정할 것
 	LINGER lin;
 	lin.l_onoff = 1;
 	lin.l_linger = 0;
 	setsockopt(listenSocket_, SOL_SOCKET, SO_LINGER, (char*)&lin, sizeof(lin));
 
-	// 네이글 off
-	int nagleFlag = 1;
-	setsockopt(listenSocket_, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&nagleFlag), sizeof(nagleFlag));
+	/// 네이글 off
+	//int nagleFlag = 1;
+	//setsockopt(listenSocket_, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&nagleFlag), sizeof(nagleFlag));
 
-
+	/// TCP Keep-Alive 활성화
 	//BOOL keepAlive = TRUE;
-
-	//// TCP Keep-Alive 활성화
 	//setsockopt(listenSocket_, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<const char*>(&keepAlive), sizeof(keepAlive));
 
 	//// Keep-Alive 설정
@@ -65,8 +63,8 @@ bool LanServer::Start(std::string ip, int port, int sessionMax, int concurrentCo
 	//WSAIoctl(listenSocket_, SIO_KEEPALIVE_VALS, &keepAliveVals, sizeof(keepAliveVals), nullptr, 0, &bytesReturned, nullptr, nullptr);
 
 
-	// L4 송신버퍼 사이즈 옵션
-	int sndBufSize = 0;
+	/// L4 송신버퍼 사이즈
+	//int sndBufSize = 0;
 	//setsockopt(listenSocket_, SOL_SOCKET, SO_SNDBUF, (const char*)(&sndBufSize), sizeof(sndBufSize));
 
 
@@ -193,14 +191,9 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 	packet->GetHeaderPtr()->size_ = packet->UseSize();
 
 
-
 	//session->sendQueue_.Enqueue(packet);
-
 	session->sendQueue_.Enqueue(packet->GetBufferPtr(), packet->TotalUseSize());
 
-
-
-	//session->sessionLock_.unlock();
 
 	delete packet;
 
@@ -214,7 +207,6 @@ bool LanServer::SendPacket(__int64 sessionId, Packet* packet)
 }
 
 
-
 unsigned int __stdcall LanServer::AcceptThread(void* param)
 {
 	LanServer* server = (LanServer*)param;
@@ -223,22 +215,16 @@ unsigned int __stdcall LanServer::AcceptThread(void* param)
 	{
 		SOCKADDR_IN clientAddr;
 		int addrLen;
-
 		addrLen = sizeof(clientAddr);
+
 		SOCKET clientSock = accept(server->listenSocket_, (SOCKADDR*)&clientAddr, &addrLen);
 		if (clientSock == INVALID_SOCKET)
 		{
 			int error = WSAGetLastError();
-			if (error == WSAENOTSOCK || error == WSAEINTR)
-			{
-				LOG_INFO(L"[NETWORK] accept thread exit");
 
-				return 0;
-			}
-			else
-			{
-				wprintf(L"accept() error");
-			}
+			wprintf(L"accept() error: %d", error);
+
+			continue;
 		}
 
 		InterlockedIncrement(&server->acceptCount_);
@@ -256,7 +242,8 @@ unsigned int __stdcall LanServer::AcceptThread(void* param)
 		}
 
 		Session* session = new Session();
-		// idSeed_는 이 스레드에서만 변경 가능하므로 인터락 적용 x
+
+		// idSeed_는 이 스레드에서만 변경 가능
 		session->Initialize(clientSock, ip, port, ++(server->idSeed_));
 
 		server->sessionMapLock_.lock();
@@ -293,7 +280,7 @@ unsigned int __stdcall LanServer::WorkerThread(void* param)
 		//session = nullptr;
 		//numOfBytes = 0;
 
-		// GQCS 호출 반환시 overlapped 구조체 무조건 세팅됨
+		// GQCS 호출 반환시 overlapped 구조체 무조건 세팅
 		BOOL ret = GetQueuedCompletionStatus(server->hIOCP_, &numOfBytes, (PULONG_PTR)&session, &overlapped, INFINITE);
 
 		PRO(L"GQCS()");
@@ -405,3 +392,51 @@ void LanServer::Monitoring()
 	printf("Recv TPS : %d\n", recvMessageTps);
 	printf("Send TPS : %d\n", sendMessageTps);
 }
+
+// ===================================================================
+// Socket Error Code
+// ===================================================================
+// 
+// 10014 WSAEFAULT
+// 잘못된 버퍼 주소나 버퍼 길이가 너무 작음
+// 
+// 10022 WSAEINVAL
+// wsasend()시 진행 중인 OVERLAPPED 재사용이거나 잘못된 WSABUF
+// 
+// 10035 WSAEWOULDBLOCK
+// L4 버퍼가 다 찼는데 논블로킹 소켓에서 send 호출시
+// 논블로킹 소켓에서 send recv 에서 할게 없을때 바로 반환시
+// 
+// 10038 WSAENOTSOCK
+// 할당되지 않은 소켓(or closesocket)에 소켓 api 호출시
+// 
+// 10053 WSAECONNABORTED
+// accept 호출했는데 이미 클라이언트가 종료한 연결일 경우
+// 
+// 10054 WSAECONNRESET
+// rst 보낸 후 send or recv
+// fin을 보냈는데 다른쪽에서 send 하면 rst 받음
+// 
+// 10055 WSAENOBUFS
+// 리소스 고갈
+// 
+// 10057 WSAENOTCONN
+// 논블로킹 소켓에서 connect 이후(무조건 반환) 실제로는 연결 안되었을때 send시
+// 
+// 10060 WSAETIMEDOUT
+// 연결 중 인터넷 끊어지면 recv할때 에러 발생(send는 단순 복사니깐)
+// 
+// 리모트 환경에서 안 열린 포트로 connect ?
+// 서버 백로그큐 다 차면 서버 컴퓨터는 아무것도 하지 않음 ?
+// * 연결 시도에 대한 응답이 일정 시간 동안 오지 않을 떄
+// 
+// 
+// 10061 WSAECONNREFUSED
+// 로컬 환경에서 안 열린 포트로 connect
+// 서버 백로그큐 다 차면 아무것도 안하고 상대한테 rst 보냄
+// * 해당 주소/포트에서 연결을 받아주는 서비스가 없을 때
+// 
+// 10063 WSAENAMETOOLONG
+// 
+// 10065 WSAEHOSTUNREACH
+// 인터넷 연결 안되었는데 connect

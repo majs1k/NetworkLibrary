@@ -17,8 +17,8 @@ public:
     void ResPlayerRegister(RESPONSE_CODE code);
     void ReqPlayerConnection(int userId);
     void ResPlayerProfile(Player& player);
-    void ResPlayerCharacters(std::list<Character>& characters);
-    void ResLobbyPlayers(std::list<PlayerInfo>& players);
+    void ResPlayerCharacters(std::vector<Character>& characters);
+    void ResLobbyPlayers(std::vector<PlayerInfo>& players);
     void ResPlayerEnterLobby(PlayerInfo& player);
     void ResPlayerLeaveLobby(int playerId);
     void ReqChat(std::string& message);
@@ -29,6 +29,7 @@ public:
     void ResChangeEquipment(int inventoryId);
     void ReqStartGame();
     void ResStartGame(PlayerInfo& otherPlayer);
+    void ReqCancelGame();
     void ReqGameCommand(int commandType);
     void ResGameCommand(Character& character);
     void ResEndGame(int result, int currentMoney);

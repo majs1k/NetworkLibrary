@@ -10,11 +10,10 @@ Platform : Windows 11 x64 / Visual Studio 2022
 
 ---
 
-## Key Technical Points
+## Details
 
 * IOCP 기반 Overlapped I/O 네트워크 라이브러리 직접 구현
 * IO / Logic / DB Thread 분리를 통한 게임 로직 단일 접근 구조
-* IO Count 기반 Session 생명주기 관리 및 Lock 동기화
 * IDL 기반 RPC / DB Proxy-Stub 코드 자동 생성
 * Stateful Server와 서버 권위 구조
 
@@ -193,7 +192,7 @@ ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고,
 
 ## Current Content
 
-Implemented: 회원가입 / 로그인 / 로비 / 채팅 / 캐릭터 / 상점 / 매치 진입
+Implemented: 회원가입 / 로그인 / 로비 / 채팅(도배금지) / 캐릭터 / 상점 / 매치
 
 Planned: 게임 결과 처리 / 게임 플레이 컨텐츠
 
@@ -496,4 +495,5 @@ dbconfig 분리 및 string으로 변경
 ### 26-08-31
 ```
 playermanager 분리
+Rpc stub 수정 및 proxy 전역 객체로 변경
 ```

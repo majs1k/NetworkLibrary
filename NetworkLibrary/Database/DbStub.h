@@ -16,8 +16,8 @@ public:
     virtual bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
     virtual bool ReqPlayerConnectionDB(__int64 sessionId, int userId);
     virtual bool ResPlayerProfileDB(__int64 sessionId, Player& player);
-    virtual bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters);
-    virtual bool ResLobbyPlayersDB(__int64 sessionId, std::list<PlayerInfo>& players);
+    virtual bool ResPlayerCharactersDB(__int64 sessionId, std::vector<Character>& characters);
+    virtual bool ResLobbyPlayersDB(__int64 sessionId, std::vector<PlayerInfo>& players);
     virtual bool ResPlayerEnterLobbyDB(__int64 sessionId, PlayerInfo& player);
     virtual bool ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     virtual bool ReqChatDB(__int64 sessionId, std::string& message);

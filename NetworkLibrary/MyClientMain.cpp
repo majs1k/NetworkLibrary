@@ -44,7 +44,7 @@ ImFont* titleFont;
 #define SERVER_IP			L"127.0.0.1"
 #define SERVER_PORT			7777
 
-#include "MainView.h"
+#include "./Contents/GameUI.h"
 
 
 
@@ -141,7 +141,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	/// Ä¿½ºÅÒ °´Ã¼ /////////////////////
 	MyClient client;
 	client.AttachProxy(&g_ClientRpcProxy);
-	MainView mainView(&client);
+	GameUI mainView(&client);
 
 	CrashDump().Initialize();
 

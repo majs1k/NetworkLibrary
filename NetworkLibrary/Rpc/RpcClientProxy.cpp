@@ -89,7 +89,7 @@ void RpcClientProxy::ResPlayerProfile(Player& player)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResPlayerCharacters(std::list<Character>& characters)
+void RpcClientProxy::ResPlayerCharacters(std::vector<Character>& characters)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -100,7 +100,7 @@ void RpcClientProxy::ResPlayerCharacters(std::list<Character>& characters)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResLobbyPlayers(std::list<PlayerInfo>& players)
+void RpcClientProxy::ResLobbyPlayers(std::vector<PlayerInfo>& players)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -221,12 +221,23 @@ void RpcClientProxy::ResStartGame(PlayerInfo& otherPlayer)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqGameCommand(int commandType)
+void RpcClientProxy::ReqCancelGame()
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 62;
+    *packet;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ReqGameCommand(int commandType)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 65;
     *packet << commandType;
 
     client_->SendPacket(packet);
@@ -237,7 +248,7 @@ void RpcClientProxy::ResGameCommand(Character& character)
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 63;
+    packet->GetHeaderPtr()->type_ = 66;
     *packet << character;
 
     client_->SendPacket(packet);
@@ -248,7 +259,7 @@ void RpcClientProxy::ResEndGame(int result, int currentMoney)
     Packet* packet = new Packet();
     packet->Initialize();
 
-    packet->GetHeaderPtr()->type_ = 64;
+    packet->GetHeaderPtr()->type_ = 70;
     *packet << result << currentMoney;
 
     client_->SendPacket(packet);

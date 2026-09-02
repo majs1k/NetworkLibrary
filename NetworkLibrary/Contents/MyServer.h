@@ -22,7 +22,6 @@
 
 
 class RpcServerProxy;
-class DatabaseServerProxy;
 
 
 class MyServer : public LanServer, public RpcServerStub, public DbStub
@@ -57,7 +56,7 @@ private:
 	static unsigned int __stdcall LogicThread(void* param);
 	void Update();
 
-	// ----------------------------------------------------- //
+	// ===================================================================================== //
 
 private:
 
@@ -71,17 +70,43 @@ private:
 
 	DbProxy dbProxy_;
 
-
-	UserRepository userRepository_;
-	PlayerRepository playerRepository_;
-	InventoryRepository inventoryRepository_;
-
 private:
 
 	void ProcessDbReqQueue();
 	void ProcessDbResQueue();
 
-	// ----------------------------------------------------- //
+
+	// ===================================================================================== //
+	// Repository
+	// ===================================================================================== //
+
+private:
+
+	UserRepository userRepository_;
+	PlayerRepository playerRepository_;
+	InventoryRepository inventoryRepository_;
+
+
+	// ===================================================================================== //
+	// Contents
+	// ===================================================================================== //
+
+private:
+
+	// 클라이언트에서 보내는 playerId는 신뢰할수 없음. 서버에서 sessionId를 매핑해서 알아냄
+	//std::unordered_map<__int64, int> sessionToPlayer_;
+	//std::unordered_map<int, Player*> playerMap_{};
+	//int playerCount_ = 0;
+
+	PlayerManager playerManager_;
+
+	MatchMaker matchMaker_;
+
+	GameRoomManager roomManager_;
+
+	// ===================================================================================== //
+	// RPC
+	// ===================================================================================== //
 
 private:
 
@@ -102,8 +127,12 @@ private:
 
 	bool ReqStartGame(__int64 sessionId);
 
-	// ----------------------------------------------------- //
+	bool ReqCancelGame(__int64 sessionId);
 
+
+	// ===================================================================================== //
+	// DB
+	// ===================================================================================== //
 
 private:
 
@@ -120,31 +149,14 @@ private:
 	bool ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
 
 
-
 	bool ReqPlayerConnectionDB(__int64 sessionId, int userId);
 
 	bool ResPlayerProfileDB(__int64 sessionId, Player& player);
 
-	bool ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters);
+	bool ResPlayerCharactersDB(__int64 sessionId, std::vector<Character>& characters);
 
 
 	bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold);
 
 	bool ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
-
-
-	// ----------------------------------------------------- //
-
-private:
-
-	// 클라이언트에서 보내는 playerId는 신뢰할수 없음. 서버에서 sessionId를 매핑해서 알아냄
-	//std::unordered_map<__int64, int> sessionToPlayer_;
-	//std::unordered_map<int, Player*> playerMap_{};
-	//int playerCount_ = 0;
-
-	PlayerManager playerManager_;
-
-	MatchMaker matchMaker_;
-
-	GameRoomManager roomManager_;
 };

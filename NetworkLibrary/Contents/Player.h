@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <list>
+#include <vector>
 #include <unordered_map>
 #include "Character.h"
 
@@ -25,10 +25,13 @@ struct Player
 
 	PLAYER_STATE state_;
 
-	std::list<Character> characters_;
+	std::vector<Character> characters_;
 	int equippedInvenId_;
 
 	GameRoom* room_;
+
+	unsigned int lastChatTime_;
+	int curChatCount_;
 
 
 	void Initialize(__int64 sessionId, int playerId, std::string& playerName, int level, int gold, int equippedId)
@@ -40,9 +43,15 @@ struct Player
 		level_ = level;
 		gold_ = gold;
 
+		state_ = PLAYER_STATE::LOBBY;
+
+		characters_.clear();
 		equippedInvenId_ = equippedId;
 
-		state_ = PLAYER_STATE::LOBBY;
+		room_ = nullptr;
+
+		lastChatTime_ = 0;
+		curChatCount_ = 0;
 	}
 };
 

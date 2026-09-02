@@ -16,8 +16,8 @@ public:
     virtual bool ResPlayerRegister(RESPONSE_CODE code);
     virtual bool ReqPlayerConnection(int userId);
     virtual bool ResPlayerProfile(Player& player);
-    virtual bool ResPlayerCharacters(std::list<Character>& characters);
-    virtual bool ResLobbyPlayers(std::list<PlayerInfo>& players);
+    virtual bool ResPlayerCharacters(std::vector<Character>& characters);
+    virtual bool ResLobbyPlayers(std::vector<PlayerInfo>& players);
     virtual bool ResPlayerEnterLobby(PlayerInfo& player);
     virtual bool ResPlayerLeaveLobby(int playerId);
     virtual bool ReqChat(std::string& message);
@@ -28,6 +28,7 @@ public:
     virtual bool ResChangeEquipment(int inventoryId);
     virtual bool ReqStartGame();
     virtual bool ResStartGame(PlayerInfo& otherPlayer);
+    virtual bool ReqCancelGame();
     virtual bool ReqGameCommand(int commandType);
     virtual bool ResGameCommand(Character& character);
     virtual bool ResEndGame(int result, int currentMoney);

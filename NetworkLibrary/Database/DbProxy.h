@@ -18,8 +18,8 @@ public:
     void ResPlayerRegisterDB(__int64 sessionId, RESPONSE_CODE code);
     void ReqPlayerConnectionDB(__int64 sessionId, int userId);
     void ResPlayerProfileDB(__int64 sessionId, Player& player);
-    void ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters);
-    void ResLobbyPlayersDB(__int64 sessionId, std::list<PlayerInfo>& players);
+    void ResPlayerCharactersDB(__int64 sessionId, std::vector<Character>& characters);
+    void ResLobbyPlayersDB(__int64 sessionId, std::vector<PlayerInfo>& players);
     void ResPlayerEnterLobbyDB(__int64 sessionId, PlayerInfo& player);
     void ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     void ReqChatDB(__int64 sessionId, std::string& message);

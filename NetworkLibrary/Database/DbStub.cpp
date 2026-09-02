@@ -75,7 +75,7 @@ bool DbStub::DbPacketProc(__int64 sessionId, Packet* packet)
         }
         case 14:
         {
-			std::list<Character> characters;
+			std::vector<Character> characters;
 
             *packet >> characters;
 
@@ -83,7 +83,7 @@ bool DbStub::DbPacketProc(__int64 sessionId, Packet* packet)
         }
         case 15:
         {
-			std::list<PlayerInfo> players;
+			std::vector<PlayerInfo> players;
 
             *packet >> players;
 
@@ -151,7 +151,7 @@ bool DbStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             return ReqChangeEquipmentDB(sessionId, playerId, inventoryId);
         }
-        case 64:
+        case 70:
         {
 			int result;
 			int currentMoney;
@@ -210,12 +210,12 @@ bool DbStub::ResPlayerProfileDB(__int64 sessionId, Player& player)
     return true;
 }
 
-bool DbStub::ResPlayerCharactersDB(__int64 sessionId, std::list<Character>& characters)
+bool DbStub::ResPlayerCharactersDB(__int64 sessionId, std::vector<Character>& characters)
 {
     return true;
 }
 
-bool DbStub::ResLobbyPlayersDB(__int64 sessionId, std::list<PlayerInfo>& players)
+bool DbStub::ResLobbyPlayersDB(__int64 sessionId, std::vector<PlayerInfo>& players)
 {
     return true;
 }
