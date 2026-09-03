@@ -1,29 +1,42 @@
 #pragma once
 
+enum class STONE
+{
+	NONE,
+	BLACK,
+	WHITE,
+};
+
+class MYSTONE
+{
+	STONE stone_;
+	int sequence_;
+};
 
 class OmokGame
 {
 public:
+	// 보드의 네모(cell) 칸은 줄 당 14개
+	// 돌을 놓을 수 있는 교차점은 줄 당 15개
 	static constexpr int BOARD_SIZE = 15;
 	static constexpr int MAX_TURN_TIME = 30;
 
-	enum class Stone
-	{
-		None ,
-		Black ,
-		White ,
-	};
-
-	class MyStone
-	{
-		Stone stone_;
-		int sequence_;
-	};
-
 public:
-	OmokGame()
+
+	void Initialize()
 	{
-		StartGame();
+		for (auto& row : board_)
+		{
+			for (auto& elem : row)
+			{
+				elem = STONE::NONE;
+			}
+		}
+
+		turn_ = STONE::BLACK;
+		isGameOver_ = false;
+		winner_ = STONE::NONE;
+		turnTime_ = MAX_TURN_TIME;
 	}
 
 	bool PlaceStone(int row, int col)
@@ -34,13 +47,14 @@ public:
 		if (!IsValidPosition(row, col))
 			return false;
 
-		if (board_[row][col] != Stone::None)
+		if (board_[row][col] != STONE::NONE)
 			return false;
 
-		Stone stone = currentTurn_;
+		STONE stone = turn_;
 		board_[row][col] = stone;
 
-		if (CheckWin(row, col, stone))
+		// 이 로직을 클라이언트에서는 분리??
+		if (IsOmok(row, col))
 		{
 			isGameOver_ = true;
 			winner_ = stone;
@@ -48,22 +62,10 @@ public:
 			return true;
 		}
 
-		currentTurn_ = GetOpponentStone(currentTurn_);
+		turn_ = ChangeTurn(turn_);
 		turnTime_ = MAX_TURN_TIME;
 
 		return true;
-	}
-
-	void StartGame()
-	{
-		for (auto& row : board_)
-			for (auto& elem : row)
-				elem = Stone::None;
-
-		currentTurn_ = Stone::Black;
-		isGameOver_ = false;
-		winner_ = Stone::None;
-		turnTime_ = MAX_TURN_TIME;
 	}
 
 	void UpdateTurnTimer(float deltaTime)
@@ -78,7 +80,7 @@ public:
 
 		turnTime_ = 0.0f;
 		isGameOver_ = true;
-		winner_ = GetOpponentStone(currentTurn_);
+		winner_ = ChangeTurn(turn_);
 	}
 
 	bool IsGameOver() const
@@ -86,20 +88,20 @@ public:
 		return isGameOver_;
 	}
 
-	Stone GetStone(int row, int col) const
+	STONE GetStone(int row, int col) const
 	{
 		if (!IsValidPosition(row, col))
-			return Stone::None;
+			return STONE::NONE;
 
 		return board_[row][col];
 	}
 
-	Stone GetCurrentTurn() const
+	STONE GetTurn() const
 	{
-		return currentTurn_;
+		return turn_;
 	}
 
-	Stone GetWinner() const
+	STONE GetWinner() const
 	{
 		return winner_;
 	}
@@ -109,26 +111,34 @@ public:
 		return static_cast<int>(turnTime_ + 1);
 	}
 
+	// 클라이언트 호출용
+	void SetWinner(STONE stone)
+	{
+		isGameOver_ = true;
+		winner_ = stone;
+	}
+
 
 private:
-	bool CheckWin(int row, int col, Stone stone) const
-	{
-		static constexpr int directions[4][2] =
-		{
-			{ 1, 0 },
-			{ 0, 1 },
-			{ 1, 1 },
-			{ 1, -1 }
-		};
 
-		for (const auto& direction : directions)
+	// 가로 세로 대각 대각
+	int dx[4] = { 1,0,1,1 };
+	int dy[4] = { 0, 1, 1, -1 };
+
+
+	bool IsOmok(int row, int col) const
+	{
+		STONE stone = board_[row][col];
+
+		for (int i = 0; i < 4; i++)
 		{
 			int count = 1;
 
-			for (int i = 1; i < 5; ++i)
+			// 정방향
+			for (int j = 1; j < 5; j++)
 			{
-				int nextRow = row + direction[0] * i;
-				int nextCol = col + direction[1] * i;
+				int nextRow = row + dx[i] * j;
+				int nextCol = col + dy[i] * j;
 
 				if (!IsValidPosition(nextRow, nextCol))
 					break;
@@ -139,10 +149,11 @@ private:
 				count++;
 			}
 
-			for (int i = 1; i < 5; ++i)
+			// 역방향
+			for (int j = 1; j < 5; j++)
 			{
-				int nextRow = row - direction[0] * i;
-				int nextCol = col - direction[1] * i;
+				int nextRow = row - dx[i] * j;
+				int nextCol = col - dy[i] * j;
 
 				if (!IsValidPosition(nextRow, nextCol))
 					break;
@@ -165,16 +176,19 @@ private:
 		return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
 	}
 
-	Stone GetOpponentStone(Stone stone) const
+	STONE ChangeTurn(STONE stone) const
 	{
-		return stone == Stone::Black ? Stone::White : Stone::Black;
+		return stone == STONE::BLACK ? STONE::WHITE : STONE::BLACK;
 	}
 
 private:
-	Stone board_[BOARD_SIZE][BOARD_SIZE];
 
-	Stone currentTurn_ = Stone::Black;
-	Stone winner_ = Stone::None;
+	STONE board_[BOARD_SIZE][BOARD_SIZE];
+
+	STONE turn_ = STONE::BLACK;
+	STONE winner_ = STONE::NONE;
+
+
 	bool isGameOver_ = false;
 	float turnTime_ = MAX_TURN_TIME;
 

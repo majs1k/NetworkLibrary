@@ -183,7 +183,7 @@ void DbProxy::ResChatDB(__int64 sessionId, int playerId, std::string& message)
     dbResQueue_->Push(packet);
 }
 
-void DbProxy::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold)
+void DbProxy::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -191,12 +191,12 @@ void DbProxy::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 50;
-    *packet << playerId << inventoryId << characterId << curGold;
+    *packet << playerId << inventoryId << characterId << curMoney;
 
     dbReqQueue_->Push(packet);
 }
 
-void DbProxy::ResBuyCharacterDB(__int64 sessionId, Character& character, int curGold)
+void DbProxy::ResBuyCharacterDB(__int64 sessionId, Character& character, int curMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -204,7 +204,7 @@ void DbProxy::ResBuyCharacterDB(__int64 sessionId, Character& character, int cur
     packet->SetId(sessionId);
 
     packet->GetHeaderPtr()->type_ = 51;
-    *packet << character << curGold;
+    *packet << character << curMoney;
 
     dbResQueue_->Push(packet);
 }
@@ -222,15 +222,15 @@ void DbProxy::ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventor
     dbReqQueue_->Push(packet);
 }
 
-void DbProxy::ReqEndGameDB(__int64 sessionId, int result, int currentMoney)
+void DbProxy::ReqGameResultDB(__int64 sessionId, int winnerId, int loserId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->SetId(sessionId);
 
-    packet->GetHeaderPtr()->type_ = 70;
-    *packet << result << currentMoney;
+    packet->GetHeaderPtr()->type_ = 67;
+    *packet << winnerId << loserId;
 
     dbReqQueue_->Push(packet);
 }

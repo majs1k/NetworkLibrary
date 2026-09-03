@@ -22,8 +22,8 @@ public:
     virtual bool ResPlayerLeaveLobbyDB(__int64 sessionId, int playerId);
     virtual bool ReqChatDB(__int64 sessionId, std::string& message);
     virtual bool ResChatDB(__int64 sessionId, int playerId, std::string& message);
-    virtual bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold);
-    virtual bool ResBuyCharacterDB(__int64 sessionId, Character& character, int curGold);
+    virtual bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curMoney);
+    virtual bool ResBuyCharacterDB(__int64 sessionId, Character& character, int curMoney);
     virtual bool ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
-    virtual bool ReqEndGameDB(__int64 sessionId, int result, int currentMoney);
+    virtual bool ReqGameResultDB(__int64 sessionId, int winnerId, int loserId);
 };

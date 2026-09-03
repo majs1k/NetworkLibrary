@@ -15,9 +15,11 @@ ReqPlayerConnection(int userId)											12
 ResPlayerProfile(Player& player)										13
 ResPlayerCharacters(std::vector<Character>& characters)					14
 
-ResLobbyPlayers(std::vector<PlayerInfo>& players)						15
-ResPlayerEnterLobby(PlayerInfo& player)									16
-ResPlayerLeaveLobby(int playerId)										17
+
+ReqEnterLobby()															15
+ResEnterLobby(PlayerInfo& player)										16
+
+ResLeaveLobby(int playerId)												17
 
 
 ReqChat(std::string& message)											30
@@ -25,18 +27,25 @@ ResChat(int playerId, std::string& message)								31
 
 
 ReqBuyCharacter()														50
-ResBuyCharacter(Character& character, int curGold)						51
+ResBuyCharacter(Character& character, int curMoney)						51
 
 ReqChangeEquipment(int inventoryId)										52
 ResChangeEquipment(int inventoryId)										53
 
 
-ReqStartGame()											60
-ResStartGame(PlayerInfo& otherPlayer)					61
-ReqCancelGame()											62
+ReqStartMatch()															60
+ResStartMatch(STONE stone, PlayerInfo& opponent)						61
+ReqCancelMatch()														62
 
-ReqGameCommand(int commandType)							65
-ResGameCommand(Character& character)					66
 
-ResEndGame(int result, int currentMoney)				70
+ReqPlaceStone(short row, short col)										65
+ResPlaceStone(short row, short col)										66
 
+
+ResGameResult(STONE stone, int level, int myMoney)						67
+ResChangePlayerLevel(int playerId, int level)							68
+ResChangePlayerState(int playerId, PLAYER_STATE state)					69
+
+ResEnterRoom(int playerId)												70
+ReqLeaveRoom()															71
+ResLeaveRoom(int playerId)												72

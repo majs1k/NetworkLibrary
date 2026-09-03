@@ -9,6 +9,7 @@
 //#include "../RPC/RpcClientProxy.h"
 #include "../RPC/RpcClientStub.h"
 
+#include "OmokGame.h"
 
 // TODO: 클래스 분리
 enum class SCENE
@@ -18,6 +19,8 @@ enum class SCENE
 	MAIN,
 	GAME
 };
+
+
 
 class RpcClientProxy;
 
@@ -54,10 +57,10 @@ private:
 
 	std::vector<std::string> chatMessages_;
 
+	PlayerInfo opponentPlayer_;
 
-	PlayerInfo enemyPlayer_;
-	Character myCharacter_;
-	Character enemyCharacter_;
+	OmokGame omokGame_;
+
 
 	// ===================================================================================== //
 	// RPC
@@ -78,17 +81,28 @@ private:
 
 	bool ResChat(int playerId, std::string& message);
 
-	bool ResLobbyPlayers(std::vector<PlayerInfo>& players);
+
+	bool ResEnterLobby(PlayerInfo& player);
+	bool ResLeaveLobby(int playerId);
 
 
-	bool ResPlayerEnterLobby(PlayerInfo& player);
-	bool ResPlayerLeaveLobby(int playerId);
-
-
-	bool ResBuyCharacter(Character& character, int curGold);
+	bool ResBuyCharacter(Character& character, int curMoney);
 
 	bool ResChangeEquipment(int inventoryId);
 
 
-	bool ResStartGame(PlayerInfo& otherPlayer);
+	virtual bool ResStartMatch(STONE stone, PlayerInfo& opponent);
+
+
+	virtual bool ResPlaceStone(short row, short col);
+
+	virtual bool ResGameResult(STONE stone, int level, int myMoney);
+
+
+
+	virtual bool ResChangePlayerLevel(int playerId, int level);
+	virtual bool ResChangePlayerState(int playerId, PLAYER_STATE state);
+
+
+	virtual bool ResLeaveRoom(int playerId);
 };

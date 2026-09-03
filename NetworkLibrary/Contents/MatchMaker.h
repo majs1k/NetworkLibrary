@@ -39,7 +39,7 @@ public:
 
 			matchQueue_.clear();
 
-			roomManager_->Create(player1, player2);
+			roomManager_->CreateRoom(player1, player2);
 		}
 	}
 

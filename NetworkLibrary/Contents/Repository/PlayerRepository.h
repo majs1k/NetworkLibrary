@@ -18,7 +18,7 @@ public:
 			"user_id INT NOT NULL UNIQUE,"
 			"player_name VARCHAR(30) NOT NULL UNIQUE,"
 			"level INT NOT NULL DEFAULT 1,"
-			"gold INT NOT NULL DEFAULT 10000,"
+			"money INT NOT NULL DEFAULT 10000,"
 			"equipped_character_id INT NOT NULL DEFAULT 0,"
 			"FOREIGN KEY (user_id) REFERENCES users(user_id)"
 			");");
@@ -62,7 +62,7 @@ public:
 		try
 		{
 			auto stmt = database_->Prepare(
-				"SELECT player_id, player_name, level, gold, equipped_character_id "
+				"SELECT player_id, player_name, level, money, equipped_character_id "
 				"FROM players "
 				"WHERE user_id = ?");
 
@@ -79,7 +79,7 @@ public:
 			p.playerId_ = result->getInt("player_id");
 			p.playerName_ = result->getString("player_name");
 			p.level_ = result->getInt("level");
-			p.gold_ = result->getInt("gold");
+			p.money_ = result->getInt("money");
 			p.equippedInvenId_ = result->getInt("equipped_character_id");
 		}
 		catch (sql::SQLException& e)
@@ -112,16 +112,16 @@ public:
 		}
 	}
 
-	void UpdateGold(int playerId, int gold)
+	void UpdateMoney(int playerId, int money)
 	{
 		try
 		{
 			auto stmt = database_->Prepare(
 				"UPDATE players "
-				"SET gold = ? "
+				"SET money = ? "
 				"WHERE player_id = ?");
 
-			stmt->setInt(1, gold);
+			stmt->setInt(1, money);
 			stmt->setInt(2, playerId);
 
 			stmt->execute();

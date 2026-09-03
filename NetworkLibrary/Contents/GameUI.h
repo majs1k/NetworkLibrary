@@ -5,8 +5,7 @@
 
 
 
-static OmokGame g_OmokGame;
-static OmokGame::Stone myStone = OmokGame::Stone::Black;
+
 
 
 class GameUI
@@ -210,7 +209,7 @@ private:
 
 		ImGui::Text(u8"이름 : %s", client_->myPlayer_.playerName_.c_str());
 		ImGui::Text(u8"레벨 : %d", client_->myPlayer_.level_);
-		ImGui::Text(u8"골드 : %d", client_->myPlayer_.gold_);
+		ImGui::Text(u8"머니 : %d", client_->myPlayer_.money_);
 
 		ImGui::Spacing();
 		ImGui::Separator();
@@ -286,7 +285,7 @@ private:
 
 			if (ImGui::Button(u8"구매하기", ImVec2(140, 45)))
 			{
-				if (client_->myPlayer_.gold_ < 1000)
+				if (client_->myPlayer_.money_ < 1000)
 				{
 					ImGui::OpenPopup(u8"구매실패");
 				}
@@ -330,7 +329,7 @@ private:
 			ImGui::SetNextWindowSize(ImVec2(300, 250));
 			ImGui::OpenPopup(u8"게임 시작");
 
-			g_ClientRpcProxy.ReqStartGame();
+			g_ClientRpcProxy.ReqStartMatch();
 		}
 
 		if (ImGui::BeginPopupModal(u8"게임 시작", &showMatching, ImGuiWindowFlags_NoResize))
@@ -350,7 +349,7 @@ private:
 			if (ImGui::Button(u8"매칭 취소", ImVec2(140, 50)))
 			{
 				showMatching = false;
-				g_ClientRpcProxy.ReqCancelGame();
+				g_ClientRpcProxy.ReqCancelMatch();
 			}
 
 			ImGui::EndPopup();
@@ -375,7 +374,15 @@ private:
 
 		for (auto& p : client_->playerMap_)
 		{
-			ImGui::Text(u8"%s  Lv.%d", p.second.playerName_.c_str(), p.second.level_);
+			std::string playerState;
+			if (p.second.state_ == PLAYER_STATE::LOBBY)
+				playerState = u8"로비";
+			else if (p.second.state_ == PLAYER_STATE::GAMEROOM)
+				playerState = u8"게임 중";
+			else
+				playerState = u8"확인 불가";
+
+			ImGui::Text(u8"%s  Lv.%d %s", p.second.playerName_.c_str(), p.second.level_, playerState);
 		}
 
 		ImGui::EndChild();
@@ -437,16 +444,19 @@ private:
 
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + boardOffsetX);
 
-		ImGui::BeginChild("OmokBoard", ImVec2(boardSize + 40.0f, boardSize + 40.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+		ImGui::BeginChild("OmokBoard", ImVec2(boardSize + 80.0f, boardSize + 80.0f), true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 		ImDrawList* drawList = ImGui::GetWindowDrawList();
 		ImVec2 boardPos = ImGui::GetCursorScreenPos();
+
+		boardPos.x += 30.0f;
+		boardPos.y += 30.0f;
 
 		// ---------------------------------------------------------
 		// 바둑판 배경
 		// ---------------------------------------------------------
 
-		drawList->AddRectFilled(ImVec2(boardPos.x - 10.0f, boardPos.y - 10.0f), ImVec2(boardPos.x + boardSize + 10.0f, boardPos.y + boardSize + 10.0f), 
+		drawList->AddRectFilled(ImVec2(boardPos.x - 30.0f, boardPos.y - 30.0f), ImVec2(boardPos.x + boardSize + 30.0f, boardPos.y + boardSize + 30.0f), 
 			IM_COL32(205, 155, 80, 255), 4.0f);
 
 		// ---------------------------------------------------------
@@ -480,13 +490,13 @@ private:
 		// 돌 그리기
 		// ---------------------------------------------------------
 
-		for (int row = 0; row < OmokGame::BOARD_SIZE; ++row)
+		for (int row = 0; row < OmokGame::BOARD_SIZE; row++)
 		{
-			for (int col = 0; col < OmokGame::BOARD_SIZE; ++col)
+			for (int col = 0; col < OmokGame::BOARD_SIZE; col++)
 			{
-				OmokGame::Stone stone = g_OmokGame.GetStone(row, col);
+				STONE stone = client_->omokGame_.GetStone(row, col);
 
-				if (stone == OmokGame::Stone::None)
+				if (stone == STONE::NONE)
 					continue;
 
 				float x = boardPos.x + col * boardCellSize;
@@ -494,14 +504,14 @@ private:
 				float radius = boardCellSize * 0.43f;
 
 				// 흑
-				if (stone == OmokGame::Stone::Black)
+				if (stone == STONE::BLACK)
 				{
 					drawList->AddCircleFilled(ImVec2(x + 1.5f, y + 2.0f), radius, IM_COL32(0, 0, 0, 180), 32);
 					drawList->AddCircleFilled(ImVec2(x, y), radius, IM_COL32(25, 25, 25, 255), 32);
 					drawList->AddCircleFilled(ImVec2(x - radius * 0.3f, y - radius * 0.3f), radius * 0.15f, IM_COL32(120, 120, 120, 100), 32);
 				}
 				// 백
-				else if (stone == OmokGame::Stone::White)
+				else if (stone == STONE::WHITE)
 				{
 					drawList->AddCircleFilled(ImVec2(x + 1.5f, y + 2.0f), radius, IM_COL32(120, 120, 120, 180), 32);
 					drawList->AddCircleFilled(ImVec2(x, y), radius, IM_COL32(230, 230, 230, 255), 32);
@@ -517,17 +527,27 @@ private:
 		ImGui::SetCursorScreenPos(boardPos);
 		ImGui::InvisibleButton("BoardClickArea", ImVec2(boardSize, boardSize));
 
-		if (!g_OmokGame.IsGameOver() && ImGui::IsItemClicked(ImGuiMouseButton_Left))
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
 		{
-			ImVec2 mousePos = ImGui::GetIO().MousePos;
-			float localX = mousePos.x - boardPos.x;
-			float localY = mousePos.y - boardPos.y;
+			// TODO: 로직 검증
+			if (!client_->omokGame_.IsGameOver() )
+				// && client_->myPlayer_.stone_ == g_OmokGame.GetTurn()
+			{
+				ImVec2 mousePos = ImGui::GetIO().MousePos;
+				float localX = mousePos.x - boardPos.x;
+				float localY = mousePos.y - boardPos.y;
 
-			int col = static_cast<int>(std::round(localX / boardCellSize));
-			int row = static_cast<int>(std::round(localY / boardCellSize));
+				int col = static_cast<int>(std::round(localX / boardCellSize));
+				int row = static_cast<int>(std::round(localY / boardCellSize));
 
-			if (row >= 0 && row < OmokGame::BOARD_SIZE && col >= 0 && col < OmokGame::BOARD_SIZE)
-				g_OmokGame.PlaceStone(row, col);
+				if (row >= 0 && row < OmokGame::BOARD_SIZE && col >= 0 && col < OmokGame::BOARD_SIZE)
+				{
+					//g_OmokGame.PlaceStone(row, col);
+
+					/// 바둑알 놓기 패킷 전송
+					g_ClientRpcProxy.ReqPlaceStone(row, col);
+				}
+			}
 		}
 
 		ImGui::EndChild();
@@ -575,14 +595,23 @@ private:
 			};
 
 		// 위쪽 = 흑
-		DrawPlayerInfo(u8"흑돌 플레이어", 25, true, g_OmokGame.GetCurrentTurn() == OmokGame::Stone::Black);
+		DrawPlayerInfo(u8"흑돌 플레이어", 25, true, client_->omokGame_.GetTurn() == STONE::BLACK);
 
 		ImGui::Spacing();
 
 		// 아래쪽 = 백
-		DrawPlayerInfo(u8"백돌 플레이어", 18, false, g_OmokGame.GetCurrentTurn() == OmokGame::Stone::White);
+		DrawPlayerInfo(u8"백돌 플레이어", 18, false, client_->omokGame_.GetTurn() == STONE::WHITE);
 
 		ImGui::Spacing();
+
+
+		// =========================================================
+		// 턴 타이머
+		// =========================================================
+
+		client_->omokGame_.UpdateTurnTimer(ImGui::GetIO().DeltaTime);
+
+		
 
 		// =========================================================
 		// 제한 시간 영역
@@ -590,9 +619,45 @@ private:
 
 		ImGui::BeginChild("TurnTimer", ImVec2(0, 90.0f), true);
 
-		ImGui::Text(u8"남은 시간 : %2d초", g_OmokGame.GetTurnTime());
+		if (!client_->omokGame_.IsGameOver())
+		{
+			ImGui::Text(u8"남은 시간 : %2d초", client_->omokGame_.GetTurnTime());
+		}
+		else
+		{
+			bool playerWon = client_->omokGame_.GetWinner() == client_->myPlayer_.stone_;
+
+			if (playerWon)
+				ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.1f, 1.0f), u8"승리!");
+			else
+				ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1.0f), u8"패배!");
+
+			ImGui::SameLine();
+
+			float buttonWidth = 120.0f;
+			float buttonSpacing = 10.0f;
+
+			if (ImGui::Button(u8"재대결", ImVec2(buttonWidth, 45.0f)))
+			{
+				if (client_->opponentPlayer_.playerId_ != 0)
+				{
+					//client_->omokGame_.Initialize();
+
+					// TODO: 재대결 신청 패킷 전송
+				}
+			}
+
+			ImGui::SameLine(0.0f, buttonSpacing);
+
+			if (ImGui::Button(u8"나가기", ImVec2(buttonWidth, 45.0f)))
+			{
+				/// 게임방 나가기 패킷 전송
+				g_ClientRpcProxy.ReqLeaveRoom();
+			}
+		}
 
 		ImGui::EndChild();
+
 
 		// =========================================================
 		// 채팅
@@ -608,72 +673,6 @@ private:
 
 		ImGui::EndChild();
 
-		// =========================================================
-		// 턴 타이머
-		// =========================================================
-
-		g_OmokGame.UpdateTurnTimer(ImGui::GetIO().DeltaTime);
-
-		// =========================================================
-		// 게임 결과창
-		// =========================================================
-
-		if (g_OmokGame.IsGameOver())
-			ImGui::OpenPopup("GameResult");
-
-		ImGui::SetNextWindowSize(ImVec2(420.0f, 260.0f), ImGuiCond_Always);
-
-		if (ImGui::BeginPopupModal("GameResult", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-		{
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			// 결과
-			bool playerWon = g_OmokGame.GetWinner() == myStone;
-
-			if (playerWon)
-				ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.1f, 1.0f), u8"승리!");
-			else
-				ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1.0f), u8"패배...");
-
-			ImGui::Spacing();
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Spacing();
-			ImGui::Spacing();
-
-			// -----------------------------------------------------
-			// 재대결
-			// -----------------------------------------------------
-
-			float buttonWidth = 160.0f;
-			float contentWidth = ImGui::GetContentRegionAvail().x;
-
-			ImGui::SetCursorPosX((contentWidth - buttonWidth * 2 - 10.0f) * 0.5f);
-
-			if (ImGui::Button(u8"재대결", ImVec2(buttonWidth, 45.0f)))
-			{
-				g_OmokGame.ResetGame();
-				ImGui::CloseCurrentPopup();
-			}
-
-			ImGui::SameLine();
-
-			// -----------------------------------------------------
-			// 나가기
-			// -----------------------------------------------------
-
-			if (ImGui::Button(u8"나가기", ImVec2(buttonWidth, 45.0f)))
-			{
-				ImGui::CloseCurrentPopup();
-
-				// TODO:
-				// 게임방 나가기 패킷 전송
-				// SendLeaveGamePacket();
-			}
-
-			ImGui::EndPopup();
-		}
 
 		ImGui::End();
 	}

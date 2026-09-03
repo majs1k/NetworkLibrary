@@ -3,12 +3,13 @@
 #include <vector>
 #include <unordered_map>
 #include "Character.h"
+#include "OmokGame.h"
 
 enum class PLAYER_STATE : short
 {
+	NONE,
 	LOBBY,
-	GAME_WAITING,
-	GAME_COMMAND,
+	GAMEROOM,
 };
 
 class RpcServerProxy;
@@ -21,34 +22,36 @@ struct Player
 	int playerId_;
 	std::string playerName_;
 	int level_;
-	int gold_;
+	int money_;
 
 	PLAYER_STATE state_;
 
 	std::vector<Character> characters_;
 	int equippedInvenId_;
 
-	GameRoom* room_;
+	GameRoom* gameRoom_;
 
 	unsigned int lastChatTime_;
 	int curChatCount_;
 
+	STONE stone_;
 
-	void Initialize(__int64 sessionId, int playerId, std::string& playerName, int level, int gold, int equippedId)
+
+	void Initialize(__int64 sessionId, int playerId, std::string& playerName, int level, int money, int equippedId)
 	{
 		sessionId_ = sessionId;
 
 		playerId_ = playerId;
 		playerName_ = playerName;
 		level_ = level;
-		gold_ = gold;
+		money_ = money;
 
-		state_ = PLAYER_STATE::LOBBY;
+		state_ = PLAYER_STATE::NONE;
 
 		characters_.clear();
 		equippedInvenId_ = equippedId;
 
-		room_ = nullptr;
+		gameRoom_ = nullptr;
 
 		lastChatTime_ = 0;
 		curChatCount_ = 0;
@@ -88,21 +91,17 @@ public:
 		return true;
 	}
 
-	bool RemovePlayer(int playerId)
+	bool RemovePlayer(Player* player)
 	{
-		auto it = playerMap_.find(playerId);
+		auto it = playerMap_.find(player->playerId_);
 
 		if (it == playerMap_.end())
 			return false;
 
-		Player* player = it->second;
-
-		__int64 sessionId = player->sessionId_;
+		playerMap_.erase(player->playerId_);
+		sessionToPlayer_.erase(player->sessionId_);
 
 		delete player;
-		playerMap_.erase(it);
-
-		sessionToPlayer_.erase(sessionId);
 
 		return true;
 	}
@@ -166,7 +165,6 @@ public:
 
 
 
-
 // 클라이언트가 받을 대전 상대 플레이어
 struct PlayerInfo
 {
@@ -174,10 +172,12 @@ struct PlayerInfo
 	std::string playerName_;
 	int level_;
 
+	PLAYER_STATE state_;
+
 	PlayerInfo() = default;
 
 	PlayerInfo(const Player& player)
-		:playerId_(player.playerId_), playerName_(player.playerName_), level_(player.level_)
+		:playerId_(player.playerId_), playerName_(player.playerName_), level_(player.level_), state_(player.state_)
 	{
 	}
 };

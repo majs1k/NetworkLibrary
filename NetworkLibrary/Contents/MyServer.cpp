@@ -13,10 +13,12 @@ MyServer::MyServer()
 
 	hDatabaseThread_ = (HANDLE)_beginthreadex(nullptr, 0, DatabaseThread, this, 0, nullptr);
 
-	dbProxy_.dbReqQueue_ = &dbReqQueue_;
-	dbProxy_.dbResQueue_ = &dbResQueue_;
+	g_DbProxy.dbReqQueue_ = &dbReqQueue_;
+	g_DbProxy.dbResQueue_ = &dbResQueue_;
 
 	matchMaker_.Initialize(&roomManager_);
+
+	roomManager_.SetPlayerManager(&playerManager_);
 }
 
 void MyServer::AttachProxy(RpcServerProxy* rpcProxy)
@@ -60,12 +62,12 @@ void MyServer::OnRelease(__int64 sessionId)
 	int playerId = player->playerId_;
 
 	// TODO: 인자 수정
-	playerManager_.RemovePlayer(playerId);
+	playerManager_.RemovePlayer(player);
 
 	// 다른 플레이어들에게 퇴장 알림
 	for (auto& p : playerManager_.GetPlayers())
 	{
-		g_RpcProxy.ResPlayerLeaveLobby(p.second->sessionId_, playerId);
+		g_RpcProxy.ResLeaveLobby(p.second->sessionId_, playerId);
 	}
 }
 

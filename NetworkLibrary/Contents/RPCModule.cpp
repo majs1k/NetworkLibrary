@@ -1,6 +1,7 @@
 // -------------------------------------------------
 // 
-// 직렬화 버퍼에 필요한 가변 인자들 전역 오버로딩 추가
+// 직렬화 버퍼에 필요한 가변 인자들 전역 오버로딩
+// RPC 클래스 컴파일
 //
 // -------------------------------------------------
 #include "RpcModule.h"
@@ -11,6 +12,8 @@
 
 RpcServerProxy g_RpcProxy;
 RpcClientProxy g_ClientRpcProxy;
+
+DbProxy g_DbProxy;
 
 
 inline Packet& operator<<(Packet& packet, std::string& str)
@@ -81,14 +84,32 @@ inline Packet& operator>>(Packet& packet, RESPONSE_CODE& code)
 }
 
 
+inline Packet& operator<<(Packet& packet, PLAYER_STATE state)
+{
+	packet << static_cast<short>(state);
+
+	return packet;
+}
+
+inline Packet& operator>>(Packet& packet, PLAYER_STATE& state)
+{
+	short s;
+	packet >> s;
+
+	state = static_cast<PLAYER_STATE>(s);
+
+	return packet;
+}
+
 
 inline Packet& operator<<(Packet& packet, Player player)
 {
 	packet << player.playerId_;
 	packet << player.playerName_;
 	packet << player.level_;
-	packet << player.gold_;
+	packet << player.money_;
 	packet << player.equippedInvenId_;
+	packet << player.state_;
 
 	return packet;
 }
@@ -98,8 +119,9 @@ inline Packet& operator>>(Packet& packet, Player& player)
 	packet >> player.playerId_;
 	packet >> player.playerName_;
 	packet >> player.level_;
-	packet >> player.gold_;
+	packet >> player.money_;
 	packet >> player.equippedInvenId_;
+	packet >> player.state_;
 
 	return packet;
 }
@@ -109,6 +131,7 @@ inline Packet& operator<<(Packet& packet, PlayerInfo info)
 	packet << info.playerId_;
 	packet << info.playerName_;
 	packet << info.level_;
+	packet << info.state_;
 
 	return packet;
 }
@@ -118,6 +141,7 @@ inline Packet& operator>>(Packet& packet, PlayerInfo& info)
 	packet >> info.playerId_;
 	packet >> info.playerName_;
 	packet >> info.level_;
+	packet >> info.state_;
 
 	return packet;
 }
@@ -140,6 +164,23 @@ inline Packet& operator>>(Packet& packet, Character& character)
 	packet >> character.level_;
 	packet >> character.attack_;
 	packet >> character.hp_;
+
+	return packet;
+}
+
+inline Packet& operator<<(Packet& packet, STONE stone)
+{
+	packet << static_cast<short>(stone);
+
+	return packet;
+}
+
+inline Packet& operator>>(Packet& packet, STONE& stone)
+{
+	short s;
+	packet >> s;
+
+	stone = static_cast<STONE>(s);
 
 	return packet;
 }

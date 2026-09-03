@@ -121,7 +121,13 @@ bool MyClient::ResPlayerProfile(Player& player)
 		//TODO: 이동으로 변경??
 		myPlayer_ = player;
 
+		// 초기화
+		playerMap_.clear();
+		chatMessages_.clear();
+
 		scene_ = SCENE::MAIN;
+
+		g_ClientRpcProxy.ReqEnterLobby();
 
 		return true;
 	}
@@ -148,34 +154,33 @@ bool MyClient::ResChat(int playerId, std::string& message)
 	return true;
 }
 
-bool MyClient::ResLobbyPlayers(std::vector<PlayerInfo>& players)
+bool MyClient::ResEnterLobby(PlayerInfo& player)
 {
-	for (auto& info : players)
+	// 다시 로비에 들어왔다면 정보 업데이트
+	if (playerMap_.count(player.playerId_))
 	{
-		playerMap_.insert({ info.playerId_, info });
+		playerMap_[player.playerId_].level_ = player.level_;
+		playerMap_[player.playerId_].state_ = player.state_;
+
+		return true;
 	}
 
-	return true;
-}
-
-bool MyClient::ResPlayerEnterLobby(PlayerInfo& player)
-{
-	// player 복사가 일어남? 인자가 레퍼런스 였다면 어케됨?
+	// TODO: player 복사가 일어남? 인자가 레퍼런스 였다면 어케됨?
 	playerMap_.insert({ player.playerId_, player });
 
 	return true;
 }
 
-bool MyClient::ResPlayerLeaveLobby(int playerId)
+bool MyClient::ResLeaveLobby(int playerId)
 {
 	playerMap_.erase(playerId);
 
 	return true;
 }
 
-bool MyClient::ResBuyCharacter(Character& character, int curGold)
+bool MyClient::ResBuyCharacter(Character& character, int curMoney)
 {
-	myPlayer_.gold_ = curGold;
+	myPlayer_.money_ = curMoney;
 
 	myPlayer_.characters_.push_back(character);
 
@@ -189,24 +194,77 @@ bool MyClient::ResChangeEquipment(int inventoryId)
 	return true;
 }
 
-bool MyClient::ResStartGame(PlayerInfo& otherPlayer)
+bool MyClient::ResStartMatch(STONE stone, PlayerInfo& opponent)
 {
+	chatMessages_.clear();
+
+	opponentPlayer_ = opponent;
+
+	myPlayer_.stone_ = stone;
+
+	omokGame_.Initialize();
+
 	scene_ = SCENE::GAME;
 
-	for (auto& c : myPlayer_.characters_)
+	return true;
+}
+
+bool MyClient::ResPlaceStone(short row, short col)
+{
+	omokGame_.PlaceStone(row, col);
+
+	return true;
+}
+
+bool MyClient::ResGameResult(STONE stone, int level, int myMoney)
+{
+	// 클라이언트에서도 승리자를 계산하지만 한번 더 덮어씀.
+	omokGame_.SetWinner(stone);
+
+	myPlayer_.money_ = myMoney;
+	myPlayer_.level_ = level;
+
+	return true;
+}
+
+bool MyClient::ResChangePlayerLevel(int playerId, int level)
+{
+	if (myPlayer_.playerId_ == playerId)
+		myPlayer_.level_ = level;
+
+	playerMap_[playerId].level_ = level;
+
+	return true;
+}
+
+bool MyClient::ResChangePlayerState(int playerId, PLAYER_STATE state)
+{
+	if (myPlayer_.playerId_ == playerId)
+		myPlayer_.state_ = state;
+
+	playerMap_[playerId].state_ = state;
+
+	return true;
+}
+
+bool MyClient::ResLeaveRoom(int playerId)
+{
+	if (myPlayer_.playerId_ == playerId)
 	{
-		if (c.inventoryId_ == myPlayer_.equippedInvenId_)
-		{
-			myCharacter_ = c;
-			myCharacter_.currentHp_ = myCharacter_.hp_;
-			break;
-		}
+		// 초기화
+		playerMap_.clear();
+		chatMessages_.clear();
+
+		g_ClientRpcProxy.ReqEnterLobby();
+
+		scene_ = SCENE::MAIN;
 	}
-
-	enemyPlayer_ = otherPlayer;
-
-	// TODO: 상대 캐릭터 정보 추가
-	//enemyCharacter = &character;
+	else if(opponentPlayer_.playerId_ == playerId)
+	{
+		opponentPlayer_.level_ = 0;
+		opponentPlayer_.playerId_ = 0;
+		opponentPlayer_.playerName_ = "";
+	}
 
 	return true;
 }

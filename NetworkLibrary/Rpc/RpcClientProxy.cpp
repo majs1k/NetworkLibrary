@@ -100,18 +100,18 @@ void RpcClientProxy::ResPlayerCharacters(std::vector<Character>& characters)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResLobbyPlayers(std::vector<PlayerInfo>& players)
+void RpcClientProxy::ReqEnterLobby()
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 15;
-    *packet << players;
+    *packet;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResPlayerEnterLobby(PlayerInfo& player)
+void RpcClientProxy::ResEnterLobby(PlayerInfo& player)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -122,7 +122,7 @@ void RpcClientProxy::ResPlayerEnterLobby(PlayerInfo& player)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResPlayerLeaveLobby(int playerId)
+void RpcClientProxy::ResLeaveLobby(int playerId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -166,13 +166,13 @@ void RpcClientProxy::ReqBuyCharacter()
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResBuyCharacter(Character& character, int curGold)
+void RpcClientProxy::ResBuyCharacter(Character& character, int curMoney)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 51;
-    *packet << character << curGold;
+    *packet << character << curMoney;
 
     client_->SendPacket(packet);
 }
@@ -199,7 +199,7 @@ void RpcClientProxy::ResChangeEquipment(int inventoryId)
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqStartGame()
+void RpcClientProxy::ReqStartMatch()
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -210,18 +210,18 @@ void RpcClientProxy::ReqStartGame()
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResStartGame(PlayerInfo& otherPlayer)
+void RpcClientProxy::ResStartMatch(STONE stone, PlayerInfo& opponent)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 61;
-    *packet << otherPlayer;
+    *packet << stone << opponent;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqCancelGame()
+void RpcClientProxy::ReqCancelMatch()
 {
     Packet* packet = new Packet();
     packet->Initialize();
@@ -232,35 +232,90 @@ void RpcClientProxy::ReqCancelGame()
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ReqGameCommand(int commandType)
+void RpcClientProxy::ReqPlaceStone(short row, short col)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 65;
-    *packet << commandType;
+    *packet << row << col;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResGameCommand(Character& character)
+void RpcClientProxy::ResPlaceStone(short row, short col)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 66;
-    *packet << character;
+    *packet << row << col;
 
     client_->SendPacket(packet);
 }
 
-void RpcClientProxy::ResEndGame(int result, int currentMoney)
+void RpcClientProxy::ResGameResult(STONE stone, int level, int myMoney)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 67;
+    *packet << stone << level << myMoney;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResChangePlayerLevel(int playerId, int level)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 68;
+    *packet << playerId << level;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResChangePlayerState(int playerId, PLAYER_STATE state)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 69;
+    *packet << playerId << state;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResEnterRoom(int playerId)
 {
     Packet* packet = new Packet();
     packet->Initialize();
 
     packet->GetHeaderPtr()->type_ = 70;
-    *packet << result << currentMoney;
+    *packet << playerId;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ReqLeaveRoom()
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 71;
+    *packet;
+
+    client_->SendPacket(packet);
+}
+
+void RpcClientProxy::ResLeaveRoom(int playerId)
+{
+    Packet* packet = new Packet();
+    packet->Initialize();
+
+    packet->GetHeaderPtr()->type_ = 72;
+    *packet << playerId;
 
     client_->SendPacket(packet);
 }

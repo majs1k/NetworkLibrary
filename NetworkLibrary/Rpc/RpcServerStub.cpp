@@ -83,11 +83,10 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
         }
         case 15:
         {
-			std::vector<PlayerInfo> players;
 
-            *packet >> players;
+            *packet;
 
-            return ResLobbyPlayers(sessionId, players);
+            return ReqEnterLobby(sessionId);
         }
         case 16:
         {
@@ -95,7 +94,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> player;
 
-            return ResPlayerEnterLobby(sessionId, player);
+            return ResEnterLobby(sessionId, player);
         }
         case 17:
         {
@@ -103,7 +102,7 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet >> playerId;
 
-            return ResPlayerLeaveLobby(sessionId, playerId);
+            return ResLeaveLobby(sessionId, playerId);
         }
         case 30:
         {
@@ -132,11 +131,11 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
         case 51:
         {
 			Character character;
-			int curGold;
+			int curMoney;
 
-            *packet >> character >> curGold;
+            *packet >> character >> curMoney;
 
-            return ResBuyCharacter(sessionId, character, curGold);
+            return ResBuyCharacter(sessionId, character, curMoney);
         }
         case 52:
         {
@@ -159,47 +158,92 @@ bool RpcServerStub::PacketProc(__int64 sessionId, Packet* packet)
 
             *packet;
 
-            return ReqStartGame(sessionId);
+            return ReqStartMatch(sessionId);
         }
         case 61:
         {
-			PlayerInfo otherPlayer;
+			STONE stone;
+			PlayerInfo opponent;
 
-            *packet >> otherPlayer;
+            *packet >> stone >> opponent;
 
-            return ResStartGame(sessionId, otherPlayer);
+            return ResStartMatch(sessionId, stone, opponent);
         }
         case 62:
         {
 
             *packet;
 
-            return ReqCancelGame(sessionId);
+            return ReqCancelMatch(sessionId);
         }
         case 65:
         {
-			int commandType;
+			short row;
+			short col;
 
-            *packet >> commandType;
+            *packet >> row >> col;
 
-            return ReqGameCommand(sessionId, commandType);
+            return ReqPlaceStone(sessionId, row, col);
         }
         case 66:
         {
-			Character character;
+			short row;
+			short col;
 
-            *packet >> character;
+            *packet >> row >> col;
 
-            return ResGameCommand(sessionId, character);
+            return ResPlaceStone(sessionId, row, col);
+        }
+        case 67:
+        {
+			STONE stone;
+			int level;
+			int myMoney;
+
+            *packet >> stone >> level >> myMoney;
+
+            return ResGameResult(sessionId, stone, level, myMoney);
+        }
+        case 68:
+        {
+			int playerId;
+			int level;
+
+            *packet >> playerId >> level;
+
+            return ResChangePlayerLevel(sessionId, playerId, level);
+        }
+        case 69:
+        {
+			int playerId;
+			PLAYER_STATE state;
+
+            *packet >> playerId >> state;
+
+            return ResChangePlayerState(sessionId, playerId, state);
         }
         case 70:
         {
-			int result;
-			int currentMoney;
+			int playerId;
 
-            *packet >> result >> currentMoney;
+            *packet >> playerId;
 
-            return ResEndGame(sessionId, result, currentMoney);
+            return ResEnterRoom(sessionId, playerId);
+        }
+        case 71:
+        {
+
+            *packet;
+
+            return ReqLeaveRoom(sessionId);
+        }
+        case 72:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return ResLeaveRoom(sessionId, playerId);
         }
     default:
     {
@@ -256,17 +300,17 @@ bool RpcServerStub::ResPlayerCharacters(__int64 sessionId, std::vector<Character
     return true;
 }
 
-bool RpcServerStub::ResLobbyPlayers(__int64 sessionId, std::vector<PlayerInfo>& players)
+bool RpcServerStub::ReqEnterLobby(__int64 sessionId)
 {
     return true;
 }
 
-bool RpcServerStub::ResPlayerEnterLobby(__int64 sessionId, PlayerInfo& player)
+bool RpcServerStub::ResEnterLobby(__int64 sessionId, PlayerInfo& player)
 {
     return true;
 }
 
-bool RpcServerStub::ResPlayerLeaveLobby(__int64 sessionId, int playerId)
+bool RpcServerStub::ResLeaveLobby(__int64 sessionId, int playerId)
 {
     return true;
 }
@@ -286,7 +330,7 @@ bool RpcServerStub::ReqBuyCharacter(__int64 sessionId)
     return true;
 }
 
-bool RpcServerStub::ResBuyCharacter(__int64 sessionId, Character& character, int curGold)
+bool RpcServerStub::ResBuyCharacter(__int64 sessionId, Character& character, int curMoney)
 {
     return true;
 }
@@ -301,32 +345,57 @@ bool RpcServerStub::ResChangeEquipment(__int64 sessionId, int inventoryId)
     return true;
 }
 
-bool RpcServerStub::ReqStartGame(__int64 sessionId)
+bool RpcServerStub::ReqStartMatch(__int64 sessionId)
 {
     return true;
 }
 
-bool RpcServerStub::ResStartGame(__int64 sessionId, PlayerInfo& otherPlayer)
+bool RpcServerStub::ResStartMatch(__int64 sessionId, STONE stone, PlayerInfo& opponent)
 {
     return true;
 }
 
-bool RpcServerStub::ReqCancelGame(__int64 sessionId)
+bool RpcServerStub::ReqCancelMatch(__int64 sessionId)
 {
     return true;
 }
 
-bool RpcServerStub::ReqGameCommand(__int64 sessionId, int commandType)
+bool RpcServerStub::ReqPlaceStone(__int64 sessionId, short row, short col)
 {
     return true;
 }
 
-bool RpcServerStub::ResGameCommand(__int64 sessionId, Character& character)
+bool RpcServerStub::ResPlaceStone(__int64 sessionId, short row, short col)
 {
     return true;
 }
 
-bool RpcServerStub::ResEndGame(__int64 sessionId, int result, int currentMoney)
+bool RpcServerStub::ResGameResult(__int64 sessionId, STONE stone, int level, int myMoney)
+{
+    return true;
+}
+
+bool RpcServerStub::ResChangePlayerLevel(__int64 sessionId, int playerId, int level)
+{
+    return true;
+}
+
+bool RpcServerStub::ResChangePlayerState(__int64 sessionId, int playerId, PLAYER_STATE state)
+{
+    return true;
+}
+
+bool RpcServerStub::ResEnterRoom(__int64 sessionId, int playerId)
+{
+    return true;
+}
+
+bool RpcServerStub::ReqLeaveRoom(__int64 sessionId)
+{
+    return true;
+}
+
+bool RpcServerStub::ResLeaveRoom(__int64 sessionId, int playerId)
 {
     return true;
 }

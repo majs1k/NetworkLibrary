@@ -24,13 +24,10 @@ ReqChat(std::string& message)											30
 ResChat(int playerId, std::string& message)								31
 
 
-ReqBuyCharacter(int playerId, int inventoryId, int characterId, int curGold)				50
-ResBuyCharacter(Character& character, int curGold)						51
+ReqBuyCharacter(int playerId, int inventoryId, int characterId, int curMoney)				50
+ResBuyCharacter(Character& character, int curMoney)						51
 
 ReqChangeEquipment(int playerId, int inventoryId)						52
 
 
-
-
-ReqEndGame(int result, int currentMoney)				70
-
+ReqGameResult(int winnerId, int loserId)								67

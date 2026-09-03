@@ -5,7 +5,7 @@ bool MyServer::ReqUserRegisterDB(__int64 sessionId, std::string& loginId, std::s
 {
 	RESPONSE_CODE code = userRepository_.CreateUser(loginId, password);
 
-	dbProxy_.ResUserRegisterDB(sessionId, code);
+	g_DbProxy.ResUserRegisterDB(sessionId, code);
 
 	return true;
 }
@@ -23,7 +23,7 @@ bool MyServer::ReqUserLoginDB(__int64 sessionId, std::string& loginId, std::stri
 
 	RESPONSE_CODE code = userRepository_.FindByLoginId(loginId, password, userId);
 
-	dbProxy_.ResUserLoginDB(sessionId, code, userId);
+	g_DbProxy.ResUserLoginDB(sessionId, code, userId);
 
 	return true;
 }
@@ -40,7 +40,7 @@ bool MyServer::ReqPlayerRegisterDB(__int64 sessionId, int userId, std::string& p
 {
 	RESPONSE_CODE code = playerRepository_.CreatePlayer(userId, playerName);
 
-	dbProxy_.ResPlayerRegisterDB(sessionId, code);
+	g_DbProxy.ResPlayerRegisterDB(sessionId, code);
 
 	return true;
 }
@@ -68,14 +68,14 @@ bool MyServer::ReqPlayerConnectionDB(__int64 sessionId, int userId)
 		return true;
 	}
 
-	dbProxy_.ResPlayerProfileDB(sessionId, p);
+	g_DbProxy.ResPlayerProfileDB(sessionId, p);
 
 
 	std::vector<Character> characters;
 
 	inventoryRepository_.FindCharacterByPlayerId(p.playerId_, characters);
 
-	dbProxy_.ResPlayerCharactersDB(sessionId, characters);
+	g_DbProxy.ResPlayerCharactersDB(sessionId, characters);
 
 
 	return true;
@@ -94,13 +94,13 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 	}
 
 	Player* newPlayer = new Player();
-	newPlayer->Initialize(sessionId, player.playerId_, player.playerName_, player.level_, player.gold_, player.equippedInvenId_);
+	newPlayer->Initialize(sessionId, player.playerId_, player.playerName_, player.level_, player.money_, player.equippedInvenId_);
 
 	if (!playerManager_.AddPlayer(sessionId, newPlayer))
 	{
 		delete newPlayer;
 
-		// 클라이언트는 해당 패킷 수신시, 플레이어 등록 안되었음을 확인
+		// 잘못된 요청 (플레이어 db에 등록 x)
 		player.playerId_ = 0;
 
 		g_RpcProxy.ResPlayerProfile(sessionId, player);
@@ -109,27 +109,6 @@ bool MyServer::ResPlayerProfileDB(__int64 sessionId, Player& player)
 	}
 
 	g_RpcProxy.ResPlayerProfile(sessionId, player);
-
-
-	// 플레이어에게 로비 플레이어들 정보 송신
-	std::vector<PlayerInfo> infos;
-
-	for (auto& p : playerManager_.GetPlayers())
-	{
-		PlayerInfo info(*(p.second));
-		infos.push_back(info);
-	}
-
-	g_RpcProxy.ResLobbyPlayers(sessionId, infos);
-
-	// 복사생성자 호출
-	PlayerInfo info(player);
-
-	// 다른 플레이어들에게도 입장 알림
-	for (auto& p : playerManager_.GetPlayers())
-	{
-		g_RpcProxy.ResPlayerEnterLobby(p.second->sessionId_, info);
-	}
 
 	return true;
 }
@@ -153,11 +132,11 @@ bool MyServer::ResPlayerCharactersDB(__int64 sessionId, std::vector<Character>& 
 	return true;
 }
 
-bool MyServer::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold)
+bool MyServer::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curMoney)
 {
 	db_->BeginTransaction();
 
-	playerRepository_.UpdateGold(playerId, curGold);
+	playerRepository_.UpdateMoney(playerId, curMoney);
 	inventoryRepository_.CreateCharacter(playerId, inventoryId, characterId);
 
 	db_->Commit();
@@ -168,6 +147,28 @@ bool MyServer::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryI
 bool MyServer::ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId)
 {
 	playerRepository_.UpdateEquipment(playerId, inventoryId);
+
+	return true;
+}
+
+bool MyServer::ReqGameResultDB(__int64 sessionId, int winnerId, int loserId)
+{
+	Player* winner = playerManager_.GetPlayerBySessionId(winnerId);
+
+	if (winner == nullptr)
+		return true;
+
+	Player* loser = playerManager_.GetPlayerBySessionId(loserId);
+
+	if (loser == nullptr)
+		return true;
+
+	db_->BeginTransaction();
+
+	playerRepository_.UpdateLevel(winnerId, winner->level_);
+	playerRepository_.UpdateMoney(winnerId, winner->money_);
+
+	db_->Commit();
 
 	return true;
 }

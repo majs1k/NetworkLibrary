@@ -18,8 +18,6 @@ public:
 			"player_id INT NOT NULL,"
 			"character_id INT NOT NULL,"
 			"level INT NOT NULL DEFAULT 1,"
-			//"attack INT NOT NULL,"
-			//"hp INT NOT NULL,"
 			"acquired_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
 			"FOREIGN KEY (player_id) REFERENCES players(player_id)"
 			");");
@@ -145,50 +143,4 @@ public:
 		}
 	}
 
-	//void UpdateCharacterAttack(int inventoryId, int attack, int statPoint)
-	//{
-	//	try
-	//	{
-	//		auto stmt = database_->Prepare(
-	//			"UPDATE inventories "
-	//			"SET attack = ?, stat_point = ? "
-	//			"WHERE inventory_id = ?");
-
-	//		stmt->setInt(1, attack);
-	//		stmt->setInt(2, statPoint);
-	//		stmt->setInt(3, inventoryId);
-
-	//		stmt->execute();
-	//	}
-	//	catch (sql::SQLException& e)
-	//	{
-	//		std::cout << "SQL Error: " << e.what() << std::endl;
-	//		std::cout << "Error Code: " << e.getErrorCode() << std::endl;
-	//		std::cout << "SQL State: " << e.getSQLState() << std::endl;
-	//	}
-	//}
-
-
-	//void UpdateCharacterHp(int inventoryId, int hp, int statPoint)
-	//{
-	//	try
-	//	{
-	//		auto stmt = database_->Prepare(
-	//			"UPDATE inventories "
-	//			"SET hp = ?, stat_point = ? "
-	//			"WHERE inventory_id = ?");
-
-	//		stmt->setInt(1, hp);
-	//		stmt->setInt(2, statPoint);
-	//		stmt->setInt(3, inventoryId);
-
-	//		stmt->execute();
-	//	}
-	//	catch (sql::SQLException& e)
-	//	{
-	//		std::cout << "SQL Error: " << e.what() << std::endl;
-	//		std::cout << "Error Code: " << e.getErrorCode() << std::endl;
-	//		std::cout << "SQL State: " << e.getSQLState() << std::endl;
-	//	}
-	//}
 };

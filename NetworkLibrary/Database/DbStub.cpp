@@ -127,20 +127,20 @@ bool DbStub::DbPacketProc(__int64 sessionId, Packet* packet)
 			int playerId;
 			int inventoryId;
 			int characterId;
-			int curGold;
+			int curMoney;
 
-            *packet >> playerId >> inventoryId >> characterId >> curGold;
+            *packet >> playerId >> inventoryId >> characterId >> curMoney;
 
-            return ReqBuyCharacterDB(sessionId, playerId, inventoryId, characterId, curGold);
+            return ReqBuyCharacterDB(sessionId, playerId, inventoryId, characterId, curMoney);
         }
         case 51:
         {
 			Character character;
-			int curGold;
+			int curMoney;
 
-            *packet >> character >> curGold;
+            *packet >> character >> curMoney;
 
-            return ResBuyCharacterDB(sessionId, character, curGold);
+            return ResBuyCharacterDB(sessionId, character, curMoney);
         }
         case 52:
         {
@@ -151,14 +151,14 @@ bool DbStub::DbPacketProc(__int64 sessionId, Packet* packet)
 
             return ReqChangeEquipmentDB(sessionId, playerId, inventoryId);
         }
-        case 70:
+        case 67:
         {
-			int result;
-			int currentMoney;
+			int winnerId;
+			int loserId;
 
-            *packet >> result >> currentMoney;
+            *packet >> winnerId >> loserId;
 
-            return ReqEndGameDB(sessionId, result, currentMoney);
+            return ReqGameResultDB(sessionId, winnerId, loserId);
         }
     default:
     {
@@ -240,12 +240,12 @@ bool DbStub::ResChatDB(__int64 sessionId, int playerId, std::string& message)
     return true;
 }
 
-bool DbStub::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold)
+bool DbStub::ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curMoney)
 {
     return true;
 }
 
-bool DbStub::ResBuyCharacterDB(__int64 sessionId, Character& character, int curGold)
+bool DbStub::ResBuyCharacterDB(__int64 sessionId, Character& character, int curMoney)
 {
     return true;
 }
@@ -255,7 +255,7 @@ bool DbStub::ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventory
     return true;
 }
 
-bool DbStub::ReqEndGameDB(__int64 sessionId, int result, int currentMoney)
+bool DbStub::ReqGameResultDB(__int64 sessionId, int winnerId, int loserId)
 {
     return true;
 }

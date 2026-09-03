@@ -83,11 +83,10 @@ bool RpcClientStub::PacketProc(Packet* packet)
         }
         case 15:
         {
-			std::vector<PlayerInfo> players;
 
-            *packet >> players;
+            *packet;
 
-            return ResLobbyPlayers(players);
+            return ReqEnterLobby();
         }
         case 16:
         {
@@ -95,7 +94,7 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet >> player;
 
-            return ResPlayerEnterLobby(player);
+            return ResEnterLobby(player);
         }
         case 17:
         {
@@ -103,7 +102,7 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet >> playerId;
 
-            return ResPlayerLeaveLobby(playerId);
+            return ResLeaveLobby(playerId);
         }
         case 30:
         {
@@ -132,11 +131,11 @@ bool RpcClientStub::PacketProc(Packet* packet)
         case 51:
         {
 			Character character;
-			int curGold;
+			int curMoney;
 
-            *packet >> character >> curGold;
+            *packet >> character >> curMoney;
 
-            return ResBuyCharacter(character, curGold);
+            return ResBuyCharacter(character, curMoney);
         }
         case 52:
         {
@@ -159,47 +158,92 @@ bool RpcClientStub::PacketProc(Packet* packet)
 
             *packet;
 
-            return ReqStartGame();
+            return ReqStartMatch();
         }
         case 61:
         {
-			PlayerInfo otherPlayer;
+			STONE stone;
+			PlayerInfo opponent;
 
-            *packet >> otherPlayer;
+            *packet >> stone >> opponent;
 
-            return ResStartGame(otherPlayer);
+            return ResStartMatch(stone, opponent);
         }
         case 62:
         {
 
             *packet;
 
-            return ReqCancelGame();
+            return ReqCancelMatch();
         }
         case 65:
         {
-			int commandType;
+			short row;
+			short col;
 
-            *packet >> commandType;
+            *packet >> row >> col;
 
-            return ReqGameCommand(commandType);
+            return ReqPlaceStone(row, col);
         }
         case 66:
         {
-			Character character;
+			short row;
+			short col;
 
-            *packet >> character;
+            *packet >> row >> col;
 
-            return ResGameCommand(character);
+            return ResPlaceStone(row, col);
+        }
+        case 67:
+        {
+			STONE stone;
+			int level;
+			int myMoney;
+
+            *packet >> stone >> level >> myMoney;
+
+            return ResGameResult(stone, level, myMoney);
+        }
+        case 68:
+        {
+			int playerId;
+			int level;
+
+            *packet >> playerId >> level;
+
+            return ResChangePlayerLevel(playerId, level);
+        }
+        case 69:
+        {
+			int playerId;
+			PLAYER_STATE state;
+
+            *packet >> playerId >> state;
+
+            return ResChangePlayerState(playerId, state);
         }
         case 70:
         {
-			int result;
-			int currentMoney;
+			int playerId;
 
-            *packet >> result >> currentMoney;
+            *packet >> playerId;
 
-            return ResEndGame(result, currentMoney);
+            return ResEnterRoom(playerId);
+        }
+        case 71:
+        {
+
+            *packet;
+
+            return ReqLeaveRoom();
+        }
+        case 72:
+        {
+			int playerId;
+
+            *packet >> playerId;
+
+            return ResLeaveRoom(playerId);
         }
     default:
     {
@@ -256,17 +300,17 @@ bool RpcClientStub::ResPlayerCharacters(std::vector<Character>& characters)
     return true;
 }
 
-bool RpcClientStub::ResLobbyPlayers(std::vector<PlayerInfo>& players)
+bool RpcClientStub::ReqEnterLobby()
 {
     return true;
 }
 
-bool RpcClientStub::ResPlayerEnterLobby(PlayerInfo& player)
+bool RpcClientStub::ResEnterLobby(PlayerInfo& player)
 {
     return true;
 }
 
-bool RpcClientStub::ResPlayerLeaveLobby(int playerId)
+bool RpcClientStub::ResLeaveLobby(int playerId)
 {
     return true;
 }
@@ -286,7 +330,7 @@ bool RpcClientStub::ReqBuyCharacter()
     return true;
 }
 
-bool RpcClientStub::ResBuyCharacter(Character& character, int curGold)
+bool RpcClientStub::ResBuyCharacter(Character& character, int curMoney)
 {
     return true;
 }
@@ -301,32 +345,57 @@ bool RpcClientStub::ResChangeEquipment(int inventoryId)
     return true;
 }
 
-bool RpcClientStub::ReqStartGame()
+bool RpcClientStub::ReqStartMatch()
 {
     return true;
 }
 
-bool RpcClientStub::ResStartGame(PlayerInfo& otherPlayer)
+bool RpcClientStub::ResStartMatch(STONE stone, PlayerInfo& opponent)
 {
     return true;
 }
 
-bool RpcClientStub::ReqCancelGame()
+bool RpcClientStub::ReqCancelMatch()
 {
     return true;
 }
 
-bool RpcClientStub::ReqGameCommand(int commandType)
+bool RpcClientStub::ReqPlaceStone(short row, short col)
 {
     return true;
 }
 
-bool RpcClientStub::ResGameCommand(Character& character)
+bool RpcClientStub::ResPlaceStone(short row, short col)
 {
     return true;
 }
 
-bool RpcClientStub::ResEndGame(int result, int currentMoney)
+bool RpcClientStub::ResGameResult(STONE stone, int level, int myMoney)
+{
+    return true;
+}
+
+bool RpcClientStub::ResChangePlayerLevel(int playerId, int level)
+{
+    return true;
+}
+
+bool RpcClientStub::ResChangePlayerState(int playerId, PLAYER_STATE state)
+{
+    return true;
+}
+
+bool RpcClientStub::ResEnterRoom(int playerId)
+{
+    return true;
+}
+
+bool RpcClientStub::ReqLeaveRoom()
+{
+    return true;
+}
+
+bool RpcClientStub::ResLeaveRoom(int playerId)
 {
     return true;
 }

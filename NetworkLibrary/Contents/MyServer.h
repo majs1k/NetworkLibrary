@@ -68,7 +68,6 @@ private:
 	HANDLE hDatabaseThread_;
 	static unsigned int __stdcall DatabaseThread(void* param);
 
-	DbProxy dbProxy_;
 
 private:
 
@@ -118,6 +117,8 @@ private:
 
 	bool ReqPlayerConnection(__int64 sessionId, int userId);
 
+	virtual bool ReqEnterLobby(__int64 sessionId);
+
 
 	bool ReqChat(__int64 sessionId, std::string& message);
 
@@ -125,9 +126,14 @@ private:
 
 	bool ReqChangeEquipment(__int64 sessionId, int inventoryId);
 
-	bool ReqStartGame(__int64 sessionId);
+	bool ReqStartMatch(__int64 sessionId);
 
-	bool ReqCancelGame(__int64 sessionId);
+	bool ReqCancelMatch(__int64 sessionId);
+
+
+	virtual bool ReqPlaceStone(__int64 sessionId, short row, short col);
+
+	virtual bool ReqLeaveRoom(__int64 sessionId);
 
 
 	// ===================================================================================== //
@@ -156,7 +162,9 @@ private:
 	bool ResPlayerCharactersDB(__int64 sessionId, std::vector<Character>& characters);
 
 
-	bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curGold);
+	bool ReqBuyCharacterDB(__int64 sessionId, int playerId, int inventoryId, int characterId, int curMoney);
 
 	bool ReqChangeEquipmentDB(__int64 sessionId, int playerId, int inventoryId);
+
+	virtual bool ReqGameResultDB(__int64 sessionId, int winnerId, int loserId);
 };

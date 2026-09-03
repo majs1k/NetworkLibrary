@@ -12,7 +12,7 @@ bool MyServer::ReqUserRegister(__int64 sessionId, std::string& loginId, std::str
 		return true;
 	}
 
-	dbProxy_.ReqUserRegisterDB(sessionId, loginId, password);
+	g_DbProxy.ReqUserRegisterDB(sessionId, loginId, password);
 
 	return true;
 }
@@ -27,23 +27,60 @@ bool MyServer::ReqUserLogin(__int64 sessionId, std::string& loginId, std::string
 		return true;
 	}
 
-	dbProxy_.ReqUserLoginDB(sessionId, loginId, password);
+	g_DbProxy.ReqUserLoginDB(sessionId, loginId, password);
 
 	return true;
 }
 
 bool MyServer::ReqPlayerRegister(__int64 sessionId, int userId, std::string& playerName)
 {
-	dbProxy_.ReqPlayerRegisterDB(sessionId, userId, playerName);
+	g_DbProxy.ReqPlayerRegisterDB(sessionId, userId, playerName);
 
 	return true;
 }
 
 bool MyServer::ReqPlayerConnection(__int64 sessionId, int userId)
 {
-	dbProxy_.ReqPlayerConnectionDB(sessionId, userId);
+	g_DbProxy.ReqPlayerConnectionDB(sessionId, userId);
 
 	return true;
+}
+
+bool MyServer::ReqEnterLobby(__int64 sessionId)
+{
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
+		return true;
+
+	player->state_ = PLAYER_STATE::LOBBY;
+
+
+	// 플레이어에게 로비 플레이어들 정보 송신
+	for (auto& p : playerManager_.GetPlayers())
+	{
+		// 복사 생성자
+		PlayerInfo info(*(p.second));
+
+		g_RpcProxy.ResEnterLobby(sessionId, info);
+	}
+
+	// TODO: 수정
+	PlayerInfo info;
+	info.playerId_ = player->playerId_;
+	info.playerName_ = player->playerName_;
+	info.level_ = player->level_;
+	info.state_ = player->state_;
+
+
+	// 다른 플레이어들에게도 입장 알림
+	for (auto& p : playerManager_.GetPlayers())
+	{
+		if (p.second->playerId_ == player->playerId_)
+			continue;
+
+		g_RpcProxy.ResEnterLobby(p.second->sessionId_, info);
+	}
 }
 
 bool MyServer::ReqChat(__int64 sessionId, std::string& message)
@@ -53,13 +90,10 @@ bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 	if (player == nullptr)
 		return true;
 
-	if (player->state_ != PLAYER_STATE::LOBBY)
-		return true;
-
 	unsigned int now = GetTickCount();
 
 	// 1초 내에 다시 채팅 보냈을시
-	if(now - player->lastChatTime_ < 1000)
+	if (now - player->lastChatTime_ < 1000)
 	{
 		player->curChatCount_++;
 	}
@@ -81,10 +115,25 @@ bool MyServer::ReqChat(__int64 sessionId, std::string& message)
 
 	player->lastChatTime_ = now;
 
-	for (auto& i : playerManager_.GetPlayers())
+
+	// 로비 내 사람들끼리 채팅
+	if (player->state_ == PLAYER_STATE::LOBBY)
 	{
-		g_RpcProxy.ResChat(i.second->sessionId_, player->playerId_, message);
+		for (auto& i : playerManager_.GetPlayers())
+		{
+			if (i.second->state_ != PLAYER_STATE::LOBBY)
+				continue;
+
+			g_RpcProxy.ResChat(i.second->sessionId_, player->playerId_, message);
+		}
 	}
+	// 게임룸 내 사람들끼리 채팅
+	else if (player->state_ == PLAYER_STATE::GAMEROOM)
+	{
+		// TODO: 코드 개선 방안?...
+		player->gameRoom_->BraodcastChatting(player, message);
+	}
+
 
 	return true;
 }
@@ -103,25 +152,25 @@ bool MyServer::ReqBuyCharacter(__int64 sessionId)
 
 	Character ch{};
 
-	if (player->gold_ < 1000)
+	if (player->money_ < 1000)
 	{
 		Character ch{};
 		ch.characterId_ = 0;
 
-		g_RpcProxy.ResBuyCharacter(sessionId, ch, player->gold_);
+		g_RpcProxy.ResBuyCharacter(sessionId, ch, player->money_);
 
 		return true;
 	}
 
-	player->gold_ -= 1000;
+	player->money_ -= 1000;
 
 	// TODO: 캐릭터 임의 생성 수정
 	ch.characterId_ = 1;
 	ch.inventoryId_ = inventoryRepository_.GenerateInventoryId();
 
-	g_RpcProxy.ResBuyCharacter(sessionId, ch, player->gold_);
+	g_RpcProxy.ResBuyCharacter(sessionId, ch, player->money_);
 
-	dbProxy_.ReqBuyCharacterDB(sessionId, playerId, ch.inventoryId_, ch.characterId_, player->gold_);
+	g_DbProxy.ReqBuyCharacterDB(sessionId, playerId, ch.inventoryId_, ch.characterId_, player->money_);
 
 	return true;
 }
@@ -144,7 +193,7 @@ bool MyServer::ReqChangeEquipment(__int64 sessionId, int inventoryId)
 		{
 			g_RpcProxy.ResChangeEquipment(sessionId, inventoryId);
 
-			dbProxy_.ReqChangeEquipmentDB(sessionId, player->playerId_, inventoryId);
+			g_DbProxy.ReqChangeEquipmentDB(sessionId, player->playerId_, inventoryId);
 
 			break;
 		}
@@ -153,7 +202,7 @@ bool MyServer::ReqChangeEquipment(__int64 sessionId, int inventoryId)
 	return true;
 }
 
-bool MyServer::ReqStartGame(__int64 sessionId)
+bool MyServer::ReqStartMatch(__int64 sessionId)
 {
 	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
 
@@ -165,7 +214,7 @@ bool MyServer::ReqStartGame(__int64 sessionId)
 	return true;
 }
 
-bool MyServer::ReqCancelGame(__int64 sessionId)
+bool MyServer::ReqCancelMatch(__int64 sessionId)
 {
 	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
 
@@ -173,6 +222,33 @@ bool MyServer::ReqCancelGame(__int64 sessionId)
 		return true;
 
 	matchMaker_.Remove(player);
+
+	return true;
+}
+
+bool MyServer::ReqPlaceStone(__int64 sessionId, short row, short col)
+{
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
+		return true;
+
+	player->gameRoom_->PlaceStone(player, row, col);
+
+	return true;
+}
+
+bool MyServer::ReqLeaveRoom(__int64 sessionId)
+{
+	Player* player = playerManager_.GetPlayerBySessionId(sessionId);
+
+	if (player == nullptr)
+		return true;
+
+	int roomId = player->gameRoom_->GetRoomId();
+
+	if (player->gameRoom_->LeaveRoom(player))
+		roomManager_.RemoveRoom(roomId);
 
 	return true;
 }
