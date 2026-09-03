@@ -1,0 +1,33 @@
+
+
+ReqUserRegister(std::string& loginId, std::string& password)			0
+ResUserRegister(RESPONSE_CODE code)										1
+
+ReqUserLogin(std::string& loginId, std::string& password)				2
+ResUserLogin(RESPONSE_CODE code, int userId)							3
+
+
+
+ReqPlayerRegister(int userId, std::string& playerName)					10
+ResPlayerRegister(RESPONSE_CODE code)									11
+
+ReqPlayerConnection(int userId)											12
+ResPlayerProfile(Player& player)										13
+ResPlayerIcons(std::vector<Icon>& icons)								14
+
+ResLobbyPlayers(std::vector<PlayerInfo>& players)						15
+ResPlayerEnterLobby(PlayerInfo& player)									16
+ResPlayerLeaveLobby(int playerId)										17
+
+
+ReqChat(std::string& message)											30
+ResChat(int playerId, std::string& message)								31
+
+
+ReqBuyIcon(int playerId, int inventoryId, int iconId, int curMoney)		50
+ResBuyIcon(Icon& icon, int curMoney)									51
+
+ReqChangeEquipment(int playerId, int inventoryId)						52
+
+
+ReqGameResult(int winnerId, int loserId)								67

@@ -22,7 +22,7 @@ Platform : Windows 11 x64 / Visual Studio 2022
 IOCP 네트워크 클래스 `LanServer`를 컨텐츠에서 상속받아 이벤트를 구현합니다.
 
 ```cpp
-class MyServer : public LanServer, public RpcServerStub, public DbServerStub
+class GameServer : public LanServer, public RpcServerStub, public DbServerStub
 {
 private:
     bool OnConnectionRequest(const std::wstring& ip, int port) override;
@@ -202,7 +202,7 @@ Planned: 게임 결과 처리 / 게임 플레이 컨텐츠
 NetworkLibrary
 │
 ├── Contents
-│   ├── MyServer
+│   ├── GameServer
 │   ├── MyClient
 │   ├── RpcModule
 │   ├── Repository

@@ -1,0 +1,51 @@
+
+
+ReqUserRegister(std::string& loginId, std::string& password)			0
+ResUserRegister(RESPONSE_CODE code)										1
+
+ReqUserLogin(std::string& loginId, std::string& password)				2
+ResUserLogin(RESPONSE_CODE code, int userId)							3
+
+
+
+ReqPlayerRegister(int userId, std::string& playerName)					10
+ResPlayerRegister(RESPONSE_CODE code)									11
+
+ReqPlayerConnection(int userId)											12
+ResPlayerProfile(Player& player)										13
+ResPlayerIcons(std::vector<Icon>& icons)								14
+
+
+ReqEnterLobby()															15
+ResEnterLobby(PlayerInfo& player)										16
+
+ResLeaveLobby(int playerId)												17
+
+
+ReqChat(std::string& message)											30
+ResChat(int playerId, std::string& message)								31
+
+
+ReqBuyIcon()															50
+ResBuyIcon(Icon& icon, int curMoney)									51
+
+ReqChangeEquipment(int inventoryId)										52
+ResChangeEquipment(int inventoryId)										53
+
+
+ReqStartMatch()															60
+ResStartMatch(STONE stone, PlayerInfo& opponent)						61
+ReqCancelMatch()														62
+
+
+ReqPlaceStone(short row, short col)										65
+ResPlaceStone(short row, short col)										66
+
+
+ResGameResult(STONE winner, int myRating, int opponentRating, int myMoney)		67
+ResChangePlayerRating(int playerId, int rating)							68
+ResChangePlayerState(int playerId, PLAYER_STATE state)					69
+
+ResEnterRoom(int playerId)												70
+ReqLeaveRoom()															71
+ResLeaveRoom(int playerId)												72

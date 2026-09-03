@@ -4,8 +4,8 @@
     {
         static void Main(string[] args)
         {
-            var rpcFile = "myrpc_idl.txt";
-            var dbFile = "mydb_idl.txt";
+            var rpcFile = "game_rpc_idl.txt";
+            var dbFile = "game_db_idl.txt";
 
             RpcServerGenerator.Generate(rpcFile);
             RpcClientGenerator.Generate(rpcFile);

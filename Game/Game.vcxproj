@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{47753550-c128-4cc1-af49-99b82ed1fb86}</ProjectGuid>
+    <RootNamespace>Game</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>C:\Study\mysql-connector-c++-9.7.0-winx64\include\jdbc</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>NotSet</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\Study\mysql-connector-c++-9.7.0-winx64\lib64\vs14</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Contents\Client\GameClient.h" />
+    <ClInclude Include="Contents\Client\GameUI.h" />
+    <ClInclude Include="Contents\Client\ImGui\imconfig.h" />
+    <ClInclude Include="Contents\Client\ImGui\imgui.h" />
+    <ClInclude Include="Contents\Client\ImGui\imgui_impl_dx11.h" />
+    <ClInclude Include="Contents\Client\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="Contents\Client\ImGui\imgui_internal.h" />
+    <ClInclude Include="Contents\Client\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="Contents\Client\ImGui\imstb_textedit.h" />
+    <ClInclude Include="Contents\Client\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Contents\GameRoom.h" />
+    <ClInclude Include="Contents\Icon.h" />
+    <ClInclude Include="Contents\MatchMaker.h" />
+    <ClInclude Include="Contents\OmokGame.h" />
+    <ClInclude Include="Contents\Player.h" />
+    <ClInclude Include="Contents\Repository\InventoryRepository.h" />
+    <ClInclude Include="Contents\Repository\PlayerRepository.h" />
+    <ClInclude Include="Contents\Repository\UserRepository.h" />
+    <ClInclude Include="Contents\ResponseCode.h" />
+    <ClInclude Include="Contents\RpcModule.h" />
+    <ClInclude Include="Contents\Server\GameServer.h" />
+    <ClInclude Include="Database\Database.h" />
+    <ClInclude Include="Network\LanClient.h" />
+    <ClInclude Include="Network\LanServer.h" />
+    <ClInclude Include="Network\Session.h" />
+    <ClInclude Include="Utils\ConfigLoader.h" />
+    <ClInclude Include="Utils\CrashDump.h" />
+    <ClInclude Include="Utils\List.h" />
+    <ClInclude Include="Utils\Logger.h" />
+    <ClInclude Include="Utils\MemoryLeak.h" />
+    <ClInclude Include="Utils\MemoryOverflow.h" />
+    <ClInclude Include="Utils\MemoryPool.h" />
+    <ClInclude Include="Utils\Packet.h" />
+    <ClInclude Include="Utils\PacketQueue.h" />
+    <ClInclude Include="Utils\Profiler.h" />
+    <ClInclude Include="Utils\ProfilerManager.h" />
+    <ClInclude Include="Utils\Profiler_Single.h" />
+    <ClInclude Include="Utils\Random.h" />
+    <ClInclude Include="Utils\rapidjson\allocators.h" />
+    <ClInclude Include="Utils\rapidjson\cursorstreamwrapper.h" />
+    <ClInclude Include="Utils\rapidjson\document.h" />
+    <ClInclude Include="Utils\rapidjson\encodedstream.h" />
+    <ClInclude Include="Utils\rapidjson\encodings.h" />
+    <ClInclude Include="Utils\rapidjson\error\en.h" />
+    <ClInclude Include="Utils\rapidjson\error\error.h" />
+    <ClInclude Include="Utils\rapidjson\filereadstream.h" />
+    <ClInclude Include="Utils\rapidjson\filewritestream.h" />
+    <ClInclude Include="Utils\rapidjson\fwd.h" />
+    <ClInclude Include="Utils\rapidjson\internal\biginteger.h" />
+    <ClInclude Include="Utils\rapidjson\internal\clzll.h" />
+    <ClInclude Include="Utils\rapidjson\internal\diyfp.h" />
+    <ClInclude Include="Utils\rapidjson\internal\dtoa.h" />
+    <ClInclude Include="Utils\rapidjson\internal\ieee754.h" />
+    <ClInclude Include="Utils\rapidjson\internal\itoa.h" />
+    <ClInclude Include="Utils\rapidjson\internal\meta.h" />
+    <ClInclude Include="Utils\rapidjson\internal\pow10.h" />
+    <ClInclude Include="Utils\rapidjson\internal\regex.h" />
+    <ClInclude Include="Utils\rapidjson\internal\stack.h" />
+    <ClInclude Include="Utils\rapidjson\internal\strfunc.h" />
+    <ClInclude Include="Utils\rapidjson\internal\strtod.h" />
+    <ClInclude Include="Utils\rapidjson\internal\swap.h" />
+    <ClInclude Include="Utils\rapidjson\istreamwrapper.h" />
+    <ClInclude Include="Utils\rapidjson\memorybuffer.h" />
+    <ClInclude Include="Utils\rapidjson\memorystream.h" />
+    <ClInclude Include="Utils\rapidjson\msinttypes\inttypes.h" />
+    <ClInclude Include="Utils\rapidjson\msinttypes\stdint.h" />
+    <ClInclude Include="Utils\rapidjson\ostreamwrapper.h" />
+    <ClInclude Include="Utils\rapidjson\pointer.h" />
+    <ClInclude Include="Utils\rapidjson\prettywriter.h" />
+    <ClInclude Include="Utils\rapidjson\rapidjson.h" />
+    <ClInclude Include="Utils\rapidjson\reader.h" />
+    <ClInclude Include="Utils\rapidjson\schema.h" />
+    <ClInclude Include="Utils\rapidjson\stream.h" />
+    <ClInclude Include="Utils\rapidjson\stringbuffer.h" />
+    <ClInclude Include="Utils\rapidjson\uri.h" />
+    <ClInclude Include="Utils\rapidjson\writer.h" />
+    <ClInclude Include="Utils\RingBuffer.h" />
+    <ClInclude Include="Utils\Singleton.h" />
+    <ClInclude Include="Utils\TickController.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Contents\Client\GameClient.cpp" />
+    <ClCompile Include="Contents\Client\GameClientMain.cpp" />
+    <ClCompile Include="Contents\Client\ImGui\imgui.cpp" />
+    <ClCompile Include="Contents\Client\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="Contents\Client\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="Contents\Client\ImGui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="Contents\Client\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="Contents\Client\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="Contents\Client\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="Contents\RpcModule.cpp" />
+    <ClCompile Include="Contents\Server\GameServer.cpp" />
+    <ClCompile Include="Contents\Server\GameServer_Db.cpp" />
+    <ClCompile Include="Contents\Server\GameServer_Rpc.cpp" />
+    <ClCompile Include="Database\Database.cpp" />
+    <ClCompile Include="Network\LanClient.cpp" />
+    <ClCompile Include="Network\LanServer_1.cpp" />
+    <ClCompile Include="Network\LanServer_2.cpp" />
+    <ClCompile Include="Utils\Logger.cpp" />
+    <ClCompile Include="Utils\Profiler.cpp" />
+    <ClCompile Include="Utils\ProfilerManager.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
