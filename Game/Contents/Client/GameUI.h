@@ -212,11 +212,11 @@ private:
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		if (ImGui::Button(u8"캐릭터 목록", ImVec2(180, 50)))
+		if (ImGui::Button(u8"아이콘", ImVec2(180, 50)))
 		{
 			showIconList = true;
 			ImGui::SetNextWindowSize(ImVec2(500, 400));
-			ImGui::OpenPopup(u8"캐릭터 목록");
+			ImGui::OpenPopup(u8"아이콘 목록");
 		}
 
 		ImGui::SameLine();
@@ -228,7 +228,7 @@ private:
 			ImGui::OpenPopup(u8"상점");
 		}
 
-		if (ImGui::BeginPopupModal(u8"캐릭터 목록", &showIconList, ImGuiWindowFlags_NoResize))
+		if (ImGui::BeginPopupModal(u8"아이콘 목록", &showIconList, ImGuiWindowFlags_NoResize))
 		{
 			ImGui::BeginChild("IconList", ImVec2(0, 0), true);
 
@@ -412,7 +412,7 @@ private:
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 		ImGui::SetNextWindowSize(displaySize);
 
-		ImGui::Begin("GameUI", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | 
+		ImGui::Begin("GameUI", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
 			ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
 		ImVec2 contentSize = ImGui::GetContentRegionAvail();
@@ -452,7 +452,7 @@ private:
 		// 바둑판 배경
 		// ---------------------------------------------------------
 
-		drawList->AddRectFilled(ImVec2(boardPos.x - 30.0f, boardPos.y - 30.0f), ImVec2(boardPos.x + boardSize + 30.0f, boardPos.y + boardSize + 30.0f), 
+		drawList->AddRectFilled(ImVec2(boardPos.x - 30.0f, boardPos.y - 30.0f), ImVec2(boardPos.x + boardSize + 30.0f, boardPos.y + boardSize + 30.0f),
 			IM_COL32(205, 155, 80, 255), 4.0f);
 
 		// ---------------------------------------------------------
@@ -525,9 +525,8 @@ private:
 
 		if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
 		{
-			// TODO: 로직 검증
-			if (!client_->omokGame_.IsGameOver() )
-				// && client_->myPlayer_.stone_ == g_OmokGame.GetTurn()
+			// 게임 진행중 && 내턴일떄만 바둑알 놓을 수 있음
+			if (!client_->omokGame_.IsGameOver() && client_->myPlayer_.stone_ == client_->omokGame_.GetTurn())
 			{
 				ImVec2 mousePos = ImGui::GetIO().MousePos;
 				float localX = mousePos.x - boardPos.x;
@@ -561,28 +560,50 @@ private:
 		// 플레이어 정보
 		// =========================================================
 
-		auto DrawPlayerInfo = [&](const char* name, int rating, bool isBlack, bool isMyTurn)
+		auto DrawPlayerInfo = [&](const char* name, int rating, STONE stone)
 			{
+				bool isGameOver = client_->omokGame_.IsGameOver();
+
+				// 게임 중일 때만 현재 턴 표시
+				bool isMyTurn =
+					!isGameOver &&
+					client_->omokGame_.GetTurn() == stone;
+
+				// 게임 종료 후 승리 여부
+				bool isWinner =
+					isGameOver &&
+					client_->omokGame_.GetWinner() == stone;
+
 				ImVec4 backgroundColor = ImVec4(0.40f, 0.40f, 0.40f, 1.0f);
-				ImVec4 borderColor = isMyTurn ? ImVec4(1.0f, 0.75f, 0.1f, 1.0f) : ImVec4(0.70f, 0.70f, 0.70f, 1.0f);
+				ImVec4 borderColor =
+					isMyTurn
+					? ImVec4(1.0f, 0.75f, 0.1f, 1.0f)
+					: ImVec4(0.70f, 0.70f, 0.70f, 1.0f);
 
 				ImGui::PushStyleColor(ImGuiCol_ChildBg, backgroundColor);
 				ImGui::PushStyleColor(ImGuiCol_Border, borderColor);
-				ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, isMyTurn ? 3.0f : 1.0f);
+				ImGui::PushStyleVar(
+					ImGuiStyleVar_ChildBorderSize,
+					isMyTurn ? 3.0f : 1.0f
+				);
 
-				ImGui::BeginChild(isBlack ? "BlackPlayer" : "WhitePlayer", ImVec2(0, 105.0f), true);
+				ImGui::BeginChild(
+					stone == STONE::BLACK ? "BlackPlayer" : "WhitePlayer",
+					ImVec2(0, 105.0f),
+					true
+				);
 
 				ImGui::Spacing();
 
-				// -----------------------------------------------------
 				// 닉네임
-				// -----------------------------------------------------
-
-				ImVec2 cursor = ImGui::GetCursorScreenPos();
-				ImVec2 textPos = ImVec2(cursor.x, cursor.y);
-
-				ImGui::SetCursorScreenPos(textPos);
-				ImGui::TextColored(isBlack ? ImVec4(0, 0, 0, 1) : ImVec4(1, 1, 1, 1), u8"%-10s %4dpt ", name, rating);
+				ImGui::TextColored(
+					stone == STONE::BLACK
+					? ImVec4(0, 0, 0, 1)
+					: ImVec4(1, 1, 1, 1),
+					u8"%-10s %4dpt",
+					name,
+					rating
+				);
 
 				ImGui::EndChild();
 
@@ -590,14 +611,21 @@ private:
 				ImGui::PopStyleColor(2);
 			};
 
-		// TODO: 수정 필요
-		// 위쪽 = 흑
-		DrawPlayerInfo(client_->myPlayer_.playerName_.c_str(), client_->myPlayer_.rating_, true, client_->omokGame_.GetTurn() == STONE::BLACK);
+		// 위쪽 = 내 Player
+		DrawPlayerInfo(
+			client_->myPlayer_.playerName_.c_str(),
+			client_->myPlayer_.rating_,
+			client_->myPlayer_.stone_
+		);
 
 		ImGui::Spacing();
 
-		// 아래쪽 = 백
-		DrawPlayerInfo(client_->opponentPlayer_.playerName_.c_str(), client_->opponentPlayer_.rating_, false, client_->omokGame_.GetTurn() == STONE::WHITE);
+		// 아래쪽 = 상대 Player
+		DrawPlayerInfo(
+			client_->opponentPlayer_.playerName_.c_str(),
+			client_->opponentPlayer_.rating_,
+			client_->opponentPlayer_.stone_
+		);
 
 		ImGui::Spacing();
 
@@ -606,9 +634,10 @@ private:
 		// 턴 타이머
 		// =========================================================
 
+		// TODO: 클라측에선 결과 판단 제거
 		client_->omokGame_.UpdateTurnTimer(ImGui::GetIO().DeltaTime);
 
-		
+
 
 		// =========================================================
 		// 제한 시간 영역
@@ -625,24 +654,14 @@ private:
 			bool playerWon = client_->omokGame_.GetWinner() == client_->myPlayer_.stone_;
 
 			if (playerWon)
-				ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.1f, 1.0f), u8"승리!");
+				ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.1f, 1.0f), u8" 승리!    ");
 			else
-				ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1.0f), u8"패배!");
+				ImGui::TextColored(ImVec4(0.8f, 0.2f, 0.2f, 1.0f), u8" 패배!    ");
 
 			ImGui::SameLine();
 
 			float buttonWidth = 120.0f;
 			float buttonSpacing = 10.0f;
-
-			if (ImGui::Button(u8"재대결", ImVec2(buttonWidth, 45.0f)))
-			{
-				if (client_->opponentPlayer_.playerId_ != 0)
-				{
-					//client_->omokGame_.Initialize();
-
-					// TODO: 재대결 신청 패킷 전송
-				}
-			}
 
 			ImGui::SameLine(0.0f, buttonSpacing);
 

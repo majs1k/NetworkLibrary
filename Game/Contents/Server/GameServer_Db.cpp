@@ -120,10 +120,9 @@ bool GameServer::ResPlayerIconsDB(__int64 sessionId, std::vector<Icon>& icons)
 	if (p == nullptr)
 		return true;
 
-	// 플레이어의 캐릭터 등록
+	// 아이콘 등록
 	for (auto& i : icons)
 	{
-		// TODO: emplace_back???
 		p->icons_.push_back(i);
 	}
 
@@ -165,13 +164,9 @@ bool GameServer::ReqGameResultDB(__int64 sessionId, int winnerId, int loserId)
 
 	db_->BeginTransaction();
 
-	// TODO: 개선점?
-	playerRepository_.UpdateWin(winnerId, winner->win_);
-	playerRepository_.UpdateMoney(winnerId, winner->money_);
-	playerRepository_.UpdateRating(winnerId, winner->rating_);
+	playerRepository_.UpdateWinResult(winnerId, winner->win_, winner->rating_, winner->money_);
 
-	playerRepository_.UpdateLose(loserId, loser->lose_);
-	playerRepository_.UpdateRating(loserId, loser->rating_);
+	playerRepository_.UpdateLoseResult(loserId, loser->lose_, loser->rating_);
 
 	db_->Commit();
 

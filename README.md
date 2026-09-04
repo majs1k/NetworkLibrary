@@ -192,7 +192,7 @@ ex) 클라이언트가 보내는 자신의 `playerId`를 신뢰하지 않고,
 
 ## Current Content
 
-Implemented: 회원가입 / 로그인 / 로비 / 채팅(도배금지) / 캐릭터 / 상점 / 매치
+Implemented: 회원가입 / 로그인 / 로비 / 채팅(도배금지) / 상점 / 매치
 
 Planned: 게임 결과 처리 / 게임 플레이 컨텐츠
 

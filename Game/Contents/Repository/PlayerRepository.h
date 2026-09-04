@@ -11,7 +11,6 @@ public:
 	{
 		database_ = db;
 
-		// TODO: 외래키 삭제
 		auto stmt = database_->Prepare(
 			"CREATE TABLE IF NOT EXISTS players("
 			"player_id INT AUTO_INCREMENT PRIMARY KEY,"
@@ -21,8 +20,8 @@ public:
 			"win INT NOT NULL DEFAULT 0,"
 			"lose INT NOT NULL DEFAULT 0,"
 			"rating INT NOT NULL DEFAULT 1000,"
-			"profile_icon_id INT NOT NULL DEFAULT 0,"
-			"FOREIGN KEY (user_id) REFERENCES users(user_id)"
+			"profile_icon_id INT NOT NULL DEFAULT 0"
+			//"FOREIGN KEY (user_id) REFERENCES users(user_id)"
 			");");
 
 		stmt->execute();
@@ -94,17 +93,19 @@ public:
 		}
 	}
 
-	void UpdateWin(int playerId, int win)
+	void UpdateWinResult(int playerId, int win, int rating, int money)
 	{
 		try
 		{
 			auto stmt = database_->Prepare(
 				"UPDATE players "
-				"SET win = ? "
+				"SET win = ?, rating = ?, money = ? "
 				"WHERE player_id = ?");
 
 			stmt->setInt(1, win);
-			stmt->setInt(2, playerId);
+			stmt->setInt(2, rating);
+			stmt->setInt(3, money);
+			stmt->setInt(4, playerId);
 
 			stmt->execute();
 		}
@@ -116,39 +117,18 @@ public:
 		}
 	}
 
-	void UpdateLose(int playerId, int lose)
+	void UpdateLoseResult(int playerId, int lose, int rating)
 	{
 		try
 		{
 			auto stmt = database_->Prepare(
 				"UPDATE players "
-				"SET lose = ? "
+				"SET lose = ?, rating = ? "
 				"WHERE player_id = ?");
 
 			stmt->setInt(1, lose);
-			stmt->setInt(2, playerId);
-
-			stmt->execute();
-		}
-		catch (sql::SQLException& e)
-		{
-			std::cout << "DB Error: " << e.what() << std::endl;
-			std::cout << "Error Code: " << e.getErrorCode() << std::endl;
-			std::cout << "SQL State: " << e.getSQLState() << std::endl;
-		}
-	}
-
-	void UpdateRating(int playerId, int rating)
-	{
-		try
-		{
-			auto stmt = database_->Prepare(
-				"UPDATE players "
-				"SET rating = ? "
-				"WHERE player_id = ?");
-
-			stmt->setInt(1, rating);
-			stmt->setInt(2, playerId);
+			stmt->setInt(2, rating);
+			stmt->setInt(3, playerId);
 
 			stmt->execute();
 		}

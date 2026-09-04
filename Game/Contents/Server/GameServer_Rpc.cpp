@@ -59,19 +59,12 @@ bool GameServer::ReqEnterLobby(__int64 sessionId)
 	// 플레이어에게 로비 플레이어들 정보 송신
 	for (auto& p : playerManager_.GetPlayers())
 	{
-		// 복사 생성자
-		PlayerInfo info(*(p.second));
+		PlayerInfo other = p.second->ToInfo();
 
-		g_RpcProxy.ResEnterLobby(sessionId, info);
+		g_RpcProxy.ResEnterLobby(sessionId, other);
 	}
 
-	// TODO: 수정
-	PlayerInfo info;
-	info.playerId_ = player->playerId_;
-	info.playerName_ = player->playerName_;
-	info.rating_ = player->rating_;
-	info.state_ = player->state_;
-
+	PlayerInfo info = player->ToInfo();
 
 	// 다른 플레이어들에게도 입장 알림
 	for (auto& p : playerManager_.GetPlayers())
@@ -130,8 +123,8 @@ bool GameServer::ReqChat(__int64 sessionId, std::string& message)
 	// 게임룸 내 사람들끼리 채팅
 	else if (player->state_ == PLAYER_STATE::GAMEROOM)
 	{
-		// TODO: 코드 개선 방안?...
-		player->gameRoom_->BraodcastChatting(player, message);
+		// TODO: 코드 개선 방안?
+		player->gameRoom_->BraodcastChat(player, message);
 	}
 
 	return true;
@@ -162,7 +155,7 @@ bool GameServer::ReqBuyIcon(__int64 sessionId)
 
 	player->money_ -= 1000;
 
-	// TODO: 캐릭터 랜덤 지급
+	// TODO: 아이콘 랜덤 지급
 	icon.iconId_ = 1;
 	icon.inventoryId_ = inventoryRepository_.GenerateInventoryId();
 
@@ -184,7 +177,7 @@ bool GameServer::ReqChangeEquipment(__int64 sessionId, int inventoryId)
 	if (player->state_ != PLAYER_STATE::LOBBY)
 		return true;
 
-	// 해당 캐릭터 id를 보유하고 있을시, db 저장
+	// 해당 아이콘 보유하고 있을시, db 저장
 	for (auto& i : player->icons_)
 	{
 		if (i.inventoryId_ == inventoryId)

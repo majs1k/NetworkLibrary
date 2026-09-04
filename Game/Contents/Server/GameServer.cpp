@@ -59,6 +59,10 @@ void GameServer::OnRelease(__int64 sessionId)
 	if (player == nullptr)
 		return;
 
+	// 방에 있었다면 나가기
+	if (player->gameRoom_)
+		player->gameRoom_->LeaveRoom(player);
+
 	int playerId = player->playerId_;
 
 	playerManager_.RemovePlayer(player);
@@ -130,7 +134,7 @@ void GameServer::ProcessNetworkQueue()
 
 void GameServer::Update()
 {
-
+	roomManager_.Update();
 }
 
 

@@ -15,6 +15,27 @@ enum class PLAYER_STATE : short
 class RpcServerProxy;
 class GameRoom;
 
+// 클라이언트 보관용
+struct PlayerInfo
+{
+	int playerId_;
+	std::string playerName_;
+
+	int rating_;
+
+	PLAYER_STATE state_;
+
+	STONE stone_ = STONE::NONE;
+
+	PlayerInfo() = default;
+
+	PlayerInfo(int playerId, const std::string& playerName, int rating, PLAYER_STATE state)
+		: playerId_(playerId), playerName_(playerName), rating_(rating), state_(state)
+	{
+	}
+};
+
+
 struct Player
 {
 	__int64 sessionId_;
@@ -51,7 +72,7 @@ struct Player
 		win_ = win;
 		lose_ = lose;
 		rating_ = rating;
-		
+
 		money_ = money;
 
 		state_ = PLAYER_STATE::NONE;
@@ -63,6 +84,12 @@ struct Player
 
 		lastChatTime_ = 0;
 		curChatCount_ = 0;
+	}
+
+	// PlayerInfo 생성용
+	PlayerInfo ToInfo() const
+	{
+		return PlayerInfo{ playerId_,playerName_,rating_,state_ };
 	}
 };
 
@@ -168,24 +195,4 @@ public:
 		return playerMap_;
 	}
 
-};
-
-
-
-// 클라이언트가 받을 대전 상대 플레이어
-struct PlayerInfo
-{
-	int playerId_;
-	std::string playerName_;
-
-	int rating_;
-
-	PLAYER_STATE state_;
-
-	PlayerInfo() = default;
-
-	PlayerInfo(const Player& player)
-		:playerId_(player.playerId_), playerName_(player.playerName_), rating_(player.rating_), state_(player.state_)
-	{
-	}
 };

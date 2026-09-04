@@ -4,6 +4,7 @@
 #include "RpcModule.h"
 #include "Player.h"
 #include "OmokGame.h"
+#include "../Utils/TickController.h"
 
 class GameRoom
 {
@@ -56,10 +57,8 @@ public:
 
 	void StartGame()
 	{
-		// TODO: 개선방법?
-		PlayerInfo blackInfo = *(blackPlayer_);
-		PlayerInfo whiteInfo = *(whitePlayer_);
-
+		PlayerInfo blackInfo = blackPlayer_->ToInfo();
+		PlayerInfo whiteInfo = whitePlayer_->ToInfo();
 
 		// 흑인지 백인지 정보 전달 추가
 		g_RpcProxy.ResStartMatch(blackPlayer_->sessionId_, STONE::BLACK, whiteInfo);
@@ -146,15 +145,13 @@ public:
 
 public:
 
-
 	void Update()
 	{
 		if (omokGame_.IsGameOver())
 			return;
 
-		// TODO:
-		//auto deltaTime = ...
-		//game_.UpdateTurnTimer(deltaTime);
+		// 초 단위로 타이머 업데이트
+		omokGame_.UpdateTurnTimer(TickController::Instance().DeltaTime() / 1000);
 
 		if (omokGame_.IsGameOver())
 		{
@@ -165,7 +162,6 @@ public:
 		}
 	}
 
-	// TODO: 세션 종료시 방에 있었다면, 이 함수 호출
 	bool LeaveRoom(Player* player)
 	{
 		if (player == nullptr)
@@ -175,7 +171,6 @@ public:
 			return false;
 
 		playerCount_--;
-		player->gameRoom_ = nullptr;
 
 		g_RpcProxy.ResLeaveRoom(player->sessionId_, player->playerId_);
 
@@ -187,16 +182,21 @@ public:
 
 		g_RpcProxy.ResLeaveRoom(GetOpponentPlayer(player)->sessionId_, player->playerId_);
 
-		if (player == whitePlayer_)
-			whitePlayer_ = nullptr;
-		else if (player == blackPlayer_)
-			blackPlayer_ = nullptr;
+
 
 		if (!omokGame_.IsGameOver())
 		{
 			// 나간 상대를 패배로 결과 처리
 			EndGame(GetOpponentPlayer(player));
 		}
+
+		// 처리가 전부 끝난후 nullptr로 변경. 안 그러면 메모리 접근 에러 발생
+		if (player == whitePlayer_)
+			whitePlayer_ = nullptr;
+		else if (player == blackPlayer_)
+			blackPlayer_ = nullptr;
+
+		player->gameRoom_ = nullptr;
 
 		return false;
 	}
@@ -213,7 +213,7 @@ public:
 		return blackPlayer_ == nullptr && whitePlayer_ == nullptr;
 	}
 
-	void BraodcastChatting(Player* player, std::string& message)
+	void BraodcastChat(Player* player, std::string& message)
 	{
 		g_RpcProxy.ResChat(blackPlayer_->sessionId_, player->playerId_, message);
 		g_RpcProxy.ResChat(whitePlayer_->sessionId_, player->playerId_, message);
@@ -302,5 +302,13 @@ public:
 	void RemoveRoom(int roomId)
 	{
 		rooms_.erase(roomId);
+	}
+
+	void Update()
+	{
+		for (auto& r : rooms_)
+		{
+			r.second->Update();
+		}
 	}
 };

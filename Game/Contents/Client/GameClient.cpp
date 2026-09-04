@@ -118,7 +118,6 @@ bool GameClient::ResPlayerProfile(Player& player)
 	}
 	else
 	{
-		//TODO: 이동으로 변경??
 		myPlayer_ = player;
 
 		// 초기화
@@ -165,7 +164,6 @@ bool GameClient::ResEnterLobby(PlayerInfo& player)
 		return true;
 	}
 
-	// TODO: player 복사가 일어남? 인자가 레퍼런스 였다면 어케됨?
 	playerMap_.insert({ player.playerId_, player });
 
 	return true;
@@ -201,6 +199,11 @@ bool GameClient::ResStartMatch(STONE stone, PlayerInfo& opponent)
 	opponentPlayer_ = opponent;
 
 	myPlayer_.stone_ = stone;
+
+	if (stone == STONE::BLACK)
+		opponentPlayer_.stone_ = STONE::WHITE;
+	else
+		opponentPlayer_.stone_ = STONE::BLACK;
 
 	omokGame_.Initialize();
 

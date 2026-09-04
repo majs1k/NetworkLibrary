@@ -156,7 +156,7 @@ bool LanServer::Disconnect(__int64 sessionId)
 
 	sessionMapLock_.unlock();
 
-	// TODO: 이후 수정 필요
+	// TODO:
 	closesocket(session->socket_);
 
 	return true;
