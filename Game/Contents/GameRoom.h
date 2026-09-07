@@ -54,7 +54,6 @@ public:
 			return false;
 	}
 
-
 	void StartGame()
 	{
 		PlayerInfo blackInfo = blackPlayer_->ToInfo();
@@ -86,6 +85,87 @@ public:
 		}
 	}
 
+	Player* GetOpponentPlayer(Player* player) const
+	{
+		if (player == blackPlayer_)
+			return whitePlayer_;
+		else if (player == whitePlayer_)
+			return blackPlayer_;
+		else
+			return nullptr;
+	}
+
+	void Update()
+	{
+		if (omokGame_.IsGameOver())
+			return;
+
+		// 초 단위로 타이머 업데이트
+		omokGame_.UpdateTurnTimer(TickController::Instance().DeltaTime() / 1000);
+
+		if (omokGame_.IsGameOver())
+		{
+			Player* loser = GetPlayer(omokGame_.GetTurn());
+
+			EndGame(GetOpponentPlayer(loser));
+
+			return;
+		}
+	}
+
+	bool LeaveRoom(Player* player)
+	{
+		if (player == nullptr)
+			return false;
+
+		if (player != whitePlayer_ && player != blackPlayer_)
+			return false;
+
+		playerCount_--;
+
+		g_RpcProxy.ResLeaveRoom(player->sessionId_, player->playerId_);
+
+		// 두 명 다 나간 경우 방 삭제
+		if (playerCount_ <= 0)
+		{
+			return true;
+		}
+
+		g_RpcProxy.ResLeaveRoom(GetOpponentPlayer(player)->sessionId_, player->playerId_);
+
+
+		if (!omokGame_.IsGameOver())
+		{
+			// 나간 상대를 패배로 결과 처리
+			EndGame(GetOpponentPlayer(player));
+		}
+
+		// 처리가 전부 끝난후 nullptr로 변경. 안 그러면 메모리 접근 에러 발생
+		if (player == whitePlayer_)
+			whitePlayer_ = nullptr;
+		else if (player == blackPlayer_)
+			blackPlayer_ = nullptr;
+
+		player->gameRoom_ = nullptr;
+
+		return false;
+	}
+
+	int GetRoomId() const
+	{
+		return roomId_;
+	}
+
+	bool IsEmpty() const
+	{
+		return blackPlayer_ == nullptr && whitePlayer_ == nullptr;
+	}
+
+	void BraodcastChat(Player* player, std::string& message)
+	{
+		g_RpcProxy.ResChat(blackPlayer_->sessionId_, player->playerId_, message);
+		g_RpcProxy.ResChat(whitePlayer_->sessionId_, player->playerId_, message);
+	}
 
 private:
 
@@ -130,94 +210,6 @@ private:
 			return nullptr;
 	}
 
-public:
-
-	Player* GetOpponentPlayer(Player* player) const
-	{
-		if (player == blackPlayer_)
-			return whitePlayer_;
-		else if (player == whitePlayer_)
-			return blackPlayer_;
-		else
-			return nullptr;
-	}
-
-
-public:
-
-	void Update()
-	{
-		if (omokGame_.IsGameOver())
-			return;
-
-		// 초 단위로 타이머 업데이트
-		omokGame_.UpdateTurnTimer(TickController::Instance().DeltaTime() / 1000);
-
-		if (omokGame_.IsGameOver())
-		{
-			Player* loser = GetPlayer(omokGame_.GetTurn());
-
-			EndGame(GetOpponentPlayer(loser));
-			return;
-		}
-	}
-
-	bool LeaveRoom(Player* player)
-	{
-		if (player == nullptr)
-			return false;
-
-		if (player != whitePlayer_ && player != blackPlayer_)
-			return false;
-
-		playerCount_--;
-
-		g_RpcProxy.ResLeaveRoom(player->sessionId_, player->playerId_);
-
-		// 두 명 다 나간 경우 방 삭제
-		if (playerCount_ <= 0)
-		{
-			return true;
-		}
-
-		g_RpcProxy.ResLeaveRoom(GetOpponentPlayer(player)->sessionId_, player->playerId_);
-
-
-
-		if (!omokGame_.IsGameOver())
-		{
-			// 나간 상대를 패배로 결과 처리
-			EndGame(GetOpponentPlayer(player));
-		}
-
-		// 처리가 전부 끝난후 nullptr로 변경. 안 그러면 메모리 접근 에러 발생
-		if (player == whitePlayer_)
-			whitePlayer_ = nullptr;
-		else if (player == blackPlayer_)
-			blackPlayer_ = nullptr;
-
-		player->gameRoom_ = nullptr;
-
-		return false;
-	}
-
-public:
-
-	int GetRoomId() const
-	{
-		return roomId_;
-	}
-
-	bool IsEmpty() const
-	{
-		return blackPlayer_ == nullptr && whitePlayer_ == nullptr;
-	}
-
-	void BraodcastChat(Player* player, std::string& message)
-	{
-		g_RpcProxy.ResChat(blackPlayer_->sessionId_, player->playerId_, message);
-		g_RpcProxy.ResChat(whitePlayer_->sessionId_, player->playerId_, message);
-	}
 };
 
 

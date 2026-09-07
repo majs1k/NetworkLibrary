@@ -58,6 +58,6 @@ void Logger::Log(LogLevel level, const WCHAR* fmt, ...)
 		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
 		threadId, levelStr, userMessage);
 
-	//std::wcout << finalMessage;
-	fout_ << finalMessage;
+	std::wcout << finalMessage;
+	//fout_ << finalMessage;
 }

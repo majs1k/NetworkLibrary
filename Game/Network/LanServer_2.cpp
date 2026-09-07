@@ -262,7 +262,7 @@ void LanServer::RecvPost(Session* session)
 		else
 		{
 			LOG(L"WSARecv() error: %d, iocount: %d", error, session->ioCount_);
-			DebugBreak();
+			//__debugbreak();
 			this->DecrementIoCount(session);
 
 			return;
@@ -504,7 +504,7 @@ void LanServer::SendPost(Session* session)
 		else
 		{
 			LOG(L"WSASend() error: %d, iocount: %d", error, session->ioCount_);
-			DebugBreak();
+			//__debugbreak();
 			this->DecrementIoCount(session);
 
 			return;
@@ -573,7 +573,7 @@ void LanServer::ReleaseSession(Session* session)
 
 	delete session;
 
-	//LOG_INFO(L"[NETWORK] session delete");
+	LOG_INFO(L"[NETWORK] session delete");
 
 	InterlockedDecrement(&sessionCount_);
 }

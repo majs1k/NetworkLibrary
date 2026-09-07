@@ -273,7 +273,7 @@ bool GameClient::ResLeaveRoom(int playerId)
 
 		scene_ = SCENE::MAIN;
 	}
-	else if(opponentPlayer_.playerId_ == playerId)
+	else if (opponentPlayer_.playerId_ == playerId)
 	{
 		opponentPlayer_.playerId_ = 0;
 		opponentPlayer_.playerName_ = "";

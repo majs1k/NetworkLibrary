@@ -513,6 +513,16 @@ private:
 					drawList->AddCircleFilled(ImVec2(x, y), radius, IM_COL32(230, 230, 230, 255), 32);
 					drawList->AddCircleFilled(ImVec2(x - radius * 0.3f, y - radius * 0.3f), radius * 0.15f, IM_COL32(255, 255, 255, 220), 32);
 				}
+
+				// 최근 돌 표시
+				if (row == client_->omokGame_.GetLastRow() && col == client_->omokGame_.GetLastCol())
+				{
+					drawList->AddCircleFilled(
+						ImVec2(x, y),
+						radius * 0.18f,
+						IM_COL32(255, 0, 0, 255),
+						32);
+				}
 			}
 		}
 

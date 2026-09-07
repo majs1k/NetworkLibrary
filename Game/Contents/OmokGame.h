@@ -7,12 +7,6 @@ enum class STONE
 	WHITE,
 };
 
-class MYSTONE
-{
-	STONE stone_;
-	int sequence_;
-};
-
 class OmokGame
 {
 public:
@@ -20,6 +14,20 @@ public:
 	// 돌을 놓을 수 있는 교차점은 줄 당 15개
 	static constexpr int BOARD_SIZE = 15;
 	static constexpr int MAX_TURN_TIME = 30;
+
+
+private:
+
+	STONE board_[BOARD_SIZE][BOARD_SIZE];
+
+	STONE turn_ = STONE::BLACK;
+	STONE winner_ = STONE::NONE;
+
+	bool isGameOver_ = false;
+	float turnTime_ = MAX_TURN_TIME;
+
+	int lastRow_ = -1;
+	int lastCol_ = -1;
 
 public:
 
@@ -37,6 +45,9 @@ public:
 		isGameOver_ = false;
 		winner_ = STONE::NONE;
 		turnTime_ = MAX_TURN_TIME;
+
+		lastRow_ = -1;
+		lastCol_ = -1;
 	}
 
 	bool PlaceStone(int row, int col)
@@ -52,6 +63,9 @@ public:
 
 		STONE stone = turn_;
 		board_[row][col] = stone;
+
+		lastRow_ = row;
+		lastCol_ = col;
 
 		// 이 로직을 클라이언트에서는 분리??
 		if (IsOmok(row, col))
@@ -181,16 +195,15 @@ private:
 		return stone == STONE::BLACK ? STONE::WHITE : STONE::BLACK;
 	}
 
-private:
+public:
 
-	STONE board_[BOARD_SIZE][BOARD_SIZE];
+	int GetLastRow() const
+	{
+		return lastRow_;
+	}
 
-	STONE turn_ = STONE::BLACK;
-	STONE winner_ = STONE::NONE;
-
-
-	bool isGameOver_ = false;
-	float turnTime_ = MAX_TURN_TIME;
-
-	//bool sequenceFlag = false;
+	int GetLastCol() const
+	{
+		return lastCol_;
+	}
 };

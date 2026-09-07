@@ -254,7 +254,7 @@ unsigned int __stdcall LanServer::AcceptThread(void* param)
 
 		InterlockedIncrement(&(server->sessionCount_));
 
-		//LOG_INFO(L"[NETWORK] session create ip=%s port=%d count=%d", ip.c_str(), port, server->sessionCount_);
+		LOG_INFO(L"[NETWORK] session create ip=%S port=%d count=%d", ip.c_str(), port, server->sessionCount_);
 
 		CreateIoCompletionPort((HANDLE)clientSock, server->hIOCP_, (ULONG_PTR)session, 0);
 

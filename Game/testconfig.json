@@ -1,0 +1,12 @@
+{
+  "IP": "0.0.0.0",
+  "Port": 6000,
+  "SessionMax": 200,
+  "ConcurrentCount": 2,
+  "WorkerCount": 2,
+
+  "DBHost": "tcp://127.0.0.1:3306",
+  "DBUser": "root",
+  "DBPassword": "1234",
+  "DBSchema": "test"
+}

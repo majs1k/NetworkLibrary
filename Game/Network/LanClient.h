@@ -5,7 +5,7 @@
 #include "../Utils/RingBuffer.h"
 
 #define SEND_SIZE				10000
-#define RECV_SIZE				500
+#define RECV_SIZE				10000
 
 struct CSession
 {

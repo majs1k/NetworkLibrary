@@ -117,6 +117,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Study\mysql-connector-c++-9.7.0-winx64\include\jdbc</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>
@@ -135,6 +136,8 @@
     <ClInclude Include="Contents\Client\ImGui\imstb_rectpack.h" />
     <ClInclude Include="Contents\Client\ImGui\imstb_textedit.h" />
     <ClInclude Include="Contents\Client\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Contents\DummyTest\DummyClient.h" />
+    <ClInclude Include="Contents\DummyTest\DummyTester.h" />
     <ClInclude Include="Contents\GameRoom.h" />
     <ClInclude Include="Contents\Icon.h" />
     <ClInclude Include="Contents\MatchMaker.h" />
@@ -146,6 +149,8 @@
     <ClInclude Include="Contents\ResponseCode.h" />
     <ClInclude Include="Contents\RpcModule.h" />
     <ClInclude Include="Contents\Server\GameServer.h" />
+    <ClInclude Include="Contents\TestServer.h" />
+    <ClInclude Include="Contents_Old\TestServer.h" />
     <ClInclude Include="Database\Database.h" />
     <ClInclude Include="Network\LanClient.h" />
     <ClInclude Include="Network\LanServer.h" />
@@ -161,7 +166,6 @@
     <ClInclude Include="Utils\PacketQueue.h" />
     <ClInclude Include="Utils\Profiler.h" />
     <ClInclude Include="Utils\ProfilerManager.h" />
-    <ClInclude Include="Utils\Profiler_Single.h" />
     <ClInclude Include="Utils\Random.h" />
     <ClInclude Include="Utils\rapidjson\allocators.h" />
     <ClInclude Include="Utils\rapidjson\cursorstreamwrapper.h" />
@@ -207,7 +211,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Contents\Client\GameClient.cpp" />
-    <ClCompile Include="Contents\Client\GameClientMain.cpp" />
     <ClCompile Include="Contents\Client\ImGui\imgui.cpp" />
     <ClCompile Include="Contents\Client\ImGui\imgui_demo.cpp" />
     <ClCompile Include="Contents\Client\ImGui\imgui_draw.cpp" />
@@ -215,10 +218,14 @@
     <ClCompile Include="Contents\Client\ImGui\imgui_impl_win32.cpp" />
     <ClCompile Include="Contents\Client\ImGui\imgui_tables.cpp" />
     <ClCompile Include="Contents\Client\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="Contents\DummyTest\DummyClient.cpp" />
+    <ClCompile Include="Contents\DummyTest\DummyTester.cpp" />
+    <ClCompile Include="Contents\DummyTest\main.cpp" />
     <ClCompile Include="Contents\RpcModule.cpp" />
     <ClCompile Include="Contents\Server\GameServer.cpp" />
     <ClCompile Include="Contents\Server\GameServer_Db.cpp" />
     <ClCompile Include="Contents\Server\GameServer_Rpc.cpp" />
+    <ClCompile Include="Contents_Old\TestServer.cpp" />
     <ClCompile Include="Database\Database.cpp" />
     <ClCompile Include="Network\LanClient.cpp" />
     <ClCompile Include="Network\LanServer_1.cpp" />

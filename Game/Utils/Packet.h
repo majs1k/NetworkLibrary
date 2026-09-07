@@ -62,7 +62,7 @@ public:
 
 	~Packet()
 	{
-		delete buffer_;
+		delete[] buffer_;
 	}
 
 	void Initialize()

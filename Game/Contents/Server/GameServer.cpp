@@ -149,6 +149,7 @@ unsigned int __stdcall GameServer::DatabaseThread(void* param)
 	{
 		server->ProcessDbReqQueue();
 
+		//TODO: ªË¡¶
 		Sleep(10);
 	}
 
